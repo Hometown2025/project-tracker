@@ -1,0 +1,443 @@
+#!/usr/bin/env python3
+"""
+Comprehensive Backend API Testing for Task Manager Application
+Tests all CRUD operations, dashboard stats, calendar data, and data relationships
+"""
+
+import requests
+import json
+import base64
+from datetime import datetime, date, timedelta
+import sys
+import os
+
+# Get backend URL from frontend .env
+BACKEND_URL = "https://d627ba87-f652-484b-9633-b99e5f8fdffe.preview.emergentagent.com/api"
+
+class TaskManagerTester:
+    def __init__(self):
+        self.base_url = BACKEND_URL
+        self.session = requests.Session()
+        self.test_data = {
+            'projects': [],
+            'tasks': [],
+            'ideas': []
+        }
+        self.passed_tests = 0
+        self.failed_tests = 0
+        
+    def log(self, message, level="INFO"):
+        """Log test messages"""
+        print(f"[{level}] {message}")
+        
+    def test_request(self, method, endpoint, data=None, expected_status=200, test_name=""):
+        """Make HTTP request and validate response"""
+        url = f"{self.base_url}{endpoint}"
+        
+        try:
+            if method.upper() == "GET":
+                response = self.session.get(url)
+            elif method.upper() == "POST":
+                response = self.session.post(url, json=data)
+            elif method.upper() == "PUT":
+                response = self.session.put(url, json=data)
+            elif method.upper() == "DELETE":
+                response = self.session.delete(url)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+                
+            self.log(f"Testing {test_name}: {method} {endpoint}")
+            self.log(f"Response Status: {response.status_code}")
+            
+            if response.status_code == expected_status:
+                self.passed_tests += 1
+                self.log(f"✅ PASSED: {test_name}", "SUCCESS")
+                try:
+                    return response.json()
+                except:
+                    return response.text
+            else:
+                self.failed_tests += 1
+                self.log(f"❌ FAILED: {test_name} - Expected {expected_status}, got {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return None
+                
+        except Exception as e:
+            self.failed_tests += 1
+            self.log(f"❌ FAILED: {test_name} - Exception: {str(e)}", "ERROR")
+            return None
+    
+    def test_dashboard_stats(self):
+        """Test Dashboard Stats API"""
+        self.log("\n=== Testing Dashboard Stats API ===")
+        
+        result = self.test_request("GET", "/dashboard", test_name="Dashboard Stats")
+        
+        if result:
+            required_fields = ['total_projects', 'active_projects', 'total_tasks', 
+                             'completed_tasks', 'overdue_tasks', 'today_tasks', 'ideas_count']
+            
+            for field in required_fields:
+                if field in result:
+                    self.log(f"✅ Dashboard field '{field}': {result[field]}")
+                else:
+                    self.log(f"❌ Missing dashboard field: {field}", "ERROR")
+                    self.failed_tests += 1
+        
+        return result
+    
+    def test_projects_crud(self):
+        """Test Projects CRUD operations"""
+        self.log("\n=== Testing Projects CRUD ===")
+        
+        # Test Create Project
+        project_data = {
+            "name": "Website Redesign Project",
+            "description": "Complete redesign of company website with modern UI/UX",
+            "color": "#3B82F6"
+        }
+        
+        created_project = self.test_request("POST", "/projects", project_data, 200, "Create Project")
+        
+        if created_project:
+            self.test_data['projects'].append(created_project)
+            project_id = created_project['id']
+            
+            # Test Get All Projects
+            projects = self.test_request("GET", "/projects", test_name="Get All Projects")
+            
+            if projects and len(projects) > 0:
+                self.log(f"✅ Retrieved {len(projects)} projects")
+            
+            # Test Get Single Project
+            single_project = self.test_request("GET", f"/projects/{project_id}", test_name="Get Single Project")
+            
+            if single_project:
+                self.log(f"✅ Retrieved project: {single_project['name']}")
+            
+            # Test Update Project
+            update_data = {
+                "name": "Website Redesign Project - Updated",
+                "description": "Updated description with new requirements",
+                "color": "#10B981"
+            }
+            
+            updated_project = self.test_request("PUT", f"/projects/{project_id}", update_data, 200, "Update Project")
+            
+            if updated_project and updated_project['name'] == update_data['name']:
+                self.log("✅ Project updated successfully")
+            
+            # Create another project for testing relationships
+            project_data2 = {
+                "name": "Mobile App Development",
+                "description": "Native mobile app for iOS and Android",
+                "color": "#8B5CF6"
+            }
+            
+            created_project2 = self.test_request("POST", "/projects", project_data2, 200, "Create Second Project")
+            if created_project2:
+                self.test_data['projects'].append(created_project2)
+    
+    def test_tasks_crud(self):
+        """Test Tasks CRUD operations with priorities and due dates"""
+        self.log("\n=== Testing Tasks CRUD ===")
+        
+        if not self.test_data['projects']:
+            self.log("❌ No projects available for task testing", "ERROR")
+            return
+        
+        project_id = self.test_data['projects'][0]['id']
+        
+        # Test Create Tasks with different priorities
+        tasks_to_create = [
+            {
+                "project_id": project_id,
+                "title": "Design Homepage Layout",
+                "description": "Create wireframes and mockups for the new homepage",
+                "priority": "high",
+                "due_date": (date.today() + timedelta(days=7)).isoformat()
+            },
+            {
+                "project_id": project_id,
+                "title": "Set up Development Environment",
+                "description": "Configure local development setup",
+                "priority": "medium",
+                "due_date": (date.today() + timedelta(days=3)).isoformat()
+            },
+            {
+                "project_id": project_id,
+                "title": "Research Competitor Websites",
+                "description": "Analyze competitor designs and features",
+                "priority": "low",
+                "due_date": (date.today() + timedelta(days=14)).isoformat()
+            }
+        ]
+        
+        for task_data in tasks_to_create:
+            created_task = self.test_request("POST", "/tasks", task_data, 200, f"Create Task - {task_data['priority']} priority")
+            
+            if created_task:
+                self.test_data['tasks'].append(created_task)
+                self.log(f"✅ Created task with {task_data['priority']} priority")
+        
+        if self.test_data['tasks']:
+            task_id = self.test_data['tasks'][0]['id']
+            
+            # Test Get All Tasks
+            all_tasks = self.test_request("GET", "/tasks", test_name="Get All Tasks")
+            
+            if all_tasks:
+                self.log(f"✅ Retrieved {len(all_tasks)} tasks")
+            
+            # Test Get Tasks by Project
+            project_tasks = self.test_request("GET", f"/tasks?project_id={project_id}", test_name="Get Tasks by Project")
+            
+            if project_tasks:
+                self.log(f"✅ Retrieved {len(project_tasks)} tasks for project")
+            
+            # Test Get Single Task
+            single_task = self.test_request("GET", f"/tasks/{task_id}", test_name="Get Single Task")
+            
+            if single_task:
+                self.log(f"✅ Retrieved task: {single_task['title']}")
+            
+            # Test Task Completion
+            completion_update = {"completed": True}
+            completed_task = self.test_request("PUT", f"/tasks/{task_id}", completion_update, 200, "Mark Task as Completed")
+            
+            if completed_task and completed_task['completed']:
+                self.log("✅ Task marked as completed successfully")
+                
+                # Test uncompleting task
+                uncompletion_update = {"completed": False}
+                uncompleted_task = self.test_request("PUT", f"/tasks/{task_id}", uncompletion_update, 200, "Mark Task as Uncompleted")
+                
+                if uncompleted_task and not uncompleted_task['completed']:
+                    self.log("✅ Task marked as uncompleted successfully")
+            
+            # Test Priority Update
+            priority_update = {"priority": "high"}
+            updated_task = self.test_request("PUT", f"/tasks/{task_id}", priority_update, 200, "Update Task Priority")
+            
+            if updated_task and updated_task['priority'] == "high":
+                self.log("✅ Task priority updated successfully")
+    
+    def test_ideas_crud(self):
+        """Test Ideas CRUD operations with image data and Pinterest URLs"""
+        self.log("\n=== Testing Ideas CRUD ===")
+        
+        if not self.test_data['projects']:
+            self.log("❌ No projects available for idea testing", "ERROR")
+            return
+        
+        project_id = self.test_data['projects'][0]['id']
+        
+        # Create sample base64 image data (small 1x1 pixel PNG)
+        sample_image_base64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+        
+        # Test Create Ideas
+        ideas_to_create = [
+            {
+                "project_id": project_id,
+                "title": "Modern Navigation Design",
+                "description": "Inspiration for clean, modern navigation patterns",
+                "image_data": sample_image_base64,
+                "pinterest_url": "https://pinterest.com/pin/modern-nav-design",
+                "tags": ["navigation", "modern", "clean"]
+            },
+            {
+                "project_id": project_id,
+                "title": "Color Palette Ideas",
+                "description": "Trending color combinations for web design",
+                "pinterest_url": "https://pinterest.com/pin/color-palette-2024",
+                "tags": ["colors", "palette", "trending"]
+            }
+        ]
+        
+        for idea_data in ideas_to_create:
+            created_idea = self.test_request("POST", "/ideas", idea_data, 200, f"Create Idea - {idea_data['title']}")
+            
+            if created_idea:
+                self.test_data['ideas'].append(created_idea)
+                self.log(f"✅ Created idea: {idea_data['title']}")
+        
+        if self.test_data['ideas']:
+            idea_id = self.test_data['ideas'][0]['id']
+            
+            # Test Get All Ideas
+            all_ideas = self.test_request("GET", "/ideas", test_name="Get All Ideas")
+            
+            if all_ideas:
+                self.log(f"✅ Retrieved {len(all_ideas)} ideas")
+            
+            # Test Get Ideas by Project
+            project_ideas = self.test_request("GET", f"/ideas?project_id={project_id}", test_name="Get Ideas by Project")
+            
+            if project_ideas:
+                self.log(f"✅ Retrieved {len(project_ideas)} ideas for project")
+            
+            # Test Get Single Idea
+            single_idea = self.test_request("GET", f"/ideas/{idea_id}", test_name="Get Single Idea")
+            
+            if single_idea:
+                self.log(f"✅ Retrieved idea: {single_idea['title']}")
+                
+                # Verify image data is preserved
+                if single_idea.get('image_data') == sample_image_base64:
+                    self.log("✅ Image data preserved correctly")
+                else:
+                    self.log("❌ Image data not preserved correctly", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test Update Idea
+            update_data = {
+                "project_id": project_id,
+                "title": "Updated Navigation Design",
+                "description": "Updated description with new insights",
+                "pinterest_url": "https://pinterest.com/pin/updated-nav-design",
+                "tags": ["navigation", "updated", "modern"]
+            }
+            
+            updated_idea = self.test_request("PUT", f"/ideas/{idea_id}", update_data, 200, "Update Idea")
+            
+            if updated_idea and updated_idea['title'] == update_data['title']:
+                self.log("✅ Idea updated successfully")
+    
+    def test_calendar_api(self):
+        """Test Calendar API for tasks with due dates"""
+        self.log("\n=== Testing Calendar API ===")
+        
+        calendar_data = self.test_request("GET", "/calendar", test_name="Get Calendar Data")
+        
+        if calendar_data:
+            self.log(f"✅ Retrieved {len(calendar_data)} calendar events")
+            
+            # Verify calendar event structure
+            if calendar_data:
+                event = calendar_data[0]
+                required_fields = ['id', 'title', 'date', 'priority', 'status', 'project_id']
+                
+                for field in required_fields:
+                    if field in event:
+                        self.log(f"✅ Calendar event has field '{field}': {event[field]}")
+                    else:
+                        self.log(f"❌ Calendar event missing field: {field}", "ERROR")
+                        self.failed_tests += 1
+        
+        return calendar_data
+    
+    def test_data_relationships(self):
+        """Test data relationships between projects, tasks, and ideas"""
+        self.log("\n=== Testing Data Relationships ===")
+        
+        if not self.test_data['projects']:
+            self.log("❌ No projects available for relationship testing", "ERROR")
+            return
+        
+        project_id = self.test_data['projects'][0]['id']
+        
+        # Get project with task counts
+        project = self.test_request("GET", f"/projects/{project_id}", test_name="Get Project with Task Counts")
+        
+        if project:
+            task_count = project.get('task_count', 0)
+            completed_tasks = project.get('completed_tasks', 0)
+            
+            self.log(f"✅ Project has {task_count} total tasks")
+            self.log(f"✅ Project has {completed_tasks} completed tasks")
+            
+            # Verify task counts match actual tasks
+            project_tasks = self.test_request("GET", f"/tasks?project_id={project_id}", test_name="Verify Task Count")
+            
+            if project_tasks and len(project_tasks) == task_count:
+                self.log("✅ Task count matches actual tasks")
+            else:
+                self.log(f"❌ Task count mismatch: expected {task_count}, got {len(project_tasks) if project_tasks else 0}", "ERROR")
+                self.failed_tests += 1
+    
+    def test_priority_system(self):
+        """Test all priority levels work correctly"""
+        self.log("\n=== Testing Priority System ===")
+        
+        priorities = ["high", "medium", "low"]
+        
+        for priority in priorities:
+            # Get tasks with specific priority
+            tasks = self.test_request("GET", f"/tasks", test_name=f"Get {priority} priority tasks")
+            
+            if tasks:
+                priority_tasks = [task for task in tasks if task.get('priority') == priority]
+                self.log(f"✅ Found {len(priority_tasks)} tasks with {priority} priority")
+    
+    def test_project_stats(self):
+        """Test project statistics and completion tracking"""
+        self.log("\n=== Testing Project Stats ===")
+        
+        # Get all projects and verify stats
+        projects = self.test_request("GET", "/projects", test_name="Get Projects with Stats")
+        
+        if projects:
+            for project in projects:
+                project_id = project['id']
+                task_count = project.get('task_count', 0)
+                completed_tasks = project.get('completed_tasks', 0)
+                
+                self.log(f"✅ Project '{project['name']}': {completed_tasks}/{task_count} tasks completed")
+                
+                if task_count > 0:
+                    completion_rate = (completed_tasks / task_count) * 100
+                    self.log(f"✅ Completion rate: {completion_rate:.1f}%")
+    
+    def cleanup_test_data(self):
+        """Clean up test data"""
+        self.log("\n=== Cleaning Up Test Data ===")
+        
+        # Delete test tasks
+        for task in self.test_data['tasks']:
+            self.test_request("DELETE", f"/tasks/{task['id']}", test_name=f"Delete Task {task['title']}")
+        
+        # Delete test ideas
+        for idea in self.test_data['ideas']:
+            self.test_request("DELETE", f"/ideas/{idea['id']}", test_name=f"Delete Idea {idea['title']}")
+        
+        # Delete test projects (this will also delete associated tasks and ideas)
+        for project in self.test_data['projects']:
+            self.test_request("DELETE", f"/projects/{project['id']}", test_name=f"Delete Project {project['name']}")
+    
+    def run_all_tests(self):
+        """Run all backend tests"""
+        self.log("🚀 Starting Comprehensive Backend API Testing")
+        self.log(f"Backend URL: {self.base_url}")
+        
+        try:
+            # Test in logical order
+            self.test_dashboard_stats()
+            self.test_projects_crud()
+            self.test_tasks_crud()
+            self.test_ideas_crud()
+            self.test_calendar_api()
+            self.test_data_relationships()
+            self.test_priority_system()
+            self.test_project_stats()
+            
+            # Clean up test data
+            self.cleanup_test_data()
+            
+        except Exception as e:
+            self.log(f"❌ Critical error during testing: {str(e)}", "ERROR")
+            self.failed_tests += 1
+        
+        # Final results
+        self.log("\n" + "="*50)
+        self.log("🏁 TESTING COMPLETE")
+        self.log(f"✅ Passed: {self.passed_tests}")
+        self.log(f"❌ Failed: {self.failed_tests}")
+        self.log(f"📊 Success Rate: {(self.passed_tests/(self.passed_tests + self.failed_tests)*100):.1f}%" if (self.passed_tests + self.failed_tests) > 0 else "No tests run")
+        self.log("="*50)
+        
+        return self.failed_tests == 0
+
+if __name__ == "__main__":
+    tester = TaskManagerTester()
+    success = tester.run_all_tests()
+    sys.exit(0 if success else 1)
