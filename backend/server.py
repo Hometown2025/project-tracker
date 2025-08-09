@@ -180,7 +180,13 @@ async def delete_project(project_id: str):
 async def create_task(task: TaskCreate):
     task_dict = task.dict()
     task_obj = Task(**task_dict)
-    await db.tasks.insert_one(task_obj.dict())
+    
+    # Convert task object to dict and handle date serialization
+    task_data = task_obj.dict()
+    if task_data.get('due_date'):
+        task_data['due_date'] = task_data['due_date'].isoformat() if hasattr(task_data['due_date'], 'isoformat') else str(task_data['due_date'])
+    
+    await db.tasks.insert_one(task_data)
     return task_obj
 
 @api_router.get("/tasks", response_model=List[Task])
