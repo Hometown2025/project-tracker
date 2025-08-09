@@ -1,52 +1,131 @@
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
 import axios from "axios";
+import Components from "./Components";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-const Home = () => {
-  const helloWorldApi = async () => {
+function App() {
+  const [currentView, setCurrentView] = useState('dashboard');
+  const [projects, setProjects] = useState([]);
+  const [tasks, setTasks] = useState([]);
+  const [ideas, setIdeas] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch data functions
+  const fetchProjects = async () => {
     try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
+      const response = await axios.get(`${API}/projects`);
+      setProjects(response.data);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    }
+  };
+
+  const fetchTasks = async (projectId = null) => {
+    try {
+      let url = `${API}/tasks`;
+      if (projectId) url += `?project_id=${projectId}`;
+      const response = await axios.get(url);
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
+
+  const fetchIdeas = async (projectId = null) => {
+    try {
+      let url = `${API}/ideas`;
+      if (projectId) url += `?project_id=${projectId}`;
+      const response = await axios.get(url);
+      setIdeas(response.data);
+    } catch (error) {
+      console.error('Error fetching ideas:', error);
+    }
+  };
+
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await axios.get(`${API}/dashboard`);
+      setDashboardStats(response.data);
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
     }
   };
 
   useEffect(() => {
-    helloWorldApi();
+    fetchProjects();
+    fetchDashboardStats();
+    fetchTasks();
+    fetchIdeas();
   }, []);
 
-  return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
-    </div>
-  );
-};
+  const refreshData = () => {
+    fetchProjects();
+    fetchDashboardStats();
+    fetchTasks();
+    fetchIdeas();
+  };
 
-function App() {
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
+      <Components.Navigation 
+        currentView={currentView} 
+        setCurrentView={setCurrentView}
+        projects={projects}
+        setSelectedProject={setSelectedProject}
+        selectedProject={selectedProject}
+      />
+      
+      <main className="main-content">
+        {currentView === 'dashboard' && (
+          <Components.Dashboard 
+            stats={dashboardStats}
+            projects={projects}
+            tasks={tasks}
+            setCurrentView={setCurrentView}
+            setSelectedProject={setSelectedProject}
+          />
+        )}
+        
+        {currentView === 'tasks' && (
+          <Components.TaskView 
+            tasks={tasks}
+            projects={projects}
+            selectedProject={selectedProject}
+            refreshData={refreshData}
+          />
+        )}
+        
+        {currentView === 'calendar' && (
+          <Components.CalendarView 
+            tasks={tasks}
+            projects={projects}
+            refreshData={refreshData}
+          />
+        )}
+        
+        {currentView === 'ideas' && (
+          <Components.IdeasBoard 
+            ideas={ideas}
+            projects={projects}
+            selectedProject={selectedProject}
+            refreshData={refreshData}
+          />
+        )}
+        
+        {currentView === 'projects' && (
+          <Components.ProjectView 
+            projects={projects}
+            refreshData={refreshData}
+            setSelectedProject={setSelectedProject}
+            setCurrentView={setCurrentView}
+          />
+        )}
+      </main>
     </div>
   );
 }
