@@ -214,6 +214,14 @@ async def get_task(task_id: str):
     task = await db.tasks.find_one({"id": task_id})
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Convert date string back to date object
+    if task.get('due_date') and isinstance(task['due_date'], str):
+        try:
+            task['due_date'] = datetime.fromisoformat(task['due_date']).date()
+        except:
+            pass
+    
     return Task(**task)
 
 @api_router.put("/tasks/{task_id}", response_model=Task)
