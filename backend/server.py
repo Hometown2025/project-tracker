@@ -198,6 +198,15 @@ async def get_tasks(project_id: Optional[str] = None, status: Optional[TaskStatu
         query["status"] = status
     
     tasks = await db.tasks.find(query).to_list(1000)
+    
+    # Convert date strings back to date objects for response
+    for task in tasks:
+        if task.get('due_date') and isinstance(task['due_date'], str):
+            try:
+                task['due_date'] = datetime.fromisoformat(task['due_date']).date()
+            except:
+                pass
+    
     return [Task(**task) for task in tasks]
 
 @api_router.get("/tasks/{task_id}", response_model=Task)
