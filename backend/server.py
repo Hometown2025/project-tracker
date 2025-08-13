@@ -940,13 +940,19 @@ async def create_task(task: TaskCreate, current_user: User = Depends(get_current
         if project:
             project_name = project["name"]
     
-    await send_notification(
-        NotificationType.TASK_CREATED,
-        "New Task Created",
-        f"Task '{task_obj.title}' has been created in {project_name} by {current_user.username}",
-        project_id=task_obj.project_id,
-        task_id=task_obj.id
-    )
+    if task_obj.project_id:
+        await send_notification_to_project_members(
+            NotificationType.TASK_CREATED,
+            "New Task Created",
+            f"Task '{task_obj.title}' has been created in {project_name} by {current_user.username}",
+            task_obj.project_id
+        )
+    else:
+        await send_notification_to_admins(
+            NotificationType.TASK_CREATED,
+            "New Task Created",
+            f"Task '{task_obj.title}' has been created in {project_name} by {current_user.username}"
+        )
     
     return task_obj
 
