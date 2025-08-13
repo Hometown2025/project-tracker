@@ -782,6 +782,10 @@ class TaskManagerTester:
         """Test date serialization and deserialization"""
         self.log("\n=== Testing Date Serialization/Deserialization ===")
         
+        if not self.admin_token:
+            self.log("❌ No admin token available for date serialization testing", "ERROR")
+            return
+        
         if not self.test_data['projects']:
             self.log("❌ No projects available for date serialization testing", "ERROR")
             return
@@ -799,7 +803,7 @@ class TaskManagerTester:
             "delivery_date": "2024-12-24"
         }
         
-        created_task = self.test_request("POST", "/tasks", test_task, 200, "Create Task for Date Testing")
+        created_task = self.test_request("POST", "/tasks", test_task, 200, "Create Task for Date Testing", auth_token=self.admin_token)
         
         if created_task:
             # Verify dates are properly stored and returned
@@ -817,7 +821,7 @@ class TaskManagerTester:
                 "delivery_date": "2024-12-28"
             }
             
-            updated_task = self.test_request("PUT", f"/tasks/{created_task['id']}", date_update, 200, "Update Task Dates")
+            updated_task = self.test_request("PUT", f"/tasks/{created_task['id']}", date_update, 200, "Update Task Dates", auth_token=self.admin_token)
             
             if updated_task:
                 for date_field in ['due_date', 'order_date', 'delivery_date']:
@@ -828,7 +832,7 @@ class TaskManagerTester:
                         self.failed_tests += 1
             
             # Clean up test task
-            self.test_request("DELETE", f"/tasks/{created_task['id']}", test_name="Delete Date Test Task")
+            self.test_request("DELETE", f"/tasks/{created_task['id']}", auth_token=self.admin_token, test_name="Delete Date Test Task")
     
     def test_backwards_compatibility(self):
         """Test backwards compatibility with existing functionality"""
