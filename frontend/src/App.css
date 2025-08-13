@@ -1180,6 +1180,40 @@ body {
   border: 1px solid #a7f3d0;
 }
 
+.project-status-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.project-stats-display {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 1rem;
+  color: #1a202c;
+  font-weight: 700;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .App {
