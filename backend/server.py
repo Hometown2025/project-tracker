@@ -1326,8 +1326,10 @@ async def get_task(task_id: str, current_user: User = Depends(get_current_user))
         elif not project_id and task.get("owner_id") != current_user.id:
             raise HTTPException(status_code=403, detail="Access denied")
     
-    # Deserialize dates for response
+    # Deserialize dates and add file count for response
     deserialize_dates(task)
+    file_count = await db.file_attachments.count_documents({"task_id": task_id})
+    task['file_count'] = file_count
     
     return Task(**task)
 
