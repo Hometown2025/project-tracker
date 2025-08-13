@@ -436,8 +436,12 @@ class TaskManagerTester:
                 self.test_data['projects'].append(created_project2)
     
     def test_tasks_crud(self):
-        """Test Enhanced Tasks CRUD operations with new date fields"""
+        """Test Enhanced Tasks CRUD operations with new date fields and authentication"""
         self.log("\n=== Testing Enhanced Tasks CRUD ===")
+        
+        if not self.admin_token:
+            self.log("❌ No admin token available for task CRUD testing", "ERROR")
+            return
         
         if not self.test_data['projects']:
             self.log("❌ No projects available for task testing", "ERROR")
@@ -445,7 +449,7 @@ class TaskManagerTester:
         
         project_id = self.test_data['projects'][0]['id']
         
-        # Test Create Tasks with enhanced date fields as requested
+        # Test Create Tasks with enhanced date fields as requested (Admin only)
         tasks_to_create = [
             {
                 "project_id": project_id,
@@ -474,7 +478,7 @@ class TaskManagerTester:
         ]
         
         for task_data in tasks_to_create:
-            created_task = self.test_request("POST", "/tasks", task_data, 200, f"Create Task - {task_data['title']}")
+            created_task = self.test_request("POST", "/tasks", task_data, 200, f"Create Task - {task_data['title']}", auth_token=self.admin_token)
             
             if created_task:
                 self.test_data['tasks'].append(created_task)
@@ -491,8 +495,8 @@ class TaskManagerTester:
         if self.test_data['tasks']:
             task_id = self.test_data['tasks'][0]['id']
             
-            # Test Get All Tasks
-            all_tasks = self.test_request("GET", "/tasks", test_name="Get All Tasks")
+            # Test Get All Tasks (with authentication)
+            all_tasks = self.test_request("GET", "/tasks", auth_token=self.admin_token, test_name="Get All Tasks")
             
             if all_tasks:
                 self.log(f"✅ Retrieved {len(all_tasks)} tasks")
@@ -507,25 +511,25 @@ class TaskManagerTester:
                         self.log(f"✅ Delivery date deserialized: {task['delivery_date']}")
             
             # Test Get Tasks by Project
-            project_tasks = self.test_request("GET", f"/tasks?project_id={project_id}", test_name="Get Tasks by Project")
+            project_tasks = self.test_request("GET", f"/tasks?project_id={project_id}", auth_token=self.admin_token, test_name="Get Tasks by Project")
             
             if project_tasks:
                 self.log(f"✅ Retrieved {len(project_tasks)} tasks for project")
             
             # Test Get Single Task
-            single_task = self.test_request("GET", f"/tasks/{task_id}", test_name="Get Single Task")
+            single_task = self.test_request("GET", f"/tasks/{task_id}", auth_token=self.admin_token, test_name="Get Single Task")
             
             if single_task:
                 self.log(f"✅ Retrieved task: {single_task['title']}")
             
-            # Test Enhanced Task Updates with new date fields
+            # Test Enhanced Task Updates with new date fields (Admin only)
             enhanced_update = {
                 "title": "Updated Website Launch",
                 "order_date": (date.today() + timedelta(days=2)).isoformat(),
                 "delivery_date": (date.today() + timedelta(days=14)).isoformat(),
                 "priority": "high"
             }
-            updated_task = self.test_request("PUT", f"/tasks/{task_id}", enhanced_update, 200, "Update Task with New Date Fields")
+            updated_task = self.test_request("PUT", f"/tasks/{task_id}", enhanced_update, 200, "Update Task with New Date Fields", auth_token=self.admin_token)
             
             if updated_task:
                 if updated_task.get('order_date') == enhanced_update['order_date']:
@@ -535,16 +539,16 @@ class TaskManagerTester:
                 if updated_task.get('title') == enhanced_update['title']:
                     self.log("✅ Task title updated successfully")
             
-            # Test Task Completion
+            # Test Task Completion (Admin only)
             completion_update = {"completed": True}
-            completed_task = self.test_request("PUT", f"/tasks/{task_id}", completion_update, 200, "Mark Task as Completed")
+            completed_task = self.test_request("PUT", f"/tasks/{task_id}", completion_update, 200, "Mark Task as Completed", auth_token=self.admin_token)
             
             if completed_task and completed_task['completed']:
                 self.log("✅ Task marked as completed successfully")
                 
                 # Test uncompleting task
                 uncompletion_update = {"completed": False}
-                uncompleted_task = self.test_request("PUT", f"/tasks/{task_id}", uncompletion_update, 200, "Mark Task as Uncompleted")
+                uncompleted_task = self.test_request("PUT", f"/tasks/{task_id}", uncompletion_update, 200, "Mark Task as Uncompleted", auth_token=self.admin_token)
                 
                 if uncompleted_task and not uncompleted_task['completed']:
                     self.log("✅ Task marked as uncompleted successfully")
