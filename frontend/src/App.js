@@ -83,6 +83,28 @@ const AppContent = () => {
     fetchIdeas();
   };
 
+  // Handle new notifications for toasts
+  useEffect(() => {
+    if (notifications.length > 0) {
+      const latestNotification = notifications[0];
+      
+      // Check if this notification is already being shown as a toast
+      const isAlreadyShown = activeToasts.some(toast => 
+        toast.id === latestNotification.id || 
+        (toast.created_at === latestNotification.created_at && toast.title === latestNotification.title)
+      );
+      
+      if (!isAlreadyShown) {
+        const toastId = latestNotification.id || `toast-${Date.now()}`;
+        setActiveToasts(prev => [...prev, { ...latestNotification, toastId }]);
+      }
+    }
+  }, [notifications]);
+
+  const removeToast = (toastId) => {
+    setActiveToasts(prev => prev.filter(toast => toast.toastId !== toastId));
+  };
+
   const handleLogout = () => {
     logout();
     setCurrentView('dashboard');
