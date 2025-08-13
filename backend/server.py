@@ -181,7 +181,34 @@ async def delete_project(project_id: str):
     
     return {"message": "Project deleted successfully"}
 
-# Task Routes
+# Helper function to serialize dates
+def serialize_dates(data):
+    """Convert date objects to ISO strings for MongoDB storage"""
+    if isinstance(data, dict):
+        result = {}
+        for key, value in data.items():
+            if isinstance(value, date) and not isinstance(value, datetime):
+                result[key] = value.isoformat()
+            elif isinstance(value, datetime):
+                result[key] = value
+            elif isinstance(value, dict):
+                result[key] = serialize_dates(value)
+            else:
+                result[key] = value
+        return result
+    return data
+
+def deserialize_dates(data, date_fields=['due_date', 'order_date', 'delivery_date']):
+    """Convert ISO date strings back to date objects"""
+    if isinstance(data, dict):
+        for field in date_fields:
+            if field in data and isinstance(data[field], str):
+                try:
+                    # Parse ISO date string to date object
+                    data[field] = datetime.fromisoformat(data[field]).date()
+                except (ValueError, TypeError):
+                    pass
+    return data
 @api_router.post("/tasks", response_model=Task)
 async def create_task(task: TaskCreate):
     task_dict = task.dict()
