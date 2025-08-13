@@ -389,6 +389,18 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
           onSuccess={refreshData}
         />
       )}
+
+      {showEditModal && editingTask && (
+        <EditTaskModal 
+          task={editingTask}
+          projects={projects}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingTask(null);
+          }}
+          onSuccess={refreshData}
+        />
+      )}
     </div>
   );
 };
