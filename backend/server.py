@@ -323,6 +323,168 @@ async def initialize_default_data():
         
         print("✅ Demo user created and assigned existing projects")
 
+# WebSocket endpoint
+@app.websocket("/ws/{user_id}")
+async def websocket_endpoint(websocket: WebSocket, user_id: str):
+    connection_id = await manager.connect(websocket, user_id)
+    print(f"WebSocket connected: User {user_id}, Connection {connection_id}")
+    
+    try:
+        while True:
+            # Keep connection alive
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        manager.disconnect(connection_id, user_id)
+        print(f"WebSocket disconnected: User {user_id}, Connection {connection_id}")
+
+# Message Routes
+@api_router.post("/messages")
+async def send_message(message_data: MessageCreate, current_user: User = Depends(get_current_user)):
+    """Send a message"""
+    # Find or create conversation
+    if message_data.recipient_type == "admin":
+        # User messaging admin - find existing conversation or create new one
+        existing_conv = await db.conversations.find_one({
+            "participants": {"$all": [current_user.id]},
+            "title": {"$regex": f"^Support.*{current_user.username}"}
+        })
+        
+        if not existing_conv:
+            # Create new conversation with admins
+            admin_users = await db.users.find({"role": "admin", "is_active": True}).to_list(1000)
+            admin_ids = [admin["id"] for admin in admin_users]
+            participants = [current_user.id] + admin_ids
+            
+            conversation = Conversation(
+                participants=participants,
+                title=f"Support Request - {current_user.username}",
+                created_by=current_user.id,
+                unread_count={admin_id: 0 for admin_id in admin_ids}
+            )
+            conversation.unread_count[current_user.id] = 0
+            
+            await db.conversations.insert_one(conversation.dict())
+            conversation_id = conversation.id
+        else:
+            conversation_id = existing_conv["id"]
+    else:
+        # Admin messaging specific user
+        if current_user.role != UserRole.ADMIN:
+            raise HTTPException(status_code=403, detail="Only admins can message specific users")
+        
+        # Find conversation between admin and user
+        existing_conv = await db.conversations.find_one({
+            "participants": {"$all": [current_user.id, message_data.recipient_id]}
+        })
+        
+        if not existing_conv:
+            conversation = Conversation(
+                participants=[current_user.id, message_data.recipient_id],
+                title=f"Admin Message - {current_user.username}",
+                created_by=current_user.id,
+                unread_count={current_user.id: 0, message_data.recipient_id: 0}
+            )
+            await db.conversations.insert_one(conversation.dict())
+            conversation_id = conversation.id
+        else:
+            conversation_id = existing_conv["id"]
+    
+    # Create message
+    message = Message(
+        conversation_id=conversation_id,
+        sender_id=current_user.id,
+        sender_name=current_user.username,
+        sender_role=current_user.role,
+        content=message_data.content
+    )
+    
+    await db.messages.insert_one(message.dict())
+    
+    # Update conversation last message time and unread counts
+    conversation = await db.conversations.find_one({"id": conversation_id})
+    unread_count = conversation.get("unread_count", {})
+    for participant_id in conversation["participants"]:
+        if participant_id != current_user.id:
+            unread_count[participant_id] = unread_count.get(participant_id, 0) + 1
+    
+    await db.conversations.update_one(
+        {"id": conversation_id},
+        {
+            "$set": {
+                "last_message_at": datetime.utcnow(),
+                "unread_count": unread_count
+            }
+        }
+    )
+    
+    # Send real-time notification
+    notification_data = {
+        "type": "message",
+        "data": {
+            "conversation_id": conversation_id,
+            "message": message.dict(),
+            "conversation_title": conversation["title"]
+        }
+    }
+    
+    # Send to all participants except sender
+    for participant_id in conversation["participants"]:
+        if participant_id != current_user.id:
+            await manager.send_personal_message(notification_data, participant_id)
+    
+    return message
+
+@api_router.get("/conversations")
+async def get_conversations(current_user: User = Depends(get_current_user)):
+    """Get user's conversations"""
+    conversations = await db.conversations.find({
+        "participants": current_user.id
+    }).sort("last_message_at", -1).to_list(1000)
+    
+    # Add last message to each conversation
+    for conv in conversations:
+        last_message = await db.messages.find_one(
+            {"conversation_id": conv["id"]},
+            sort=[("created_at", -1)]
+        )
+        conv["last_message"] = last_message
+        conv["unread_count_for_user"] = conv.get("unread_count", {}).get(current_user.id, 0)
+    
+    return conversations
+
+@api_router.get("/conversations/{conversation_id}/messages")
+async def get_messages(conversation_id: str, current_user: User = Depends(get_current_user)):
+    """Get messages in a conversation"""
+    # Verify user is participant
+    conversation = await db.conversations.find_one({"id": conversation_id})
+    if not conversation or current_user.id not in conversation["participants"]:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    messages = await db.messages.find({
+        "conversation_id": conversation_id
+    }).sort("created_at", 1).to_list(1000)
+    
+    # Mark messages as read for current user
+    await db.conversations.update_one(
+        {"id": conversation_id},
+        {"$set": {f"unread_count.{current_user.id}": 0}}
+    )
+    
+    return messages
+
+@api_router.post("/conversations/{conversation_id}/mark-read")
+async def mark_conversation_read(conversation_id: str, current_user: User = Depends(get_current_user)):
+    """Mark conversation as read"""
+    result = await db.conversations.update_one(
+        {"id": conversation_id, "participants": current_user.id},
+        {"$set": {f"unread_count.{current_user.id}": 0}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    return {"message": "Marked as read"}
+
 # Authentication Routes
 @api_router.post("/auth/login")
 async def login(login_data: UserLogin):
