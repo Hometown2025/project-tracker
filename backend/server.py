@@ -217,6 +217,14 @@ async def send_notification_to_project_members(notification_type: NotificationTy
     # Send to project members and admins
     await manager.broadcast_to_project_members(notification_data, project_id)
 
+# Helper function to send notifications to all admins (polling-based)
+async def send_notification_to_admins(notification_type: NotificationType, title: str, message: str):
+    """Send notification to all admin users via database storage"""
+    admin_users = await db.users.find({"role": "admin", "is_active": True}).to_list(1000)
+    
+    for admin in admin_users:
+        await create_notification(notification_type, title, message, admin["id"])
+
 # Helper function to create notifications in database (for polling)
 async def create_notification(notification_type: NotificationType, title: str, message: str, user_id: str):
     """Create a notification in the database for polling-based system"""
