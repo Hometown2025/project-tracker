@@ -12,7 +12,7 @@ const API = `${BACKEND_URL}/api`;
 
 // Main App Component (wrapped with auth)
 const AppContent = () => {
-  const { user, isAuthenticated, loading, logout, isAdmin } = useAuth();
+  const { user, isAuthenticated, loading, logout, isAdmin, notifications } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
@@ -21,6 +21,7 @@ const AppContent = () => {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [appLoading, setAppLoading] = useState(false);
+  const [activeToasts, setActiveToasts] = useState([]);
 
   // Fetch data functions
   const fetchProjects = async () => {
