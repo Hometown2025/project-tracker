@@ -543,9 +543,13 @@ def deserialize_dates(data, date_fields=['due_date', 'order_date', 'delivery_dat
     return data
 # Task Routes
 @api_router.post("/tasks", response_model=Task)
-async def create_task(task: TaskCreate):
+async def create_task(task: TaskCreate, current_user: User = Depends(get_current_user)):
+    """Create task (Admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can create tasks")
+    
     task_dict = task.dict()
-    task_obj = Task(**task_dict)
+    task_obj = Task(**task_dict, owner_id=current_user.id)
     
     # Serialize dates for MongoDB storage
     task_data = serialize_dates(task_obj.dict())
@@ -554,12 +558,24 @@ async def create_task(task: TaskCreate):
     return task_obj
 
 @api_router.get("/tasks", response_model=List[Task])
-async def get_tasks(project_id: Optional[str] = None, status: Optional[TaskStatus] = None):
+async def get_tasks(project_id: Optional[str] = None, status: Optional[TaskStatus] = None, current_user: User = Depends(get_current_user)):
+    """Get tasks - Admin sees all, Users see tasks from assigned projects only"""
     query = {}
     if project_id:
+        # Check if user has access to this project
+        if current_user.role != UserRole.ADMIN and project_id not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
         query["project_id"] = project_id
     if status:
         query["status"] = status
+    
+    # Apply user-specific filtering
+    if current_user.role != UserRole.ADMIN:
+        # Users only see tasks from projects they're assigned to or unassigned tasks they own
+        query["$or"] = [
+            {"project_id": {"$in": current_user.assigned_projects}},
+            {"project_id": None, "owner_id": current_user.id}
+        ]
     
     tasks = await db.tasks.find(query).to_list(1000)
     
@@ -570,10 +586,19 @@ async def get_tasks(project_id: Optional[str] = None, status: Optional[TaskStatu
     return [Task(**task) for task in tasks]
 
 @api_router.get("/tasks/{task_id}", response_model=Task)
-async def get_task(task_id: str):
+async def get_task(task_id: str, current_user: User = Depends(get_current_user)):
+    """Get single task"""
     task = await db.tasks.find_one({"id": task_id})
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Check permissions
+    if current_user.role != UserRole.ADMIN:
+        project_id = task.get("project_id")
+        if project_id and project_id not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
+        elif not project_id and task.get("owner_id") != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
     
     # Deserialize dates for response
     deserialize_dates(task)
@@ -581,7 +606,11 @@ async def get_task(task_id: str):
     return Task(**task)
 
 @api_router.put("/tasks/{task_id}", response_model=Task)
-async def update_task(task_id: str, updates: TaskUpdate):
+async def update_task(task_id: str, updates: TaskUpdate, current_user: User = Depends(get_current_user)):
+    """Update task (Admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can edit tasks")
+    
     update_dict = {k: v for k, v in updates.dict().items() if v is not None}
     
     # Handle task completion
@@ -609,7 +638,11 @@ async def update_task(task_id: str, updates: TaskUpdate):
     return Task(**updated_task)
 
 @api_router.delete("/tasks/{task_id}")
-async def delete_task(task_id: str):
+async def delete_task(task_id: str, current_user: User = Depends(get_current_user)):
+    """Delete task (Admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can delete tasks")
+    
     result = await db.tasks.delete_one({"id": task_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
