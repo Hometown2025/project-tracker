@@ -426,6 +426,11 @@ async def send_message(message_data: MessageCreate, current_user: User = Depends
         })
         
         if not existing_conv:
+            # Ensure recipient_id is valid
+            recipient = await db.users.find_one({"id": message_data.recipient_id, "is_active": True})
+            if not recipient:
+                raise HTTPException(status_code=404, detail="Recipient user not found")
+            
             conversation = Conversation(
                 participants=[current_user.id, message_data.recipient_id],
                 title=f"Admin Message - {current_user.username}",
