@@ -850,6 +850,22 @@ async def create_task(task: TaskCreate, current_user: User = Depends(get_current
     task_data = serialize_dates(task_obj.dict())
     
     await db.tasks.insert_one(task_data)
+    
+    # Send notification
+    project_name = "Unassigned"
+    if task_obj.project_id:
+        project = await db.projects.find_one({"id": task_obj.project_id})
+        if project:
+            project_name = project["name"]
+    
+    await send_notification(
+        NotificationType.TASK_CREATED,
+        "New Task Created",
+        f"Task '{task_obj.title}' has been created in {project_name} by {current_user.username}",
+        project_id=task_obj.project_id,
+        task_id=task_obj.id
+    )
+    
     return task_obj
 
 @api_router.get("/tasks", response_model=List[Task])
