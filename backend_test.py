@@ -34,6 +34,8 @@ class TaskManagerTester:
         self.demo_token = None
         self.admin_user = None
         self.demo_user = None
+        self.websocket_messages = []
+        self.websocket_connected = False
         
     def log(self, message, level="INFO"):
         """Log test messages"""
