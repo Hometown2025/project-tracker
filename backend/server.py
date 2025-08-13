@@ -1133,14 +1133,16 @@ async def get_projects(current_user: User = Depends(get_current_user)):
         # Users only see projects they're assigned to
         projects = await db.projects.find({"id": {"$in": current_user.assigned_projects}}).to_list(1000)
     
-    # Calculate task counts for each project
+    # Calculate task counts and file counts for each project
     for project in projects:
         project_id = project['id']
         total_tasks = await db.tasks.count_documents({"project_id": project_id})
         completed_tasks = await db.tasks.count_documents({"project_id": project_id, "completed": True})
+        file_count = await db.file_attachments.count_documents({"project_id": project_id})
         
         project['task_count'] = total_tasks
         project['completed_tasks'] = completed_tasks
+        project['file_count'] = file_count
     
     return [Project(**project) for project in projects]
 
