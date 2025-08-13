@@ -720,6 +720,180 @@ const ProjectView = ({ projects, refreshData, setSelectedProject, setCurrentView
   );
 };
 
+// Edit Task Modal
+const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    title: task.title || '',
+    description: task.description || '',
+    priority: task.priority || 'medium',
+    due_date: task.due_date || '',
+    order_date: task.order_date || '',
+    delivery_date: task.delivery_date || '',
+    project_id: task.project_id || ''
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Only send fields that have values or have been changed
+      const updateData = {};
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== '' && formData[key] !== null) {
+          updateData[key] = formData[key];
+        }
+      });
+
+      await axios.put(`${API}/tasks/${task.id}`, updateData);
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      try {
+        await axios.delete(`${API}/tasks/${task.id}`);
+        onSuccess();
+        onClose();
+      } catch (error) {
+        console.error('Error deleting task:', error);
+      }
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">Edit Task</h2>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-group">
+            <label className="form-label">Title</label>
+            <input 
+              type="text"
+              className="form-input"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea 
+              className="form-textarea"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              rows={3}
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Priority</label>
+              <select 
+                className="form-select"
+                value={formData.priority}
+                onChange={(e) => setFormData({...formData, priority: e.target.value})}
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Due Date</label>
+              <input 
+                type="date"
+                className="form-input"
+                value={formData.due_date}
+                onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Order Date</label>
+              <input 
+                type="date"
+                className="form-input"
+                value={formData.order_date}
+                onChange={(e) => setFormData({...formData, order_date: e.target.value})}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Delivery Date</label>
+              <input 
+                type="date"
+                className="form-input"
+                value={formData.delivery_date}
+                onChange={(e) => setFormData({...formData, delivery_date: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Project</label>
+            <select 
+              className="form-select"
+              value={formData.project_id}
+              onChange={(e) => setFormData({...formData, project_id: e.target.value})}
+              required
+            >
+              <option value="">Select a project</option>
+              {projects.map(project => (
+                <option key={project.id} value={project.id}>{project.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="task-status-section">
+            <div className="form-group">
+              <label className="form-label">Status</label>
+              <div className="task-status-display">
+                <span className={`status-badge status-${task.status}`}>
+                  {task.status?.replace('_', ' ').toUpperCase()}
+                </span>
+                {task.completed && (
+                  <span className="completion-badge">
+                    ✅ Completed {task.completed_date ? new Date(task.completed_date).toLocaleDateString() : ''}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="modal-actions">
+            <button 
+              type="button" 
+              className="btn-danger" 
+              onClick={handleDelete}
+            >
+              Delete Task
+            </button>
+            <div className="modal-actions-right">
+              <button type="button" className="btn-secondary" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Create Task Modal
 const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
