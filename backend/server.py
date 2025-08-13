@@ -851,11 +851,11 @@ async def update_project(project_id: str, updates: ProjectCreate, current_user: 
     updated_project = await db.projects.find_one({"id": project_id})
     
     # Send notification
-    await send_notification(
+    await send_notification_to_project_members(
         NotificationType.PROJECT_UPDATED,
         "Project Updated",
         f"Project '{updated_project['name']}' has been updated by {current_user.username}",
-        project_id=project_id
+        project_id
     )
     
     return Project(**updated_project)
