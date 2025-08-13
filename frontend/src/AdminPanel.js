@@ -253,6 +253,15 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setFormData({...formData, password: password});
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -261,6 +270,7 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
     try {
       await axios.post(`${API}/admin/users`, formData);
       onSuccess();
+      alert(`User "${formData.username}" created successfully!\n\nCredentials:\nUsername: ${formData.username}\nPassword: ${formData.password}\n\nPlease provide these credentials to the user.`);
     } catch (error) {
       setError(error.response?.data?.detail || 'Failed to create user');
     }
@@ -280,29 +290,51 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
           {error && (
             <div className="error-message">{error}</div>
           )}
+
+          <div className="form-note">
+            <p>Create login credentials for a new user. You can assign projects to regular users after creation.</p>
+          </div>
           
           <div className="form-group">
-            <label className="form-label">Username</label>
+            <label className="form-label">Username <span className="required">*</span></label>
             <input 
               type="text"
               className="form-input"
               value={formData.username}
               onChange={(e) => setFormData({...formData, username: e.target.value})}
+              placeholder="Enter username (e.g., john.doe)"
               required
               disabled={loading}
             />
+            <small className="form-hint">This will be used to log in to the system</small>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Password</label>
-            <input 
-              type="password"
-              className="form-input"
-              value={formData.password}
-              onChange={(e) => setFormData({...formData, password: e.target.value})}
-              required
-              disabled={loading}
-            />
+            <label className="form-label">Password <span className="required">*</span></label>
+            <div className="password-input-group">
+              <input 
+                type="text"
+                className="form-input"
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                placeholder="Enter password or generate one"
+                required
+                disabled={loading}
+              />
+              <button 
+                type="button" 
+                className="btn-generate"
+                onClick={generatePassword}
+                disabled={loading}
+                title="Generate secure password"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+            <small className="form-hint">You will provide this password to the user</small>
           </div>
 
           <div className="form-group">
@@ -312,21 +344,48 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
               className="form-input"
               value={formData.email}
               onChange={(e) => setFormData({...formData, email: e.target.value})}
+              placeholder="user@company.com"
               disabled={loading}
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Role</label>
+            <label className="form-label">Role <span className="required">*</span></label>
             <select 
               className="form-select"
               value={formData.role}
               onChange={(e) => setFormData({...formData, role: e.target.value})}
               disabled={loading}
             >
-              <option value="user">User</option>
-              <option value="admin">Admin</option>
+              <option value="user">Regular User - View assigned projects only</option>
+              <option value="admin">Administrator - Full system access</option>
             </select>
+          </div>
+
+          <div className="role-explanation">
+            {formData.role === 'user' ? (
+              <div className="role-note user-role-note">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <div>
+                  <strong>Regular User</strong>
+                  <p>Can view projects and tasks assigned by administrators. Cannot create, edit, or delete anything.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="role-note admin-role-note">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <div>
+                  <strong>Administrator</strong>
+                  <p>Full access to create, edit, and delete projects and tasks. Can manage users and assign project access.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="modal-actions">
@@ -334,10 +393,115 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
               Cancel
             </button>
             <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Creating...' : 'Create User'}
+              {loading ? 'Creating User...' : 'Create User'}
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+};
+
+const UserDetailsModal = ({ user, projects, onClose }) => {
+  const userProjects = projects.filter(p => user.assigned_projects?.includes(p.id));
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">User Details: {user.username}</h2>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        
+        <div className="modal-form">
+          <div className="user-details-content">
+            <div className="detail-section">
+              <h3>Account Information</h3>
+              <div className="detail-grid">
+                <div className="detail-item">
+                  <label>Username:</label>
+                  <span>{user.username}</span>
+                </div>
+                {user.email && (
+                  <div className="detail-item">
+                    <label>Email:</label>
+                    <span>{user.email}</span>
+                  </div>
+                )}
+                <div className="detail-item">
+                  <label>Role:</label>
+                  <span className={`role-badge role-${user.role}`}>
+                    {user.role === 'admin' ? 'Administrator' : 'Regular User'}
+                  </span>
+                </div>
+                <div className="detail-item">
+                  <label>Account Created:</label>
+                  <span>{new Date(user.created_date).toLocaleDateString()}</span>
+                </div>
+                {user.last_login && (
+                  <div className="detail-item">
+                    <label>Last Login:</label>
+                    <span>{new Date(user.last_login).toLocaleDateString()}</span>
+                  </div>
+                )}
+                <div className="detail-item">
+                  <label>Status:</label>
+                  <span className={`status-badge ${user.is_active ? 'active' : 'inactive'}`}>
+                    {user.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {user.role === 'user' && (
+              <div className="detail-section">
+                <h3>Project Access ({userProjects.length} projects)</h3>
+                {userProjects.length > 0 ? (
+                  <div className="assigned-projects">
+                    {userProjects.map(project => (
+                      <div key={project.id} className="assigned-project">
+                        <div 
+                          className="project-color-small" 
+                          style={{ backgroundColor: project.color }}
+                        ></div>
+                        <div className="project-info">
+                          <div className="project-name">{project.name}</div>
+                          <div className="project-description">{project.description || 'No description'}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="no-projects">
+                    <p>This user has not been assigned any projects yet.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {user.role === 'admin' && (
+              <div className="detail-section">
+                <h3>Administrator Access</h3>
+                <div className="admin-access-note">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <div>
+                    <p><strong>Full System Access</strong></p>
+                    <p>This administrator can view, create, edit, and delete all projects and tasks. They can also manage users and assign project access.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" className="btn-secondary" onClick={onClose}>
+              Close
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
