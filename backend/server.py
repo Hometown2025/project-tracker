@@ -227,6 +227,69 @@ async def create_notification(notification_type: NotificationType, title: str, m
     
     await db.notifications.insert_one(notification_dict)
 
+# File utility functions
+def get_file_extension(filename: str) -> str:
+    """Get file extension from filename"""
+    return filename.split('.')[-1].lower() if '.' in filename else ''
+
+def is_allowed_file(filename: str) -> bool:
+    """Check if file extension is allowed"""
+    extension = get_file_extension(filename)
+    return extension in ALLOWED_EXTENSIONS
+
+def is_image_file(filename: str) -> bool:
+    """Check if file is an image"""
+    extension = get_file_extension(filename)
+    image_extensions = {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico'}
+    return extension in image_extensions
+
+def get_file_type_category(filename: str) -> str:
+    """Get file type category for display purposes"""
+    extension = get_file_extension(filename)
+    
+    if extension in {'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico'}:
+        return 'image'
+    elif extension in {'pdf', 'doc', 'docx', 'txt', 'rtf', 'odt', 'pages'}:
+        return 'document'
+    elif extension in {'xls', 'xlsx', 'csv', 'ods', 'numbers'}:
+        return 'spreadsheet'
+    elif extension in {'ppt', 'pptx', 'odp', 'key'}:
+        return 'presentation'
+    elif extension in {'zip', 'rar', '7z', 'tar', 'gz', 'bz2'}:
+        return 'archive'
+    elif extension in {'mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg'}:
+        return 'audio'
+    elif extension in {'mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv'}:
+        return 'video'
+    elif extension in {'js', 'ts', 'py', 'html', 'css', 'json', 'xml', 'yaml', 'yml', 'php', 'cpp', 'c', 'java', 'go', 'rs', 'rb', 'swift', 'kt'}:
+        return 'code'
+    else:
+        return 'other'
+
+async def create_thumbnail(file_path: str, thumbnail_path: str) -> bool:
+    """Create thumbnail for image files"""
+    try:
+        with Image.open(file_path) as img:
+            # Convert to RGB if necessary
+            if img.mode in ('RGBA', 'LA', 'P'):
+                img = img.convert('RGB')
+            
+            # Create thumbnail (200x200)
+            img.thumbnail((200, 200), Image.Resampling.LANCZOS)
+            img.save(thumbnail_path, 'JPEG', quality=85)
+            return True
+    except Exception as e:
+        print(f"Error creating thumbnail: {e}")
+        return False
+
+def get_safe_filename(filename: str) -> str:
+    """Generate safe filename for storage"""
+    # Remove dangerous characters and limit length
+    safe_chars = "-_.abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    name, ext = os.path.splitext(filename)
+    safe_name = ''.join(c for c in name if c in safe_chars)[:50]
+    return f"{safe_name}{ext}" if safe_name else f"file{ext}"
+
 # Helper Functions
 def hash_password(password: str) -> str:
     """Hash password with salt"""
