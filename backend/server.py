@@ -323,19 +323,7 @@ async def initialize_default_data():
         
         print("✅ Demo user created and assigned existing projects")
 
-# WebSocket endpoint
-@app.websocket("/ws/{user_id}")
-async def websocket_endpoint(websocket: WebSocket, user_id: str):
-    connection_id = await manager.connect(websocket, user_id)
-    print(f"WebSocket connected: User {user_id}, Connection {connection_id}")
-    
-    try:
-        while True:
-            # Keep connection alive
-            await websocket.receive_text()
-    except WebSocketDisconnect:
-        manager.disconnect(connection_id, user_id)
-        print(f"WebSocket disconnected: User {user_id}, Connection {connection_id}")
+# WebSocket functionality removed - using polling-based notifications instead
 
 # Message Routes
 @api_router.post("/messages")
