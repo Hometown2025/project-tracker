@@ -118,6 +118,29 @@ class UserAssignment(BaseModel):
     user_id: str
     project_ids: List[str]
 
+# File Models
+class FileAttachment(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    filename: str
+    original_filename: str
+    file_size: int
+    file_type: str
+    mime_type: str
+    file_path: str
+    thumbnail_path: Optional[str] = None
+    project_id: Optional[str] = None
+    task_id: Optional[str] = None
+    uploaded_by: str
+    uploaded_at: datetime = Field(default_factory=datetime.utcnow)
+    is_image: bool = False
+
+class FileUploadResponse(BaseModel):
+    file_id: str
+    filename: str
+    file_size: int
+    file_type: str
+    upload_url: Optional[str] = None
+
 
 
 # Notification Models
