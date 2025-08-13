@@ -605,13 +605,15 @@ class TaskManagerTester:
         self.log(f"Backend URL: {self.base_url}")
         
         try:
-            # Test in logical order
+            # Test in logical order - Enhanced testing sequence
             self.test_dashboard_stats()
             self.test_projects_crud()
             self.test_tasks_crud()
-            self.test_ideas_crud()
+            self.test_date_serialization()
             self.test_calendar_api()
-            self.test_data_relationships()
+            self.test_backwards_compatibility()
+            self.test_data_relationships_enhanced()
+            self.test_ideas_crud()
             self.test_priority_system()
             self.test_project_stats()
             
