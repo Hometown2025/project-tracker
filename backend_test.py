@@ -881,9 +881,13 @@ class TaskManagerTester:
         """Clean up test data"""
         self.log("\n=== Cleaning Up Test Data ===")
         
+        if not self.admin_token:
+            self.log("❌ No admin token available for cleanup", "ERROR")
+            return
+        
         # Delete test tasks
         for task in self.test_data['tasks']:
-            self.test_request("DELETE", f"/tasks/{task['id']}", test_name=f"Delete Task {task['title']}")
+            self.test_request("DELETE", f"/tasks/{task['id']}", auth_token=self.admin_token, test_name=f"Delete Task {task['title']}")
         
         # Delete test ideas
         for idea in self.test_data['ideas']:
@@ -891,7 +895,12 @@ class TaskManagerTester:
         
         # Delete test projects (this will also delete associated tasks and ideas)
         for project in self.test_data['projects']:
-            self.test_request("DELETE", f"/projects/{project['id']}", test_name=f"Delete Project {project['name']}")
+            self.test_request("DELETE", f"/projects/{project['id']}", auth_token=self.admin_token, test_name=f"Delete Project {project['name']}")
+        
+        # Delete test users (but not admin/demo)
+        for user in self.test_data['users']:
+            if user['username'] not in ['admin', 'demo']:
+                self.test_request("DELETE", f"/admin/users/{user['id']}", auth_token=self.admin_token, test_name=f"Delete User {user['username']}")
     
     def run_all_tests(self):
         """Run all backend tests"""
