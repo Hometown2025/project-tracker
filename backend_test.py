@@ -1624,6 +1624,326 @@ class TaskManagerTester:
             if user['username'] not in ['admin', 'demo']:
                 self.test_request("DELETE", f"/admin/users/{user['id']}", auth_token=self.admin_token, test_name=f"Delete User {user['username']}")
     
+    def test_polling_based_notification_system(self):
+        """Test Polling-Based Notification System"""
+        self.log("\n=== Testing Polling-Based Notification System ===")
+        
+        if not self.admin_token or not self.demo_token:
+            self.log("❌ Missing admin or demo tokens for polling notification testing", "ERROR")
+            return
+        
+        # Test 1: Poll for notifications (should be empty initially)
+        initial_notifications = self.test_request("GET", "/notifications/poll", auth_token=self.demo_token, 
+                                                test_name="Poll Initial Notifications (Demo)")
+        
+        if initial_notifications is not None:
+            self.log(f"✅ Initial notifications poll successful: {len(initial_notifications)} notifications")
+        
+        # Test 2: Create a project to trigger notifications
+        test_project = {
+            "name": "Polling Notification Test Project",
+            "description": "Testing polling-based notifications",
+            "color": "#FF6B6B"
+        }
+        
+        # First assign demo user to receive notifications
+        if self.test_data.get('projects'):
+            existing_project_id = self.test_data['projects'][0]['id']
+            assignment_data = {
+                "user_id": self.demo_user['id'],
+                "project_ids": [existing_project_id]
+            }
+            
+            self.test_request("PUT", f"/admin/users/{self.demo_user['id']}/assign-projects", 
+                            assignment_data, 200, "Assign Demo User to Project for Notifications", 
+                            auth_token=self.admin_token)
+        
+        created_project = self.test_request("POST", "/projects", test_project, 200, 
+                                          "Create Project for Polling Notification Test", 
+                                          auth_token=self.admin_token)
+        
+        if created_project:
+            self.test_data['projects'].append(created_project)
+            project_id = created_project['id']
+            
+            # Assign demo user to this new project to receive notifications
+            assignment_data = {
+                "user_id": self.demo_user['id'],
+                "project_ids": [project_id]
+            }
+            
+            self.test_request("PUT", f"/admin/users/{self.demo_user['id']}/assign-projects", 
+                            assignment_data, 200, "Assign Demo User to New Project", 
+                            auth_token=self.admin_token)
+            
+            # Test 3: Poll for notifications after project creation
+            project_notifications = self.test_request("GET", "/notifications/poll", auth_token=self.demo_token, 
+                                                    test_name="Poll Notifications After Project Creation")
+            
+            if project_notifications:
+                project_created_notifications = [n for n in project_notifications 
+                                               if n.get('type') == 'project_created']
+                
+                if project_created_notifications:
+                    self.log("✅ Project creation notification found via polling")
+                    
+                    # Verify notification structure
+                    notification = project_created_notifications[0]
+                    required_fields = ['id', 'type', 'title', 'message', 'user_id', 'created_at', 'is_read']
+                    
+                    for field in required_fields:
+                        if field in notification:
+                            self.log(f"✅ Notification field '{field}': {notification[field]}")
+                        else:
+                            self.log(f"❌ Missing notification field: {field}", "ERROR")
+                            self.failed_tests += 1
+                else:
+                    self.log("❌ Project creation notification not found via polling", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 4: Update project and check for notifications
+            update_data = {
+                "name": "Updated Polling Notification Test Project",
+                "description": "Updated for polling notification testing",
+                "color": "#4ECDC4"
+            }
+            
+            updated_project = self.test_request("PUT", f"/projects/{project_id}", update_data, 200, 
+                                              "Update Project for Polling Notification Test", 
+                                              auth_token=self.admin_token)
+            
+            if updated_project:
+                # Poll for project update notifications
+                update_notifications = self.test_request("GET", "/notifications/poll", auth_token=self.demo_token, 
+                                                        test_name="Poll Notifications After Project Update")
+                
+                if update_notifications:
+                    project_updated_notifications = [n for n in update_notifications 
+                                                   if n.get('type') == 'project_updated']
+                    
+                    if project_updated_notifications:
+                        self.log("✅ Project update notification found via polling")
+                    else:
+                        self.log("❌ Project update notification not found via polling", "ERROR")
+                        self.failed_tests += 1
+            
+            # Test 5: Create task and check for notifications
+            test_task = {
+                "project_id": project_id,
+                "title": "Polling Notification Test Task",
+                "description": "Testing task notifications via polling",
+                "priority": "high"
+            }
+            
+            created_task = self.test_request("POST", "/tasks", test_task, 200, 
+                                           "Create Task for Polling Notification Test", 
+                                           auth_token=self.admin_token)
+            
+            if created_task:
+                self.test_data['tasks'].append(created_task)
+                task_id = created_task['id']
+                
+                # Poll for task creation notifications
+                task_notifications = self.test_request("GET", "/notifications/poll", auth_token=self.demo_token, 
+                                                      test_name="Poll Notifications After Task Creation")
+                
+                if task_notifications:
+                    task_created_notifications = [n for n in task_notifications 
+                                                if n.get('type') == 'task_created']
+                    
+                    if task_created_notifications:
+                        self.log("✅ Task creation notification found via polling")
+                    else:
+                        self.log("❌ Task creation notification not found via polling", "ERROR")
+                        self.failed_tests += 1
+                
+                # Test 6: Update task and check for notifications
+                task_update = {
+                    "title": "Updated Polling Notification Test Task",
+                    "priority": "medium"
+                }
+                
+                updated_task = self.test_request("PUT", f"/tasks/{task_id}", task_update, 200, 
+                                                "Update Task for Polling Notification Test", 
+                                                auth_token=self.admin_token)
+                
+                if updated_task:
+                    # Poll for task update notifications
+                    task_update_notifications = self.test_request("GET", "/notifications/poll", auth_token=self.demo_token, 
+                                                                test_name="Poll Notifications After Task Update")
+                    
+                    if task_update_notifications:
+                        task_updated_notifications = [n for n in task_update_notifications 
+                                                    if n.get('type') == 'task_updated']
+                        
+                        if task_updated_notifications:
+                            self.log("✅ Task update notification found via polling")
+                        else:
+                            self.log("❌ Task update notification not found via polling", "ERROR")
+                            self.failed_tests += 1
+                
+                # Test 7: Complete task and check for notifications
+                completion_update = {"completed": True}
+                
+                completed_task = self.test_request("PUT", f"/tasks/{task_id}", completion_update, 200, 
+                                                 "Complete Task for Polling Notification Test", 
+                                                 auth_token=self.admin_token)
+                
+                if completed_task:
+                    # Poll for task completion notifications
+                    completion_notifications = self.test_request("GET", "/notifications/poll", auth_token=self.demo_token, 
+                                                               test_name="Poll Notifications After Task Completion")
+                    
+                    if completion_notifications:
+                        task_completed_notifications = [n for n in completion_notifications 
+                                                      if n.get('type') == 'task_completed']
+                        
+                        if task_completed_notifications:
+                            self.log("✅ Task completion notification found via polling")
+                        else:
+                            self.log("❌ Task completion notification not found via polling", "ERROR")
+                            self.failed_tests += 1
+        
+        # Test 8: Mark notifications as read
+        mark_read_response = self.test_request("POST", "/notifications/mark-read", auth_token=self.demo_token, 
+                                             test_name="Mark All Notifications as Read")
+        
+        if mark_read_response:
+            self.log("✅ Notifications marked as read successfully")
+            
+            # Test 9: Verify notifications are marked as read
+            read_notifications = self.test_request("GET", "/notifications/poll", auth_token=self.demo_token, 
+                                                  test_name="Poll Notifications After Marking Read")
+            
+            if read_notifications is not None:
+                if len(read_notifications) == 0:
+                    self.log("✅ All notifications marked as read - polling returns empty list")
+                else:
+                    self.log(f"❌ {len(read_notifications)} notifications still unread after marking as read", "ERROR")
+                    self.failed_tests += 1
+        
+        # Test 10: Test admin polling (should receive notifications for all projects)
+        admin_notifications = self.test_request("GET", "/notifications/poll", auth_token=self.admin_token, 
+                                               test_name="Poll Notifications (Admin)")
+        
+        if admin_notifications is not None:
+            self.log(f"✅ Admin notifications poll successful: {len(admin_notifications)} notifications")
+    
+    def test_polling_based_message_system(self):
+        """Test Polling-Based Message System"""
+        self.log("\n=== Testing Polling-Based Message System ===")
+        
+        if not self.admin_token or not self.demo_token:
+            self.log("❌ Missing admin or demo tokens for polling message testing", "ERROR")
+            return
+        
+        # Test 1: Poll for unread messages (should be 0 initially)
+        initial_unread = self.test_request("GET", "/messages/poll", auth_token=self.demo_token, 
+                                         test_name="Poll Initial Unread Messages (Demo)")
+        
+        if initial_unread is not None:
+            initial_count = initial_unread.get('unread_count', 0)
+            self.log(f"✅ Initial unread message count: {initial_count}")
+        
+        # Test 2: Demo user sends message to admin
+        message_data = {
+            "content": "Testing polling-based message notifications from demo to admin",
+            "recipient_type": "admin"
+        }
+        
+        sent_message = self.test_request("POST", "/messages", message_data, 200, 
+                                       "Send Message for Polling Test", auth_token=self.demo_token)
+        
+        if sent_message:
+            conversation_id = sent_message['conversation_id']
+            self.log(f"✅ Message sent successfully, conversation ID: {conversation_id}")
+            
+            # Test 3: Admin polls for unread messages
+            admin_unread = self.test_request("GET", "/messages/poll", auth_token=self.admin_token, 
+                                           test_name="Poll Unread Messages (Admin)")
+            
+            if admin_unread is not None:
+                admin_unread_count = admin_unread.get('unread_count', 0)
+                if admin_unread_count > 0:
+                    self.log(f"✅ Admin has {admin_unread_count} unread messages after demo sent message")
+                else:
+                    self.log("❌ Admin should have unread messages but count is 0", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 4: Admin replies to demo user
+            admin_reply = {
+                "content": "Testing polling-based message notifications from admin to demo",
+                "recipient_type": "user",
+                "recipient_id": self.demo_user['id']
+            }
+            
+            admin_message = self.test_request("POST", "/messages", admin_reply, 200, 
+                                            "Admin Reply for Polling Test", auth_token=self.admin_token)
+            
+            if admin_message:
+                # Test 5: Demo user polls for unread messages
+                demo_unread = self.test_request("GET", "/messages/poll", auth_token=self.demo_token, 
+                                              test_name="Poll Unread Messages (Demo)")
+                
+                if demo_unread is not None:
+                    demo_unread_count = demo_unread.get('unread_count', 0)
+                    if demo_unread_count > 0:
+                        self.log(f"✅ Demo user has {demo_unread_count} unread messages after admin reply")
+                    else:
+                        self.log("❌ Demo user should have unread messages but count is 0", "ERROR")
+                        self.failed_tests += 1
+                
+                # Test 6: Mark conversation as read and verify polling
+                mark_read_response = self.test_request("POST", f"/conversations/{conversation_id}/mark-read", 
+                                                     auth_token=self.demo_token, 
+                                                     test_name="Mark Conversation as Read for Polling Test")
+                
+                if mark_read_response:
+                    # Test 7: Poll again to verify unread count decreased
+                    demo_unread_after = self.test_request("GET", "/messages/poll", auth_token=self.demo_token, 
+                                                        test_name="Poll Unread Messages After Marking Read")
+                    
+                    if demo_unread_after is not None:
+                        demo_unread_count_after = demo_unread_after.get('unread_count', 0)
+                        if demo_unread_count_after < demo_unread_count:
+                            self.log(f"✅ Unread message count decreased after marking as read: {demo_unread_count_after}")
+                        else:
+                            self.log(f"❌ Unread message count did not decrease: {demo_unread_count_after}", "ERROR")
+                            self.failed_tests += 1
+        
+        # Test 8: Test message notifications in notification polling
+        # Send another message to trigger message notification
+        another_message = {
+            "content": "Testing message notifications in notification polling system",
+            "recipient_type": "admin"
+        }
+        
+        sent_message2 = self.test_request("POST", "/messages", another_message, 200, 
+                                        "Send Message for Notification Polling Test", auth_token=self.demo_token)
+        
+        if sent_message2:
+            # Poll for notifications (should include message_received notification)
+            message_notifications = self.test_request("GET", "/notifications/poll", auth_token=self.admin_token, 
+                                                    test_name="Poll Notifications for Message Notifications")
+            
+            if message_notifications:
+                message_received_notifications = [n for n in message_notifications 
+                                                if n.get('type') == 'message_received']
+                
+                if message_received_notifications:
+                    self.log("✅ Message received notification found via notification polling")
+                    
+                    # Verify notification structure for message
+                    notification = message_received_notifications[0]
+                    if notification.get('title') == 'New Message':
+                        self.log("✅ Message notification has correct title")
+                    else:
+                        self.log(f"❌ Message notification has incorrect title: {notification.get('title')}", "ERROR")
+                        self.failed_tests += 1
+                else:
+                    self.log("❌ Message received notification not found via notification polling", "ERROR")
+                    self.failed_tests += 1
+
     def run_all_tests(self):
         """Run all backend tests including authentication and real-time messaging"""
         self.log("🚀 Starting Comprehensive Backend API Testing with Authentication and Real-time Features")
