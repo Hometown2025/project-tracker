@@ -331,23 +331,29 @@ async def delete_idea(idea_id: str):
 # Dashboard Route
 @api_router.get("/dashboard", response_model=DashboardStats)
 async def get_dashboard_stats():
-    today = datetime.utcnow().date()
+    today = date.today()
+    today_str = today.isoformat()
     
     total_projects = await db.projects.count_documents({})
     active_projects = await db.projects.count_documents({"status": ProjectStatus.ACTIVE})
     total_tasks = await db.tasks.count_documents({})
     completed_tasks = await db.tasks.count_documents({"completed": True})
     
-    # Count overdue tasks
+    # Count overdue tasks (check all date fields)
     overdue_tasks = await db.tasks.count_documents({
-        "due_date": {"$lt": today},
-        "completed": False
+        "$or": [
+            {"due_date": {"$lt": today_str}, "completed": False},
+            {"delivery_date": {"$lt": today_str}, "completed": False}
+        ]
     })
     
-    # Count tasks due today
+    # Count tasks due today (check all date fields)
     today_tasks = await db.tasks.count_documents({
-        "due_date": today,
-        "completed": False
+        "$or": [
+            {"due_date": today_str, "completed": False},
+            {"order_date": today_str},
+            {"delivery_date": today_str, "completed": False}
+        ]
     })
     
     ideas_count = await db.ideas.count_documents({})
