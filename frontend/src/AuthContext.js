@@ -27,6 +27,15 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  // Start polling when authenticated
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      startPolling();
+    } else {
+      stopPolling();
+    }
+  }, [isAuthenticated, token]);
+
   // Polling for notifications and messages
   const startPolling = () => {
     if (pollIntervalRef.current) return; // Already polling
