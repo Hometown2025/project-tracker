@@ -425,15 +425,24 @@ class DashboardStats(BaseModel):
 
 # Project Routes
 @api_router.post("/projects", response_model=Project)
-async def create_project(project: ProjectCreate):
+async def create_project(project: ProjectCreate, current_user: User = Depends(get_current_user)):
+    """Create project (Admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can create projects")
+    
     project_dict = project.dict()
-    project_obj = Project(**project_dict)
+    project_obj = Project(**project_dict, owner_id=current_user.id)
     await db.projects.insert_one(project_obj.dict())
     return project_obj
 
 @api_router.get("/projects", response_model=List[Project])
-async def get_projects():
-    projects = await db.projects.find().to_list(1000)
+async def get_projects(current_user: User = Depends(get_current_user)):
+    """Get projects - Admin sees all, Users see assigned only"""
+    if current_user.role == UserRole.ADMIN:
+        projects = await db.projects.find().to_list(1000)
+    else:
+        # Users only see projects they're assigned to
+        projects = await db.projects.find({"id": {"$in": current_user.assigned_projects}}).to_list(1000)
     
     # Calculate task counts for each project
     for project in projects:
@@ -447,10 +456,15 @@ async def get_projects():
     return [Project(**project) for project in projects]
 
 @api_router.get("/projects/{project_id}", response_model=Project)
-async def get_project(project_id: str):
+async def get_project(project_id: str, current_user: User = Depends(get_current_user)):
+    """Get single project"""
     project = await db.projects.find_one({"id": project_id})
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Check permissions
+    if current_user.role != UserRole.ADMIN and project_id not in current_user.assigned_projects:
+        raise HTTPException(status_code=403, detail="Access denied")
     
     # Calculate task counts
     total_tasks = await db.tasks.count_documents({"project_id": project_id})
@@ -462,7 +476,11 @@ async def get_project(project_id: str):
     return Project(**project)
 
 @api_router.put("/projects/{project_id}", response_model=Project)
-async def update_project(project_id: str, updates: ProjectCreate):
+async def update_project(project_id: str, updates: ProjectCreate, current_user: User = Depends(get_current_user)):
+    """Update project (Admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can edit projects")
+    
     result = await db.projects.update_one(
         {"id": project_id},
         {"$set": updates.dict()}
@@ -474,7 +492,11 @@ async def update_project(project_id: str, updates: ProjectCreate):
     return Project(**updated_project)
 
 @api_router.delete("/projects/{project_id}")
-async def delete_project(project_id: str):
+async def delete_project(project_id: str, current_user: User = Depends(get_current_user)):
+    """Delete project (Admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can delete projects")
+    
     # Delete all tasks and ideas associated with the project
     await db.tasks.delete_many({"project_id": project_id})
     await db.ideas.delete_many({"project_id": project_id})
@@ -482,6 +504,12 @@ async def delete_project(project_id: str):
     result = await db.projects.delete_one({"id": project_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Remove project from all users' assigned projects
+    await db.users.update_many(
+        {"assigned_projects": project_id},
+        {"$pull": {"assigned_projects": project_id}}
+    )
     
     return {"message": "Project deleted successfully"}
 
