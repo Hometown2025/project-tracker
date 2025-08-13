@@ -209,15 +209,14 @@ def deserialize_dates(data, date_fields=['due_date', 'order_date', 'delivery_dat
                 except (ValueError, TypeError):
                     pass
     return data
+# Task Routes
 @api_router.post("/tasks", response_model=Task)
 async def create_task(task: TaskCreate):
     task_dict = task.dict()
     task_obj = Task(**task_dict)
     
-    # Convert task object to dict and handle date serialization
-    task_data = task_obj.dict()
-    if task_data.get('due_date'):
-        task_data['due_date'] = task_data['due_date'].isoformat() if hasattr(task_data['due_date'], 'isoformat') else str(task_data['due_date'])
+    # Serialize dates for MongoDB storage
+    task_data = serialize_dates(task_obj.dict())
     
     await db.tasks.insert_one(task_data)
     return task_obj
@@ -232,13 +231,9 @@ async def get_tasks(project_id: Optional[str] = None, status: Optional[TaskStatu
     
     tasks = await db.tasks.find(query).to_list(1000)
     
-    # Convert date strings back to date objects for response
+    # Deserialize dates for response
     for task in tasks:
-        if task.get('due_date') and isinstance(task['due_date'], str):
-            try:
-                task['due_date'] = datetime.fromisoformat(task['due_date']).date()
-            except:
-                pass
+        deserialize_dates(task)
     
     return [Task(**task) for task in tasks]
 
@@ -248,12 +243,8 @@ async def get_task(task_id: str):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     
-    # Convert date string back to date object
-    if task.get('due_date') and isinstance(task['due_date'], str):
-        try:
-            task['due_date'] = datetime.fromisoformat(task['due_date']).date()
-        except:
-            pass
+    # Deserialize dates for response
+    deserialize_dates(task)
     
     return Task(**task)
 
@@ -270,6 +261,9 @@ async def update_task(task_id: str, updates: TaskUpdate):
         if update_dict.get("status") == TaskStatus.COMPLETED:
             update_dict["status"] = TaskStatus.TODO
     
+    # Serialize dates for MongoDB storage
+    update_dict = serialize_dates(update_dict)
+    
     result = await db.tasks.update_one(
         {"id": task_id},
         {"$set": update_dict}
@@ -278,6 +272,8 @@ async def update_task(task_id: str, updates: TaskUpdate):
         raise HTTPException(status_code=404, detail="Task not found")
     
     updated_task = await db.tasks.find_one({"id": task_id})
+    deserialize_dates(updated_task)
+    
     return Task(**updated_task)
 
 @api_router.delete("/tasks/{task_id}")
