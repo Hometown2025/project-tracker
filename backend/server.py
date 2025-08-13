@@ -350,6 +350,7 @@ class Project(BaseModel):
     description: Optional[str] = None
     color: str = "#8B5CF6"  # Purple default
     status: ProjectStatus = ProjectStatus.ACTIVE
+    owner_id: Optional[str] = None  # User who owns this project
     created_date: datetime = Field(default_factory=datetime.utcnow)
     task_count: Optional[int] = 0
     completed_tasks: Optional[int] = 0
@@ -362,6 +363,7 @@ class ProjectCreate(BaseModel):
 class Task(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     project_id: Optional[str] = None
+    owner_id: Optional[str] = None  # User who owns this task
     title: str
     description: Optional[str] = None
     priority: Priority = Priority.MEDIUM
@@ -395,6 +397,7 @@ class TaskUpdate(BaseModel):
 class Idea(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     project_id: str
+    owner_id: Optional[str] = None  # User who owns this idea
     title: str
     description: Optional[str] = None
     image_data: Optional[str] = None  # Base64 encoded image
