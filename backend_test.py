@@ -838,6 +838,10 @@ class TaskManagerTester:
         """Test backwards compatibility with existing functionality"""
         self.log("\n=== Testing Backwards Compatibility ===")
         
+        if not self.admin_token:
+            self.log("❌ No admin token available for backwards compatibility testing", "ERROR")
+            return
+        
         if not self.test_data['projects']:
             self.log("❌ No projects available for backwards compatibility testing", "ERROR")
             return
@@ -853,7 +857,7 @@ class TaskManagerTester:
             "due_date": (date.today() + timedelta(days=5)).isoformat()
         }
         
-        created_task = self.test_request("POST", "/tasks", old_format_task, 200, "Create Task with Old Format")
+        created_task = self.test_request("POST", "/tasks", old_format_task, 200, "Create Task with Old Format", auth_token=self.admin_token)
         
         if created_task:
             self.log("✅ Old task format (due_date only) still works")
@@ -879,7 +883,7 @@ class TaskManagerTester:
                         self.log("✅ Due date event created for old format task")
             
             # Clean up test task
-            self.test_request("DELETE", f"/tasks/{created_task['id']}", test_name="Delete Backwards Compatibility Test Task")
+            self.test_request("DELETE", f"/tasks/{created_task['id']}", auth_token=self.admin_token, test_name="Delete Backwards Compatibility Test Task")
     
     def cleanup_test_data(self):
         """Clean up test data"""
