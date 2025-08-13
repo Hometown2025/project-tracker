@@ -1032,6 +1032,7 @@ class Project(BaseModel):
     created_date: datetime = Field(default_factory=datetime.utcnow)
     task_count: Optional[int] = 0
     completed_tasks: Optional[int] = 0
+    file_count: int = 0  # Computed field
 
 class ProjectCreate(BaseModel):
     name: str
