@@ -139,8 +139,8 @@ class TaskManagerTester:
                 self.test_data['projects'].append(created_project2)
     
     def test_tasks_crud(self):
-        """Test Tasks CRUD operations with priorities and due dates"""
-        self.log("\n=== Testing Tasks CRUD ===")
+        """Test Enhanced Tasks CRUD operations with new date fields"""
+        self.log("\n=== Testing Enhanced Tasks CRUD ===")
         
         if not self.test_data['projects']:
             self.log("❌ No projects available for task testing", "ERROR")
@@ -148,28 +148,31 @@ class TaskManagerTester:
         
         project_id = self.test_data['projects'][0]['id']
         
-        # Test Create Tasks with different priorities
+        # Test Create Tasks with enhanced date fields as requested
         tasks_to_create = [
             {
                 "project_id": project_id,
-                "title": "Design Homepage Layout",
-                "description": "Create wireframes and mockups for the new homepage",
+                "title": "Website Launch",
+                "description": "Complete website launch with all features",
                 "priority": "high",
+                "due_date": (date.today() + timedelta(days=15)).isoformat(),
+                "order_date": (date.today() + timedelta(days=5)).isoformat(),
+                "delivery_date": (date.today() + timedelta(days=12)).isoformat()
+            },
+            {
+                "project_id": project_id,
+                "title": "Design Review",
+                "description": "Review all design components and mockups",
+                "priority": "medium",
                 "due_date": (date.today() + timedelta(days=7)).isoformat()
             },
             {
                 "project_id": project_id,
-                "title": "Set up Development Environment",
-                "description": "Configure local development setup",
-                "priority": "medium",
-                "due_date": (date.today() + timedelta(days=3)).isoformat()
-            },
-            {
-                "project_id": project_id,
-                "title": "Research Competitor Websites",
-                "description": "Analyze competitor designs and features",
-                "priority": "low",
-                "due_date": (date.today() + timedelta(days=14)).isoformat()
+                "title": "Product Order",
+                "description": "Order required products and materials",
+                "priority": "high",
+                "order_date": (date.today() + timedelta(days=3)).isoformat(),
+                "delivery_date": (date.today() + timedelta(days=10)).isoformat()
             }
         ]
         
