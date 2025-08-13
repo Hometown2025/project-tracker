@@ -35,19 +35,23 @@ class TaskManagerTester:
         """Log test messages"""
         print(f"[{level}] {message}")
         
-    def test_request(self, method, endpoint, data=None, expected_status=200, test_name=""):
+    def test_request(self, method, endpoint, data=None, expected_status=200, test_name="", auth_token=None):
         """Make HTTP request and validate response"""
         url = f"{self.base_url}{endpoint}"
+        headers = {}
+        
+        if auth_token:
+            headers["Authorization"] = f"Bearer {auth_token}"
         
         try:
             if method.upper() == "GET":
-                response = self.session.get(url)
+                response = self.session.get(url, headers=headers)
             elif method.upper() == "POST":
-                response = self.session.post(url, json=data)
+                response = self.session.post(url, json=data, headers=headers)
             elif method.upper() == "PUT":
-                response = self.session.put(url, json=data)
+                response = self.session.put(url, json=data, headers=headers)
             elif method.upper() == "DELETE":
-                response = self.session.delete(url)
+                response = self.session.delete(url, headers=headers)
             else:
                 raise ValueError(f"Unsupported method: {method}")
                 
