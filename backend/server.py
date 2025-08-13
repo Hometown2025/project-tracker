@@ -73,7 +73,7 @@ class Task(BaseModel):
     completed_date: Optional[datetime] = None
 
 class TaskCreate(BaseModel):
-    project_id: str
+    project_id: Optional[str] = None
     title: str
     description: Optional[str] = None
     priority: Priority = Priority.MEDIUM
