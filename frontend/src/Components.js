@@ -240,6 +240,8 @@ const Dashboard = ({ stats, projects, tasks, setCurrentView, setSelectedProject 
 // Task View Component
 const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
   const [filterPriority, setFilterPriority] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
 
