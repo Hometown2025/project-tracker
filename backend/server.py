@@ -812,6 +812,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+@app.on_event("startup")
+async def startup_event():
+    """Initialize default data on startup"""
+    await initialize_default_data()
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
