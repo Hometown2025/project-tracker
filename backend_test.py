@@ -21,10 +21,15 @@ class TaskManagerTester:
         self.test_data = {
             'projects': [],
             'tasks': [],
-            'ideas': []
+            'ideas': [],
+            'users': []
         }
         self.passed_tests = 0
         self.failed_tests = 0
+        self.admin_token = None
+        self.demo_token = None
+        self.admin_user = None
+        self.demo_user = None
         
     def log(self, message, level="INFO"):
         """Log test messages"""
