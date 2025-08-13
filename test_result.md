@@ -134,6 +134,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "Real-time notification system implemented correctly with NotificationType enum (task_created, task_updated, task_completed, project_created, project_updated, message_received), Notification model with proper fields, and send_notification helper function. Notification triggers are properly integrated into CRUD operations for projects and tasks. Broadcasting logic correctly targets project members and admins. System would work perfectly with functional WebSocket connections."
+        - working: true
+          agent: "testing"
+          comment: "POLLING-BASED NOTIFICATION SYSTEM FULLY FUNCTIONAL: Updated system now uses database storage with polling endpoints instead of WebSocket broadcasting. GET /api/notifications/poll endpoint working perfectly (✅), POST /api/notifications/mark-read endpoint working (✅). Notifications properly created and stored in MongoDB for all task/project operations (create, update, complete). Correct user targeting implemented (project members + admins receive notifications). Database fields properly structured with is_read boolean field. Notification polling returns unread notifications only. Mark-as-read functionality updates is_read field correctly. Authentication integration working with role-based access control. System is production-ready."
 
   - task: "Message System Backend"
     implemented: true
