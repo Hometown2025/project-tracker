@@ -470,6 +470,14 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
               <h3 className="task-card-title">{task.title}</h3>
               {task.description && <p className="task-card-description">{task.description}</p>}
               
+              {/* File Manager for Tasks */}
+              {task.file_count > 0 && (
+                <FileManager 
+                  taskId={task.id}
+                  title={`Files (${task.file_count})`}
+                />
+              )}
+              
               <div className="task-card-footer">
                 <div className="task-project-section">
                   {project ? (
