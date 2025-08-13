@@ -340,11 +340,23 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
                     <span className="project-name-small">{project.name}</span>
                   </div>
                 )}
-                {task.due_date && (
-                  <span className="task-due-date">
-                    Due: {new Date(task.due_date).toLocaleDateString()}
-                  </span>
-                )}
+                <div className="task-dates">
+                  {task.due_date && (
+                    <span className="task-date task-due">
+                      📋 Due: {new Date(task.due_date).toLocaleDateString()}
+                    </span>
+                  )}
+                  {task.order_date && (
+                    <span className="task-date task-order">
+                      📦 Order: {new Date(task.order_date).toLocaleDateString()}
+                    </span>
+                  )}
+                  {task.delivery_date && (
+                    <span className="task-date task-delivery">
+                      🚚 Delivery: {new Date(task.delivery_date).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           );
