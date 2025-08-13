@@ -903,15 +903,22 @@ class TaskManagerTester:
                 self.test_request("DELETE", f"/admin/users/{user['id']}", auth_token=self.admin_token, test_name=f"Delete User {user['username']}")
     
     def run_all_tests(self):
-        """Run all backend tests"""
-        self.log("🚀 Starting Comprehensive Backend API Testing")
+        """Run all backend tests including authentication"""
+        self.log("🚀 Starting Comprehensive Backend API Testing with Authentication")
         self.log(f"Backend URL: {self.base_url}")
         
         try:
-            # Test in logical order - Enhanced testing sequence
+            # Test authentication first
+            self.test_user_initialization()
+            self.test_authentication_endpoints()
+            self.test_admin_user_management()
+            self.test_session_management()
+            
+            # Test in logical order - Enhanced testing sequence with authentication
             self.test_dashboard_stats()
             self.test_projects_crud()
             self.test_tasks_crud()
+            self.test_role_based_access_control()
             self.test_date_serialization()
             self.test_calendar_api()
             self.test_backwards_compatibility()
