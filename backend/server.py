@@ -456,6 +456,267 @@ async def poll_unread_messages(current_user: User = Depends(get_current_user)):
 
 # WebSocket functionality removed - using polling-based notifications instead
 
+# File Upload Routes
+@api_router.post("/files/upload", response_model=FileUploadResponse)
+async def upload_file(
+    file: UploadFile = File(...),
+    project_id: Optional[str] = Form(None),
+    task_id: Optional[str] = Form(None),
+    current_user: User = Depends(get_current_user)
+):
+    """Upload a file attachment"""
+    
+    # Validate file
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="No file provided")
+    
+    if not is_allowed_file(file.filename):
+        raise HTTPException(status_code=400, detail="File type not allowed")
+    
+    # Check file size
+    file_content = await file.read()
+    if len(file_content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB")
+    
+    # Reset file pointer
+    await file.seek(0)
+    
+    # Validate project/task permissions
+    if project_id:
+        project = await db.projects.find_one({"id": project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Check permissions
+        if current_user.role != UserRole.ADMIN and project_id not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    if task_id:
+        task = await db.tasks.find_one({"id": task_id})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        
+        # Check task permissions
+        if current_user.role != UserRole.ADMIN:
+            task_project_id = task.get("project_id")
+            if task_project_id and task_project_id not in current_user.assigned_projects:
+                raise HTTPException(status_code=403, detail="Access denied")
+            elif not task_project_id and task.get("owner_id") != current_user.id:
+                raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Generate file paths
+    file_id = str(uuid.uuid4())
+    file_extension = get_file_extension(file.filename)
+    safe_filename = f"{file_id}.{file_extension}"
+    
+    # Create directory structure
+    if project_id:
+        file_dir = UPLOAD_DIR / "projects" / project_id
+    elif task_id:
+        file_dir = UPLOAD_DIR / "tasks" / task_id
+    else:
+        file_dir = UPLOAD_DIR / "general"
+    
+    file_dir.mkdir(parents=True, exist_ok=True)
+    file_path = file_dir / safe_filename
+    
+    # Save file
+    async with aiofiles.open(file_path, 'wb') as f:
+        await f.write(file_content)
+    
+    # Create thumbnail for images
+    thumbnail_path = None
+    if is_image_file(file.filename):
+        thumbnail_filename = f"{file_id}_thumb.jpg"
+        thumbnail_path = file_dir / thumbnail_filename
+        await create_thumbnail(str(file_path), str(thumbnail_path))
+    
+    # Create file record
+    file_attachment = FileAttachment(
+        id=file_id,
+        filename=safe_filename,
+        original_filename=file.filename,
+        file_size=len(file_content),
+        file_type=get_file_type_category(file.filename),
+        mime_type=file.content_type or 'application/octet-stream',
+        file_path=str(file_path),
+        thumbnail_path=str(thumbnail_path) if thumbnail_path else None,
+        project_id=project_id,
+        task_id=task_id,
+        uploaded_by=current_user.id,
+        is_image=is_image_file(file.filename)
+    )
+    
+    await db.file_attachments.insert_one(file_attachment.dict())
+    
+    # Send notification
+    if project_id:
+        await send_notification_to_project_members(
+            NotificationType.PROJECT_UPDATED,
+            "File Uploaded",
+            f"File '{file.filename}' has been uploaded to project by {current_user.username}",
+            project_id
+        )
+    elif task_id:
+        task = await db.tasks.find_one({"id": task_id})
+        task_project_id = task.get("project_id") if task else None
+        
+        if task_project_id:
+            await send_notification_to_project_members(
+                NotificationType.TASK_UPDATED,
+                "File Uploaded",
+                f"File '{file.filename}' has been uploaded to task '{task['title']}' by {current_user.username}",
+                task_project_id
+            )
+        else:
+            await send_notification_to_admins(
+                NotificationType.TASK_UPDATED,
+                "File Uploaded",
+                f"File '{file.filename}' has been uploaded to task by {current_user.username}"
+            )
+    
+    return FileUploadResponse(
+        file_id=file_id,
+        filename=file.filename,
+        file_size=len(file_content),
+        file_type=get_file_type_category(file.filename)
+    )
+
+@api_router.get("/files/project/{project_id}")
+async def get_project_files(project_id: str, current_user: User = Depends(get_current_user)):
+    """Get all files for a project"""
+    # Check permissions
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    if current_user.role != UserRole.ADMIN and project_id not in current_user.assigned_projects:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    files = await db.file_attachments.find({"project_id": project_id}).to_list(1000)
+    
+    # Clean up MongoDB ObjectIds
+    for file_obj in files:
+        if "_id" in file_obj:
+            del file_obj["_id"]
+    
+    return files
+
+@api_router.get("/files/task/{task_id}")
+async def get_task_files(task_id: str, current_user: User = Depends(get_current_user)):
+    """Get all files for a task"""
+    # Check permissions
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    if current_user.role != UserRole.ADMIN:
+        task_project_id = task.get("project_id")
+        if task_project_id and task_project_id not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
+        elif not task_project_id and task.get("owner_id") != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    files = await db.file_attachments.find({"task_id": task_id}).to_list(1000)
+    
+    # Clean up MongoDB ObjectIds
+    for file_obj in files:
+        if "_id" in file_obj:
+            del file_obj["_id"]
+    
+    return files
+
+@api_router.get("/files/download/{file_id}")
+async def download_file(file_id: str, current_user: User = Depends(get_current_user)):
+    """Download a file"""
+    file_record = await db.file_attachments.find_one({"id": file_id})
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Check permissions based on project/task
+    if file_record.get("project_id"):
+        project_id = file_record["project_id"]
+        if current_user.role != UserRole.ADMIN and project_id not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif file_record.get("task_id"):
+        task = await db.tasks.find_one({"id": file_record["task_id"]})
+        if task and current_user.role != UserRole.ADMIN:
+            task_project_id = task.get("project_id")
+            if task_project_id and task_project_id not in current_user.assigned_projects:
+                raise HTTPException(status_code=403, detail="Access denied")
+            elif not task_project_id and task.get("owner_id") != current_user.id:
+                raise HTTPException(status_code=403, detail="Access denied")
+    
+    file_path = file_record["file_path"]
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    
+    return FileResponse(
+        path=file_path,
+        filename=file_record["original_filename"],
+        media_type=file_record["mime_type"]
+    )
+
+@api_router.get("/files/thumbnail/{file_id}")
+async def get_thumbnail(file_id: str, current_user: User = Depends(get_current_user)):
+    """Get thumbnail for an image file"""
+    file_record = await db.file_attachments.find_one({"id": file_id})
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    if not file_record.get("thumbnail_path"):
+        raise HTTPException(status_code=404, detail="Thumbnail not available")
+    
+    # Check permissions (same as download)
+    if file_record.get("project_id"):
+        project_id = file_record["project_id"]
+        if current_user.role != UserRole.ADMIN and project_id not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif file_record.get("task_id"):
+        task = await db.tasks.find_one({"id": file_record["task_id"]})
+        if task and current_user.role != UserRole.ADMIN:
+            task_project_id = task.get("project_id")
+            if task_project_id and task_project_id not in current_user.assigned_projects:
+                raise HTTPException(status_code=403, detail="Access denied")
+            elif not task_project_id and task.get("owner_id") != current_user.id:
+                raise HTTPException(status_code=403, detail="Access denied")
+    
+    thumbnail_path = file_record["thumbnail_path"]
+    if not os.path.exists(thumbnail_path):
+        raise HTTPException(status_code=404, detail="Thumbnail not found on disk")
+    
+    return FileResponse(
+        path=thumbnail_path,
+        media_type="image/jpeg"
+    )
+
+@api_router.delete("/files/{file_id}")
+async def delete_file(file_id: str, current_user: User = Depends(get_current_user)):
+    """Delete a file"""
+    file_record = await db.file_attachments.find_one({"id": file_id})
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Check permissions - only admin or file uploader can delete
+    if current_user.role != UserRole.ADMIN and file_record["uploaded_by"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Delete from database
+    await db.file_attachments.delete_one({"id": file_id})
+    
+    # Delete file from disk
+    try:
+        if os.path.exists(file_record["file_path"]):
+            os.remove(file_record["file_path"])
+        
+        # Delete thumbnail if exists
+        if file_record.get("thumbnail_path") and os.path.exists(file_record["thumbnail_path"]):
+            os.remove(file_record["thumbnail_path"])
+    except Exception as e:
+        print(f"Error deleting file from disk: {e}")
+    
+    return {"message": "File deleted successfully"}
+
 # Message Routes
 @api_router.post("/messages")
 async def send_message(message_data: MessageCreate, current_user: User = Depends(get_current_user)):
