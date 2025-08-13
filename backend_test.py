@@ -184,8 +184,10 @@ class TaskManagerTester:
             return
         
         # Test creating new user (admin only)
+        import time
+        unique_suffix = str(int(time.time()))
         new_user_data = {
-            "username": "test_user_auth",
+            "username": f"test_user_auth_{unique_suffix}",
             "password": "test_password_123",
             "email": "testuser@example.com",
             "role": "user"
