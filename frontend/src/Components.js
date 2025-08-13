@@ -1195,6 +1195,149 @@ const CreateIdeaModal = ({ projects, selectedProject, onClose, onSuccess }) => {
   );
 };
 
+// Edit Project Modal
+const EditProjectModal = ({ project, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    name: project.name || '',
+    description: project.description || '',
+    color: project.color || '#8B5CF6'
+  });
+
+  const colors = [
+    '#8B5CF6', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', 
+    '#8B5A2B', '#EC4899', '#6366F1', '#84CC16', '#F97316'
+  ];
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Only send fields that have values
+      const updateData = {};
+      Object.keys(formData).forEach(key => {
+        if (formData[key] && formData[key].trim() !== '') {
+          updateData[key] = formData[key];
+        }
+      });
+
+      await axios.put(`${API}/projects/${project.id}`, updateData);
+      onSuccess();
+      onClose();
+    } catch (error) {
+      console.error('Error updating project:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this project? This will also delete all associated tasks and ideas.')) {
+      try {
+        await axios.delete(`${API}/projects/${project.id}`);
+        onSuccess();
+        onClose();
+      } catch (error) {
+        console.error('Error deleting project:', error);
+      }
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">Edit Project</h2>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-group">
+            <label className="form-label">Project Name</label>
+            <input 
+              type="text"
+              className="form-input"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea 
+              className="form-textarea"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              rows={3}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Color</label>
+            <div className="color-picker">
+              {colors.map(color => (
+                <button
+                  key={color}
+                  type="button"
+                  className={`color-option ${formData.color === color ? 'selected' : ''}`}
+                  style={{ backgroundColor: color }}
+                  onClick={() => setFormData({...formData, color})}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="project-status-section">
+            <div className="form-group">
+              <label className="form-label">Project Statistics</label>
+              <div className="project-stats-display">
+                <div className="stat-item">
+                  <span className="stat-label">Total Tasks:</span>
+                  <span className="stat-value">{project.task_count || 0}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Completed Tasks:</span>
+                  <span className="stat-value">{project.completed_tasks || 0}</span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Progress:</span>
+                  <span className="stat-value">
+                    {project.task_count > 0 
+                      ? `${Math.round((project.completed_tasks / project.task_count) * 100)}%`
+                      : '0%'
+                    }
+                  </span>
+                </div>
+                <div className="stat-item">
+                  <span className="stat-label">Created:</span>
+                  <span className="stat-value">
+                    {new Date(project.created_date).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="modal-actions">
+            <button 
+              type="button" 
+              className="btn-danger" 
+              onClick={handleDelete}
+            >
+              Delete Project
+            </button>
+            <div className="modal-actions-right">
+              <button type="button" className="btn-secondary" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Create Project Modal
 const CreateProjectModal = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
