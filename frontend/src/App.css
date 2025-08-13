@@ -615,9 +615,17 @@ body {
   gap: 1rem;
 }
 
+.task-project-section {
+  flex-shrink: 0;
+}
+
 .task-project {
   display: flex;
   align-items: center;
+}
+
+.task-project.unassigned {
+  opacity: 0.7;
 }
 
 .project-color-small {
@@ -625,6 +633,11 @@ body {
   height: 0.5rem;
   border-radius: 50%;
   margin-right: 0.5rem;
+}
+
+.unassigned-color {
+  background: #94a3b8;
+  border: 1px solid #cbd5e1;
 }
 
 .project-name-small {
