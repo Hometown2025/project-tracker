@@ -12,6 +12,7 @@ const AdminPanel = ({ onClose }) => {
   const [loading, setLoading] = useState(true);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [showUserDetails, setShowUserDetails] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -59,6 +60,24 @@ const AdminPanel = ({ onClose }) => {
     }
   };
 
+  const deactivateUser = async (userId, username) => {
+    if (userId === user.id) {
+      alert('Cannot deactivate your own account');
+      return;
+    }
+    
+    if (window.confirm(`Are you sure you want to deactivate user "${username}"?`)) {
+      try {
+        await axios.delete(`${API}/admin/users/${userId}`);
+        setUsers(users.filter(u => u.id !== userId));
+        alert('User deactivated successfully');
+      } catch (error) {
+        console.error('Error deactivating user:', error);
+        alert('Failed to deactivate user');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="modal-overlay">
@@ -73,53 +92,97 @@ const AdminPanel = ({ onClose }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal admin-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">Admin Panel</h2>
+          <h2 className="modal-title">User Management</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         
         <div className="admin-content">
           <div className="admin-section">
             <div className="admin-section-header">
-              <h3>Users</h3>
+              <h3>System Users</h3>
               <button 
                 className="btn-primary btn-sm"
                 onClick={() => setShowCreateUser(true)}
               >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
                 Add User
               </button>
             </div>
             
             <div className="users-table">
               <div className="table-header">
-                <div>Username</div>
+                <div>User Info</div>
                 <div>Role</div>
-                <div>Assigned Projects</div>
+                <div>Access</div>
                 <div>Actions</div>
               </div>
               
               {users.map(u => (
                 <div key={u.id} className="table-row">
                   <div className="user-info">
-                    <span className="username">{u.username}</span>
-                    {u.email && <span className="user-email">{u.email}</span>}
+                    <div className="username-large">{u.username}</div>
+                    {u.email && <div className="user-email">{u.email}</div>}
+                    <div className="user-meta">
+                      Created: {new Date(u.created_date).toLocaleDateString()}
+                      {u.last_login && (
+                        <span> • Last login: {new Date(u.last_login).toLocaleDateString()}</span>
+                      )}
+                    </div>
                   </div>
                   <div>
                     <span className={`role-badge role-${u.role}`}>
-                      {u.role}
+                      {u.role === 'admin' ? 'Administrator' : 'User'}
                     </span>
                   </div>
                   <div>
-                    <span className="project-count">
-                      {u.assigned_projects?.length || 0} projects
-                    </span>
+                    {u.role === 'admin' ? (
+                      <span className="access-badge full-access">Full Access</span>
+                    ) : (
+                      <span className="access-badge limited-access">
+                        {u.assigned_projects?.length || 0} project{u.assigned_projects?.length !== 1 ? 's' : ''}
+                      </span>
+                    )}
                   </div>
-                  <div>
+                  <div className="action-buttons">
                     <button 
                       className="btn-secondary btn-sm"
-                      onClick={() => setSelectedUser(u)}
+                      onClick={() => setShowUserDetails(u)}
+                      title="View Details"
                     >
-                      Assign Projects
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
                     </button>
+                    {u.role !== 'admin' && (
+                      <button 
+                        className="btn-secondary btn-sm"
+                        onClick={() => setSelectedUser(u)}
+                        title="Assign Projects"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </button>
+                    )}
+                    {u.id !== user.id && (
+                      <button 
+                        className="btn-danger btn-sm"
+                        onClick={() => deactivateUser(u.id, u.username)}
+                        title="Deactivate User"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -139,7 +202,11 @@ const AdminPanel = ({ onClose }) => {
               </div>
               <div className="stat-card">
                 <div className="stat-number">{users.filter(u => u.role === 'admin').length}</div>
-                <div className="stat-label">Admins</div>
+                <div className="stat-label">Administrators</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-number">{users.filter(u => u.role === 'user').length}</div>
+                <div className="stat-label">Regular Users</div>
               </div>
             </div>
           </div>
@@ -161,6 +228,14 @@ const AdminPanel = ({ onClose }) => {
             projects={projects}
             onClose={() => setSelectedUser(null)}
             onAssign={assignProjects}
+          />
+        )}
+
+        {showUserDetails && (
+          <UserDetailsModal 
+            user={showUserDetails}
+            projects={projects}
+            onClose={() => setShowUserDetails(null)}
           />
         )}
       </div>
