@@ -1085,9 +1085,83 @@ body {
 
 .modal-actions {
   display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   margin-top: 2rem;
+}
+
+.modal-actions-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+  text-decoration: none;
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+}
+
+.task-status-section {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.task-status-display {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.status-todo {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.status-in_progress {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status-completed {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.completion-badge {
+  font-size: 0.75rem;
+  color: #059669;
+  background: #ecfdf5;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #a7f3d0;
 }
 
 /* Responsive Design */
