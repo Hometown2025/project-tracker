@@ -580,7 +580,8 @@ body {
 .task-card-footer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
+  gap: 1rem;
 }
 
 .task-project {
@@ -599,6 +600,36 @@ body {
   font-size: 0.75rem;
   color: #64748b;
   font-weight: 500;
+}
+
+.task-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+}
+
+.task-date {
+  font-size: 0.625rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.task-due {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.task-order {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.task-delivery {
+  background: #d1fae5;
+  color: #047857;
 }
 
 .task-due-date {
