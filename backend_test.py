@@ -380,42 +380,46 @@ class TaskManagerTester:
         return result
     
     def test_projects_crud(self):
-        """Test Projects CRUD operations"""
+        """Test Projects CRUD operations with authentication"""
         self.log("\n=== Testing Projects CRUD ===")
         
-        # Test Create Project
+        if not self.admin_token:
+            self.log("❌ No admin token available for project CRUD testing", "ERROR")
+            return
+        
+        # Test Create Project (Admin only)
         project_data = {
             "name": "Website Redesign Project",
             "description": "Complete redesign of company website with modern UI/UX",
             "color": "#3B82F6"
         }
         
-        created_project = self.test_request("POST", "/projects", project_data, 200, "Create Project")
+        created_project = self.test_request("POST", "/projects", project_data, 200, "Create Project", auth_token=self.admin_token)
         
         if created_project:
             self.test_data['projects'].append(created_project)
             project_id = created_project['id']
             
-            # Test Get All Projects
-            projects = self.test_request("GET", "/projects", test_name="Get All Projects")
+            # Test Get All Projects (with authentication)
+            projects = self.test_request("GET", "/projects", auth_token=self.admin_token, test_name="Get All Projects")
             
             if projects and len(projects) > 0:
                 self.log(f"✅ Retrieved {len(projects)} projects")
             
             # Test Get Single Project
-            single_project = self.test_request("GET", f"/projects/{project_id}", test_name="Get Single Project")
+            single_project = self.test_request("GET", f"/projects/{project_id}", auth_token=self.admin_token, test_name="Get Single Project")
             
             if single_project:
                 self.log(f"✅ Retrieved project: {single_project['name']}")
             
-            # Test Update Project
+            # Test Update Project (Admin only)
             update_data = {
                 "name": "Website Redesign Project - Updated",
                 "description": "Updated description with new requirements",
                 "color": "#10B981"
             }
             
-            updated_project = self.test_request("PUT", f"/projects/{project_id}", update_data, 200, "Update Project")
+            updated_project = self.test_request("PUT", f"/projects/{project_id}", update_data, 200, "Update Project", auth_token=self.admin_token)
             
             if updated_project and updated_project['name'] == update_data['name']:
                 self.log("✅ Project updated successfully")
@@ -427,7 +431,7 @@ class TaskManagerTester:
                 "color": "#8B5CF6"
             }
             
-            created_project2 = self.test_request("POST", "/projects", project_data2, 200, "Create Second Project")
+            created_project2 = self.test_request("POST", "/projects", project_data2, 200, "Create Second Project", auth_token=self.admin_token)
             if created_project2:
                 self.test_data['projects'].append(created_project2)
     
