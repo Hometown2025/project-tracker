@@ -710,8 +710,12 @@ class TaskManagerTester:
         """Test project statistics and completion tracking"""
         self.log("\n=== Testing Project Stats ===")
         
+        if not self.admin_token:
+            self.log("❌ No admin token available for project stats testing", "ERROR")
+            return
+        
         # Get all projects and verify stats
-        projects = self.test_request("GET", "/projects", test_name="Get Projects with Stats")
+        projects = self.test_request("GET", "/projects", auth_token=self.admin_token, test_name="Get Projects with Stats")
         
         if projects:
             for project in projects:
