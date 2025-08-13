@@ -1625,8 +1625,8 @@ class TaskManagerTester:
                 self.test_request("DELETE", f"/admin/users/{user['id']}", auth_token=self.admin_token, test_name=f"Delete User {user['username']}")
     
     def run_all_tests(self):
-        """Run all backend tests including authentication"""
-        self.log("🚀 Starting Comprehensive Backend API Testing with Authentication")
+        """Run all backend tests including authentication and real-time messaging"""
+        self.log("🚀 Starting Comprehensive Backend API Testing with Authentication and Real-time Features")
         self.log(f"Backend URL: {self.base_url}")
         
         try:
@@ -1636,7 +1636,7 @@ class TaskManagerTester:
             self.test_admin_user_management()
             self.test_session_management()
             
-            # Test in logical order - Enhanced testing sequence with authentication
+            # Test core functionality
             self.test_dashboard_stats()
             self.test_projects_crud()
             self.test_tasks_crud()
@@ -1648,6 +1648,15 @@ class TaskManagerTester:
             self.test_ideas_crud()
             self.test_priority_system()
             self.test_project_stats()
+            
+            # Test real-time messaging and WebSocket features
+            self.log("\n🔄 Testing Real-time Features...")
+            self.test_websocket_infrastructure()
+            self.test_message_system_backend()
+            self.test_real_time_notification_system()
+            self.test_message_real_time_broadcasting()
+            self.test_authentication_integration_with_messaging()
+            self.test_database_operations_messaging()
             
             # Clean up test data
             self.cleanup_test_data()
