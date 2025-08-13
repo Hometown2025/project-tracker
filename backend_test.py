@@ -412,18 +412,37 @@ class TaskManagerTester:
         
         return calendar_data
     
-    def test_data_relationships(self):
-        """Test data relationships between projects, tasks, and ideas"""
-        self.log("\n=== Testing Data Relationships ===")
+    def test_project_stats(self):
+        """Test project statistics and completion tracking"""
+        self.log("\n=== Testing Project Stats ===")
         
-        if not self.test_data['projects']:
-            self.log("❌ No projects available for relationship testing", "ERROR")
+        # Get all projects and verify stats
+        projects = self.test_request("GET", "/projects", test_name="Get Projects with Stats")
+        
+        if projects:
+            for project in projects:
+                project_id = project['id']
+                task_count = project.get('task_count', 0)
+                completed_tasks = project.get('completed_tasks', 0)
+                
+                self.log(f"✅ Project '{project['name']}': {completed_tasks}/{task_count} tasks completed")
+                
+                if task_count > 0:
+                    completion_rate = (completed_tasks / task_count) * 100
+                    self.log(f"✅ Completion rate: {completion_rate:.1f}%")
+    
+    def test_data_relationships_enhanced(self):
+        """Test enhanced data relationships with new date fields"""
+        self.log("\n=== Testing Enhanced Data Relationships ===")
+        
+        if not self.test_data['projects'] or not self.test_data['tasks']:
+            self.log("❌ No projects or tasks available for relationship testing", "ERROR")
             return
         
         project_id = self.test_data['projects'][0]['id']
         
         # Get project with task counts
-        project = self.test_request("GET", f"/projects/{project_id}", test_name="Get Project with Task Counts")
+        project = self.test_request("GET", f"/projects/{project_id}", test_name="Get Project with Enhanced Task Data")
         
         if project:
             task_count = project.get('task_count', 0)
@@ -433,13 +452,23 @@ class TaskManagerTester:
             self.log(f"✅ Project has {completed_tasks} completed tasks")
             
             # Verify task counts match actual tasks
-            project_tasks = self.test_request("GET", f"/tasks?project_id={project_id}", test_name="Verify Task Count")
+            project_tasks = self.test_request("GET", f"/tasks?project_id={project_id}", test_name="Verify Enhanced Task Count")
             
-            if project_tasks and len(project_tasks) == task_count:
-                self.log("✅ Task count matches actual tasks")
-            else:
-                self.log(f"❌ Task count mismatch: expected {task_count}, got {len(project_tasks) if project_tasks else 0}", "ERROR")
-                self.failed_tests += 1
+            if project_tasks:
+                # Count tasks with different date types
+                tasks_with_due_date = len([task for task in project_tasks if task.get('due_date')])
+                tasks_with_order_date = len([task for task in project_tasks if task.get('order_date')])
+                tasks_with_delivery_date = len([task for task in project_tasks if task.get('delivery_date')])
+                
+                self.log(f"✅ Tasks with due_date: {tasks_with_due_date}")
+                self.log(f"✅ Tasks with order_date: {tasks_with_order_date}")
+                self.log(f"✅ Tasks with delivery_date: {tasks_with_delivery_date}")
+                
+                if len(project_tasks) == task_count:
+                    self.log("✅ Task count matches actual tasks")
+                else:
+                    self.log(f"❌ Task count mismatch: expected {task_count}, got {len(project_tasks)}", "ERROR")
+                    self.failed_tests += 1
     
     def test_priority_system(self):
         """Test all priority levels work correctly"""
