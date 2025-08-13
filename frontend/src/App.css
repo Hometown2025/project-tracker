@@ -367,11 +367,27 @@ body {
   padding: 2rem;
   border: 1px solid #e2e8f0;
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .project-card-large:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.project-card-large:hover .project-edit {
+  opacity: 1;
+}
+
+.project-edit {
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.project-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .project-header {
