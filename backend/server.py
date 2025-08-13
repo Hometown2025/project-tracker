@@ -1049,21 +1049,33 @@ async def update_task(task_id: str, updates: TaskUpdate, current_user: User = De
             project_name = project["name"]
     
     if task_completed:
-        await send_notification(
-            NotificationType.TASK_COMPLETED,
-            "Task Completed",
-            f"Task '{updated_task['title']}' in {project_name} has been completed by {current_user.username}",
-            project_id=updated_task.get("project_id"),
-            task_id=task_id
-        )
+        if updated_task.get("project_id"):
+            await send_notification_to_project_members(
+                NotificationType.TASK_COMPLETED,
+                "Task Completed",
+                f"Task '{updated_task['title']}' in {project_name} has been completed by {current_user.username}",
+                updated_task["project_id"]
+            )
+        else:
+            await send_notification_to_admins(
+                NotificationType.TASK_COMPLETED,
+                "Task Completed",
+                f"Task '{updated_task['title']}' in {project_name} has been completed by {current_user.username}"
+            )
     else:
-        await send_notification(
-            NotificationType.TASK_UPDATED,
-            "Task Updated",
-            f"Task '{updated_task['title']}' in {project_name} has been updated by {current_user.username}",
-            project_id=updated_task.get("project_id"),
-            task_id=task_id
-        )
+        if updated_task.get("project_id"):
+            await send_notification_to_project_members(
+                NotificationType.TASK_UPDATED,
+                "Task Updated",
+                f"Task '{updated_task['title']}' in {project_name} has been updated by {current_user.username}",
+                updated_task["project_id"]
+            )
+        else:
+            await send_notification_to_admins(
+                NotificationType.TASK_UPDATED,
+                "Task Updated",
+                f"Task '{updated_task['title']}' in {project_name} has been updated by {current_user.username}"
+            )
     
     return Task(**updated_task)
 
