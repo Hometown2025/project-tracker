@@ -922,12 +922,19 @@ async def update_task(task_id: str, updates: TaskUpdate, current_user: User = De
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Only admins can edit tasks")
     
+    # Get the existing task first
+    existing_task = await db.tasks.find_one({"id": task_id})
+    if not existing_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
     update_dict = {k: v for k, v in updates.dict().items() if v is not None}
     
     # Handle task completion
-    if updates.completed is True:
+    task_completed = False
+    if updates.completed is True and not existing_task.get("completed", False):
         update_dict["completed_date"] = datetime.utcnow()
         update_dict["status"] = TaskStatus.COMPLETED
+        task_completed = True
     elif updates.completed is False:
         update_dict["completed_date"] = None
         if update_dict.get("status") == TaskStatus.COMPLETED:
@@ -945,6 +952,30 @@ async def update_task(task_id: str, updates: TaskUpdate, current_user: User = De
     
     updated_task = await db.tasks.find_one({"id": task_id})
     deserialize_dates(updated_task)
+    
+    # Send notification
+    project_name = "Unassigned"
+    if updated_task.get("project_id"):
+        project = await db.projects.find_one({"id": updated_task["project_id"]})
+        if project:
+            project_name = project["name"]
+    
+    if task_completed:
+        await send_notification(
+            NotificationType.TASK_COMPLETED,
+            "Task Completed",
+            f"Task '{updated_task['title']}' in {project_name} has been completed by {current_user.username}",
+            project_id=updated_task.get("project_id"),
+            task_id=task_id
+        )
+    else:
+        await send_notification(
+            NotificationType.TASK_UPDATED,
+            "Task Updated",
+            f"Task '{updated_task['title']}' in {project_name} has been updated by {current_user.username}",
+            project_id=updated_task.get("project_id"),
+            task_id=task_id
+        )
     
     return Task(**updated_task)
 
