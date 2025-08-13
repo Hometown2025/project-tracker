@@ -471,12 +471,10 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
               {task.description && <p className="task-card-description">{task.description}</p>}
               
               {/* File Manager for Tasks */}
-              {task.file_count > 0 && (
-                <FileManager 
-                  taskId={task.id}
-                  title={`Files (${task.file_count})`}
-                />
-              )}
+              <FileManager 
+                taskId={task.id}
+                title={`Files (${task.file_count || 0})`}
+              />
               
               <div className="task-card-footer">
                 <div className="task-project-section">
