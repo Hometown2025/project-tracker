@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Implement real-time updates and team communication with a message center for users to send messages to admins. Features to include: WebSocket infrastructure, real-time notifications for task/project changes, messaging system with conversation threads, notification UI components, and message center interface."
+user_problem_statement: "Test the comprehensive file attachment system that has been implemented. Please test the following backend functionality: File Upload Endpoints, File Retrieval Endpoints, File Management, Integration with Projects/Tasks, and Database Operations. Use existing admin/admin and demo/demo user accounts for testing."
 
 backend:
   - task: "WebSocket Infrastructure Setup"
