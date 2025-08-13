@@ -785,12 +785,12 @@ async def create_project(project: ProjectCreate, current_user: User = Depends(ge
     project_obj = Project(**project_dict, owner_id=current_user.id)
     await db.projects.insert_one(project_obj.dict())
     
-    # Send notification
-    await send_notification(
+    # Send notification to project members and admins
+    await send_notification_to_project_members(
         NotificationType.PROJECT_CREATED,
         "New Project Created",
         f"Project '{project_obj.name}' has been created by {current_user.username}",
-        project_id=project_obj.id
+        project_obj.id
     )
     
     return project_obj
