@@ -1157,12 +1157,14 @@ async def get_project(project_id: str, current_user: User = Depends(get_current_
     if current_user.role != UserRole.ADMIN and project_id not in current_user.assigned_projects:
         raise HTTPException(status_code=403, detail="Access denied")
     
-    # Calculate task counts
+    # Calculate task counts and file counts
     total_tasks = await db.tasks.count_documents({"project_id": project_id})
     completed_tasks = await db.tasks.count_documents({"project_id": project_id, "completed": True})
+    file_count = await db.file_attachments.count_documents({"project_id": project_id})
     
     project['task_count'] = total_tasks
     project['completed_tasks'] = completed_tasks
+    project['file_count'] = file_count
     
     return Project(**project)
 
