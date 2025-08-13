@@ -655,6 +655,8 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
     description: '',
     priority: 'medium',
     due_date: '',
+    order_date: '',
+    delivery_date: '',
     project_id: selectedProject?.id || ''
   });
 
@@ -720,6 +722,28 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
                 className="form-input"
                 value={formData.due_date}
                 onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Order Date</label>
+              <input 
+                type="date"
+                className="form-input"
+                value={formData.order_date}
+                onChange={(e) => setFormData({...formData, order_date: e.target.value})}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Delivery Date</label>
+              <input 
+                type="date"
+                className="form-input"
+                value={formData.delivery_date}
+                onChange={(e) => setFormData({...formData, delivery_date: e.target.value})}
               />
             </div>
           </div>
