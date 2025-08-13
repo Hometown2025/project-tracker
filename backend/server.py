@@ -199,6 +199,24 @@ async def send_notification(notification_type: NotificationType, title: str, mes
         # Send to all admins
         await manager.broadcast_to_admins(notification_data)
 
+# Helper function to send notifications to project members
+async def send_notification_to_project_members(notification_type: NotificationType, title: str, message: str, project_id: str):
+    """Send notification specifically to project members and admins"""
+    notification = Notification(
+        type=notification_type,
+        title=title,
+        message=message,
+        project_id=project_id
+    )
+    
+    notification_data = {
+        "type": "notification",
+        "data": notification.dict()
+    }
+    
+    # Send to project members and admins
+    await manager.broadcast_to_project_members(notification_data, project_id)
+
 # Helper function to create notifications in database (for polling)
 async def create_notification(notification_type: NotificationType, title: str, message: str, user_id: str):
     """Create a notification in the database for polling-based system"""
