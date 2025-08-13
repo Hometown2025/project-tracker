@@ -365,18 +365,61 @@ async def get_dashboard_stats():
 # Calendar data endpoint
 @api_router.get("/calendar")
 async def get_calendar_data():
-    tasks_with_dates = await db.tasks.find({"due_date": {"$exists": True, "$ne": None}}).to_list(1000)
+    tasks_with_dates = await db.tasks.find({
+        "$or": [
+            {"due_date": {"$exists": True, "$ne": None}},
+            {"order_date": {"$exists": True, "$ne": None}},
+            {"delivery_date": {"$exists": True, "$ne": None}}
+        ]
+    }).to_list(1000)
     
     calendar_events = []
     for task in tasks_with_dates:
-        calendar_events.append({
-            "id": task["id"],
-            "title": task["title"],
-            "date": task["due_date"].isoformat() if hasattr(task["due_date"], "isoformat") else str(task["due_date"]),
-            "priority": task["priority"],
-            "status": task["status"],
-            "project_id": task["project_id"]
-        })
+        # Deserialize dates
+        deserialize_dates(task)
+        
+        # Create events for each date type
+        if task.get("due_date"):
+            calendar_events.append({
+                "id": f"{task['id']}_due",
+                "task_id": task["id"],
+                "title": f"📋 {task['title']}",
+                "date": task["due_date"].isoformat(),
+                "priority": task["priority"],
+                "status": task["status"],
+                "project_id": task["project_id"],
+                "event_type": "due_date",
+                "event_label": "Due"
+            })
+        
+        if task.get("order_date"):
+            calendar_events.append({
+                "id": f"{task['id']}_order",
+                "task_id": task["id"],
+                "title": f"📦 Order: {task['title']}",
+                "date": task["order_date"].isoformat(),
+                "priority": task["priority"],
+                "status": task["status"],
+                "project_id": task["project_id"],
+                "event_type": "order_date",
+                "event_label": "Order"
+            })
+        
+        if task.get("delivery_date"):
+            calendar_events.append({
+                "id": f"{task['id']}_delivery",
+                "task_id": task["id"],
+                "title": f"🚚 Delivery: {task['title']}",
+                "date": task["delivery_date"].isoformat(),
+                "priority": task["priority"],
+                "status": task["status"],
+                "project_id": task["project_id"],
+                "event_type": "delivery_date",
+                "event_label": "Delivery"
+            })
+    
+    # Sort events by date
+    calendar_events.sort(key=lambda x: x["date"])
     
     return calendar_events
 
