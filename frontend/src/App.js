@@ -1,19 +1,42 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import axios from "axios";
+import { AuthProvider, useAuth } from "./AuthContext";
+import LoginPage from "./LoginPage";
+import AdminPanel from "./AdminPanel";
 import Components from "./Components";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
-function App() {
+// Main App Component (wrapped with auth)
+const AppContent = () => {
+  const { user, isAuthenticated, loading, logout, isAdmin } = useAuth();
   const [currentView, setCurrentView] = useState('dashboard');
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
   const [ideas, setIdeas] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [appLoading, setAppLoading] = useState(false);
+
+  // Show loading screen while checking authentication
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p>Loading TaskFlow...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
 
   // Fetch data functions
   const fetchProjects = async () => {
@@ -22,6 +45,9 @@ function App() {
       setProjects(response.data);
     } catch (error) {
       console.error('Error fetching projects:', error);
+      if (error.response?.status === 401) {
+        logout();
+      }
     }
   };
 
@@ -33,6 +59,9 @@ function App() {
       setTasks(response.data);
     } catch (error) {
       console.error('Error fetching tasks:', error);
+      if (error.response?.status === 401) {
+        logout();
+      }
     }
   };
 
@@ -44,6 +73,9 @@ function App() {
       setIdeas(response.data);
     } catch (error) {
       console.error('Error fetching ideas:', error);
+      if (error.response?.status === 401) {
+        logout();
+      }
     }
   };
 
@@ -53,15 +85,25 @@ function App() {
       setDashboardStats(response.data);
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
+      if (error.response?.status === 401) {
+        logout();
+      }
     }
   };
 
   useEffect(() => {
-    fetchProjects();
-    fetchDashboardStats();
-    fetchTasks();
-    fetchIdeas();
-  }, []);
+    if (isAuthenticated) {
+      setAppLoading(true);
+      Promise.all([
+        fetchProjects(),
+        fetchDashboardStats(),
+        fetchTasks(),
+        fetchIdeas()
+      ]).finally(() => {
+        setAppLoading(false);
+      });
+    }
+  }, [isAuthenticated]);
 
   const refreshData = () => {
     fetchProjects();
@@ -69,6 +111,27 @@ function App() {
     fetchTasks();
     fetchIdeas();
   };
+
+  const handleLogout = () => {
+    logout();
+    setCurrentView('dashboard');
+    setSelectedProject(null);
+    setProjects([]);
+    setTasks([]);
+    setIdeas([]);
+    setDashboardStats(null);
+  };
+
+  if (appLoading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p>Loading your projects...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="App">
@@ -78,6 +141,9 @@ function App() {
         projects={projects}
         setSelectedProject={setSelectedProject}
         selectedProject={selectedProject}
+        user={user}
+        onLogout={handleLogout}
+        onShowAdmin={() => setShowAdminPanel(true)}
       />
       
       <main className="main-content">
@@ -88,6 +154,7 @@ function App() {
             tasks={tasks}
             setCurrentView={setCurrentView}
             setSelectedProject={setSelectedProject}
+            user={user}
           />
         )}
         
@@ -97,6 +164,7 @@ function App() {
             projects={projects}
             selectedProject={selectedProject}
             refreshData={refreshData}
+            user={user}
           />
         )}
         
@@ -105,6 +173,7 @@ function App() {
             tasks={tasks}
             projects={projects}
             refreshData={refreshData}
+            user={user}
           />
         )}
         
@@ -114,6 +183,7 @@ function App() {
             projects={projects}
             selectedProject={selectedProject}
             refreshData={refreshData}
+            user={user}
           />
         )}
         
@@ -123,10 +193,24 @@ function App() {
             refreshData={refreshData}
             setSelectedProject={setSelectedProject}
             setCurrentView={setCurrentView}
+            user={user}
           />
         )}
       </main>
+
+      {showAdminPanel && (
+        <AdminPanel onClose={() => setShowAdminPanel(false)} />
+      )}
     </div>
+  );
+};
+
+// Main App with Auth Provider
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
