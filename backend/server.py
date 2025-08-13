@@ -1053,6 +1053,7 @@ class Task(BaseModel):
     completed: bool = False
     created_date: datetime = Field(default_factory=datetime.utcnow)
     completed_date: Optional[datetime] = None
+    file_count: int = 0  # Computed field
 
 class TaskCreate(BaseModel):
     project_id: Optional[str] = None
