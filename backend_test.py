@@ -455,24 +455,104 @@ class TaskManagerTester:
                 priority_tasks = [task for task in tasks if task.get('priority') == priority]
                 self.log(f"✅ Found {len(priority_tasks)} tasks with {priority} priority")
     
-    def test_project_stats(self):
-        """Test project statistics and completion tracking"""
-        self.log("\n=== Testing Project Stats ===")
+    def test_date_serialization(self):
+        """Test date serialization and deserialization"""
+        self.log("\n=== Testing Date Serialization/Deserialization ===")
         
-        # Get all projects and verify stats
-        projects = self.test_request("GET", "/projects", test_name="Get Projects with Stats")
+        if not self.test_data['projects']:
+            self.log("❌ No projects available for date serialization testing", "ERROR")
+            return
         
-        if projects:
-            for project in projects:
-                project_id = project['id']
-                task_count = project.get('task_count', 0)
-                completed_tasks = project.get('completed_tasks', 0)
-                
-                self.log(f"✅ Project '{project['name']}': {completed_tasks}/{task_count} tasks completed")
-                
-                if task_count > 0:
-                    completion_rate = (completed_tasks / task_count) * 100
-                    self.log(f"✅ Completion rate: {completion_rate:.1f}%")
+        project_id = self.test_data['projects'][0]['id']
+        
+        # Test task with all date types
+        test_task = {
+            "project_id": project_id,
+            "title": "Date Serialization Test Task",
+            "description": "Testing date handling",
+            "priority": "medium",
+            "due_date": "2024-12-25",
+            "order_date": "2024-12-20",
+            "delivery_date": "2024-12-24"
+        }
+        
+        created_task = self.test_request("POST", "/tasks", test_task, 200, "Create Task for Date Testing")
+        
+        if created_task:
+            # Verify dates are properly stored and returned
+            for date_field in ['due_date', 'order_date', 'delivery_date']:
+                if created_task.get(date_field) == test_task[date_field]:
+                    self.log(f"✅ {date_field} serialization/deserialization working: {created_task[date_field]}")
+                else:
+                    self.log(f"❌ {date_field} serialization failed: expected {test_task[date_field]}, got {created_task.get(date_field)}", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test updating dates
+            date_update = {
+                "due_date": "2024-12-30",
+                "order_date": "2024-12-22",
+                "delivery_date": "2024-12-28"
+            }
+            
+            updated_task = self.test_request("PUT", f"/tasks/{created_task['id']}", date_update, 200, "Update Task Dates")
+            
+            if updated_task:
+                for date_field in ['due_date', 'order_date', 'delivery_date']:
+                    if updated_task.get(date_field) == date_update[date_field]:
+                        self.log(f"✅ {date_field} update serialization working: {updated_task[date_field]}")
+                    else:
+                        self.log(f"❌ {date_field} update failed: expected {date_update[date_field]}, got {updated_task.get(date_field)}", "ERROR")
+                        self.failed_tests += 1
+            
+            # Clean up test task
+            self.test_request("DELETE", f"/tasks/{created_task['id']}", test_name="Delete Date Test Task")
+    
+    def test_backwards_compatibility(self):
+        """Test backwards compatibility with existing functionality"""
+        self.log("\n=== Testing Backwards Compatibility ===")
+        
+        if not self.test_data['projects']:
+            self.log("❌ No projects available for backwards compatibility testing", "ERROR")
+            return
+        
+        project_id = self.test_data['projects'][0]['id']
+        
+        # Test creating task with only due_date (old format)
+        old_format_task = {
+            "project_id": project_id,
+            "title": "Backwards Compatibility Test",
+            "description": "Testing old task format still works",
+            "priority": "low",
+            "due_date": (date.today() + timedelta(days=5)).isoformat()
+        }
+        
+        created_task = self.test_request("POST", "/tasks", old_format_task, 200, "Create Task with Old Format")
+        
+        if created_task:
+            self.log("✅ Old task format (due_date only) still works")
+            
+            # Verify new fields are None/null
+            if created_task.get('order_date') is None:
+                self.log("✅ order_date is None for old format task")
+            if created_task.get('delivery_date') is None:
+                self.log("✅ delivery_date is None for old format task")
+            
+            # Test that calendar still works with old format tasks
+            calendar_data = self.test_request("GET", "/calendar", test_name="Calendar with Mixed Task Formats")
+            
+            if calendar_data:
+                # Find our test task in calendar
+                test_events = [event for event in calendar_data if event.get('task_id') == created_task['id']]
+                if test_events:
+                    self.log(f"✅ Old format task appears in calendar: {len(test_events)} event(s)")
+                    
+                    # Should only have due_date event
+                    due_events = [event for event in test_events if event.get('event_type') == 'due_date']
+                    if due_events:
+                        self.log("✅ Due date event created for old format task")
+            
+            # Clean up test task
+            self.test_request("DELETE", f"/tasks/{created_task['id']}", test_name="Delete Backwards Compatibility Test Task")
     
     def cleanup_test_data(self):
         """Clean up test data"""
