@@ -772,11 +772,15 @@ class TaskManagerTester:
         """Test all priority levels work correctly"""
         self.log("\n=== Testing Priority System ===")
         
+        if not self.admin_token:
+            self.log("❌ No admin token available for priority system testing", "ERROR")
+            return
+        
         priorities = ["high", "medium", "low"]
         
         for priority in priorities:
             # Get tasks with specific priority
-            tasks = self.test_request("GET", f"/tasks", test_name=f"Get {priority} priority tasks")
+            tasks = self.test_request("GET", f"/tasks", auth_token=self.admin_token, test_name=f"Get {priority} priority tasks")
             
             if tasks:
                 priority_tasks = [task for task in tasks if task.get('priority') == priority]
