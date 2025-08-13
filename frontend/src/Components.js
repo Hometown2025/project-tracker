@@ -732,6 +732,17 @@ const ProjectView = ({ projects, refreshData, setSelectedProject, setCurrentView
           onSuccess={refreshData}
         />
       )}
+
+      {showEditModal && editingProject && (
+        <EditProjectModal 
+          project={editingProject}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingProject(null);
+          }}
+          onSuccess={refreshData}
+        />
+      )}
     </div>
   );
 };
