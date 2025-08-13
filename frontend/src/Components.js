@@ -378,15 +378,20 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
 // Calendar View Component
 const CalendarView = ({ tasks, projects, refreshData }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [calendarEvents, setCalendarEvents] = useState([]);
 
-  const tasksByDate = tasks.reduce((acc, task) => {
-    if (task.due_date) {
-      const dateKey = new Date(task.due_date).toDateString();
-      if (!acc[dateKey]) acc[dateKey] = [];
-      acc[dateKey].push(task);
+  useEffect(() => {
+    fetchCalendarEvents();
+  }, [tasks]);
+
+  const fetchCalendarEvents = async () => {
+    try {
+      const response = await axios.get(`${API}/calendar`);
+      setCalendarEvents(response.data);
+    } catch (error) {
+      console.error('Error fetching calendar events:', error);
     }
-    return acc;
-  }, {});
+  };
 
   const getDaysInMonth = (date) => {
     const year = date.getFullYear();
@@ -413,6 +418,14 @@ const CalendarView = ({ tasks, projects, refreshData }) => {
     return days;
   };
 
+  // Group events by date
+  const eventsByDate = calendarEvents.reduce((acc, event) => {
+    const dateKey = new Date(event.date).toDateString();
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(event);
+    return acc;
+  }, {});
+
   const days = getDaysInMonth(currentDate);
 
   return (
@@ -438,6 +451,22 @@ const CalendarView = ({ tasks, projects, refreshData }) => {
         </div>
       </div>
 
+      {/* Calendar Legend */}
+      <div className="calendar-legend">
+        <div className="legend-item">
+          <div className="legend-color due-date-color"></div>
+          <span>📋 Due Date</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-color order-date-color"></div>
+          <span>📦 Order Date</span>
+        </div>
+        <div className="legend-item">
+          <div className="legend-color delivery-date-color"></div>
+          <span>🚚 Delivery Date</span>
+        </div>
+      </div>
+
       <div className="calendar-grid">
         <div className="calendar-header">
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
@@ -448,7 +477,7 @@ const CalendarView = ({ tasks, projects, refreshData }) => {
         <div className="calendar-days">
           {days.map(({ date, isCurrentMonth }, index) => {
             const dateKey = date.toDateString();
-            const dayTasks = tasksByDate[dateKey] || [];
+            const dayEvents = eventsByDate[dateKey] || [];
             const isToday = date.toDateString() === new Date().toDateString();
             
             return (
@@ -458,20 +487,21 @@ const CalendarView = ({ tasks, projects, refreshData }) => {
               >
                 <div className="calendar-day-number">{date.getDate()}</div>
                 <div className="calendar-day-tasks">
-                  {dayTasks.slice(0, 3).map(task => {
-                    const project = projects.find(p => p.id === task.project_id);
+                  {dayEvents.slice(0, 3).map(event => {
+                    const project = projects.find(p => p.id === event.project_id);
                     return (
                       <div 
-                        key={task.id} 
-                        className={`calendar-task priority-${task.priority}`}
+                        key={event.id} 
+                        className={`calendar-event ${event.event_type} priority-${event.priority}`}
                         style={{ borderColor: project?.color || '#8B5CF6' }}
+                        title={`${event.title} (${event.event_label})`}
                       >
-                        {task.title}
+                        {event.title.length > 25 ? `${event.title.substring(0, 25)}...` : event.title}
                       </div>
                     );
                   })}
-                  {dayTasks.length > 3 && (
-                    <div className="calendar-task-more">+{dayTasks.length - 3} more</div>
+                  {dayEvents.length > 3 && (
+                    <div className="calendar-event-more">+{dayEvents.length - 3} more</div>
                   )}
                 </div>
               </div>
