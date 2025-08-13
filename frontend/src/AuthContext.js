@@ -32,46 +32,48 @@ export const AuthProvider = ({ children }) => {
     if (pollIntervalRef.current) return; // Already polling
     
     pollIntervalRef.current = setInterval(async () => {
-      if (isAuthenticated && token) {
-        try {
-          // Poll for notifications
-          const notificationsResponse = await axios.get(`${API}/notifications/poll`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          
-          // Update notifications if there are new ones
-          if (notificationsResponse.data.length > 0) {
-            setNotifications(prev => {
-              const newNotifications = notificationsResponse.data.filter(newNotif => 
-                !prev.some(existingNotif => existingNotif.id === newNotif.id)
-              );
-              
-              // Show browser notification for new notifications
-              newNotifications.forEach(notification => {
-                if (Notification.permission === 'granted') {
-                  new Notification(notification.title, {
-                    body: notification.message,
-                    icon: '/favicon.ico'
-                  });
-                }
-              });
-              
-              return [...newNotifications, ...prev.slice(0, 49)]; // Keep last 50
+      try {
+        const currentToken = localStorage.getItem('session_token');
+        if (!currentToken) return;
+        
+        // Poll for notifications
+        const notificationsResponse = await axios.get(`${API}/notifications/poll`, {
+          headers: { Authorization: `Bearer ${currentToken}` }
+        });
+        
+        // Update notifications if there are new ones
+        if (notificationsResponse.data.length > 0) {
+          setNotifications(prev => {
+            const newNotifications = notificationsResponse.data.filter(newNotif => 
+              !prev.some(existingNotif => existingNotif.id === newNotif.id)
+            );
+            
+            // Show browser notification for new notifications
+            newNotifications.forEach(notification => {
+              if (Notification.permission === 'granted') {
+                new Notification(notification.title, {
+                  body: notification.message,
+                  icon: '/favicon.ico'
+                });
+              }
             });
-          }
-          
-          // Poll for unread messages
-          const messagesResponse = await axios.get(`${API}/messages/poll`, {
-            headers: { Authorization: `Bearer ${token}` }
+            
+            return [...newNotifications, ...prev.slice(0, 49)]; // Keep last 50
           });
-          
-          setUnreadMessages(messagesResponse.data.unread_count);
-          
-        } catch (error) {
-          if (error.response?.status === 401) {
-            // Token expired, logout
-            logout();
-          }
+        }
+        
+        // Poll for unread messages
+        const messagesResponse = await axios.get(`${API}/messages/poll`, {
+          headers: { Authorization: `Bearer ${currentToken}` }
+        });
+        
+        setUnreadMessages(messagesResponse.data.unread_count);
+        
+      } catch (error) {
+        console.error('Polling error:', error);
+        if (error.response?.status === 401) {
+          // Token expired, logout
+          logout();
         }
       }
     }, 3000); // Poll every 3 seconds
