@@ -640,6 +640,8 @@ const IdeasBoard = ({ ideas, projects, selectedProject, refreshData }) => {
 // Project View Component
 const ProjectView = ({ projects, refreshData, setSelectedProject, setCurrentView }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProject, setEditingProject] = useState(null);
 
   return (
     <div className="project-view">
