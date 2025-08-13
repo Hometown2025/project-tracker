@@ -27,6 +27,36 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
+# File storage configuration
+UPLOAD_DIR = Path("/app/uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+# File size limit (50MB)
+MAX_FILE_SIZE = 50 * 1024 * 1024
+
+# Supported file types
+ALLOWED_EXTENSIONS = {
+    # Images
+    'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico',
+    # Documents
+    'pdf', 'doc', 'docx', 'txt', 'rtf', 'odt', 'pages',
+    # Spreadsheets
+    'xls', 'xlsx', 'csv', 'ods', 'numbers',
+    # Presentations
+    'ppt', 'pptx', 'odp', 'key',
+    # Archives
+    'zip', 'rar', '7z', 'tar', 'gz', 'bz2',
+    # Audio
+    'mp3', 'wav', 'flac', 'aac', 'm4a', 'ogg',
+    # Video
+    'mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv',
+    # Code
+    'js', 'ts', 'py', 'html', 'css', 'json', 'xml', 'yaml', 'yml',
+    'php', 'cpp', 'c', 'java', 'go', 'rs', 'rb', 'swift', 'kt',
+    # Other
+    'md', 'log', 'sql', 'sh', 'bat', 'ps1'
+}
+
 # Create the main app without a prefix
 app = FastAPI()
 
