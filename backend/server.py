@@ -323,6 +323,46 @@ async def initialize_default_data():
         
         print("✅ Demo user created and assigned existing projects")
 
+# Polling endpoints for notifications
+@api_router.get("/notifications/poll")
+async def poll_notifications(current_user: User = Depends(get_current_user)):
+    """Poll for new notifications"""
+    notifications = await db.notifications.find({
+        "user_id": current_user.id,
+        "is_read": False
+    }).sort("created_at", -1).to_list(50)
+    
+    # Clean up MongoDB ObjectIds
+    for notification in notifications:
+        if "_id" in notification:
+            del notification["_id"]
+    
+    return notifications
+
+@api_router.post("/notifications/mark-read")
+async def mark_notifications_read(current_user: User = Depends(get_current_user)):
+    """Mark all notifications as read for current user"""
+    await db.notifications.update_many(
+        {"user_id": current_user.id, "is_read": False},
+        {"$set": {"is_read": True}}
+    )
+    return {"message": "Notifications marked as read"}
+
+@api_router.get("/messages/poll")
+async def poll_unread_messages(current_user: User = Depends(get_current_user)):
+    """Poll for unread message count"""
+    # Count unread messages in conversations where user is participant
+    conversations = await db.conversations.find({
+        "participants": current_user.id
+    }).to_list(1000)
+    
+    total_unread = 0
+    for conv in conversations:
+        unread_count = conv.get("unread_count", {}).get(current_user.id, 0)
+        total_unread += unread_count
+    
+    return {"unread_count": total_unread}
+
 # WebSocket functionality removed - using polling-based notifications instead
 
 # Message Routes
