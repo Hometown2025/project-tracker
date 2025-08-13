@@ -220,23 +220,34 @@ class TaskManagerTester:
             self.test_request("GET", "/admin/users", expected_status=403, auth_token=self.demo_token, test_name="Get All Users (Demo - Should Fail)")
         
         # Test project assignment (admin only)
-        if created_user and self.test_data.get('projects'):
-            project_ids = [project['id'] for project in self.test_data['projects']]
-            assignment_data = {
-                "user_id": created_user['id'],
-                "project_ids": project_ids[:1]  # Assign first project
+        if created_user:
+            # First create a test project for assignment
+            test_project_for_assignment = {
+                "name": "Assignment Test Project",
+                "description": "Project for testing user assignment",
+                "color": "#FF9800"
             }
             
-            assignment_response = self.test_request("PUT", f"/admin/users/{created_user['id']}/assign-projects", 
-                                                  assignment_data, 200, "Assign Projects to User (Admin)", auth_token=self.admin_token)
+            assignment_project = self.test_request("POST", "/projects", test_project_for_assignment, 200, "Create Project for Assignment", auth_token=self.admin_token)
             
-            if assignment_response:
-                self.log("✅ Project assignment successful")
+            if assignment_project:
+                self.test_data['projects'].append(assignment_project)
                 
-                # Test that demo user cannot assign projects
-                if self.demo_token:
-                    self.test_request("PUT", f"/admin/users/{created_user['id']}/assign-projects", 
-                                    assignment_data, 403, "Assign Projects (Demo - Should Fail)", auth_token=self.demo_token)
+                assignment_data = {
+                    "user_id": created_user['id'],
+                    "project_ids": [assignment_project['id']]
+                }
+                
+                assignment_response = self.test_request("PUT", f"/admin/users/{created_user['id']}/assign-projects", 
+                                                      assignment_data, 200, "Assign Projects to User (Admin)", auth_token=self.admin_token)
+                
+                if assignment_response:
+                    self.log("✅ Project assignment successful")
+                    
+                    # Test that demo user cannot assign projects
+                    if self.demo_token:
+                        self.test_request("PUT", f"/admin/users/{created_user['id']}/assign-projects", 
+                                        assignment_data, 403, "Assign Projects (Demo - Should Fail)", auth_token=self.demo_token)
     
     def test_role_based_access_control(self):
         """Test role-based access control"""
