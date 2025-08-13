@@ -85,6 +85,120 @@ class UserAssignment(BaseModel):
     user_id: str
     project_ids: List[str]
 
+# WebSocket Connection Manager
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, WebSocket] = {}
+        self.user_connections: Dict[str, str] = {}  # user_id -> connection_id
+    
+    async def connect(self, websocket: WebSocket, user_id: str):
+        await websocket.accept()
+        connection_id = str(uuid.uuid4())
+        self.active_connections[connection_id] = websocket
+        self.user_connections[user_id] = connection_id
+        return connection_id
+    
+    def disconnect(self, connection_id: str, user_id: str):
+        if connection_id in self.active_connections:
+            del self.active_connections[connection_id]
+        if user_id in self.user_connections:
+            del self.user_connections[user_id]
+    
+    async def send_personal_message(self, message: dict, user_id: str):
+        if user_id in self.user_connections:
+            connection_id = self.user_connections[user_id]
+            if connection_id in self.active_connections:
+                try:
+                    await self.active_connections[connection_id].send_text(json.dumps(message))
+                except:
+                    # Connection is stale, clean it up
+                    self.disconnect(connection_id, user_id)
+    
+    async def broadcast_to_admins(self, message: dict):
+        # Get all admin users
+        admin_users = await db.users.find({"role": "admin", "is_active": True}).to_list(1000)
+        for admin in admin_users:
+            await self.send_personal_message(message, admin["id"])
+    
+    async def broadcast_to_project_members(self, message: dict, project_id: str):
+        # Get users assigned to this project
+        users = await db.users.find({"assigned_projects": project_id, "is_active": True}).to_list(1000)
+        for user in users:
+            await self.send_personal_message(message, user["id"])
+        
+        # Also send to all admins
+        await self.broadcast_to_admins(message)
+
+manager = ConnectionManager()
+
+# Notification Models
+class NotificationType(str, Enum):
+    TASK_CREATED = "task_created"
+    TASK_UPDATED = "task_updated"
+    TASK_COMPLETED = "task_completed"
+    PROJECT_CREATED = "project_created"
+    PROJECT_UPDATED = "project_updated"
+    MESSAGE_RECEIVED = "message_received"
+
+class Notification(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    type: NotificationType
+    title: str
+    message: str
+    user_id: Optional[str] = None
+    project_id: Optional[str] = None
+    task_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
+# Message Models
+class Message(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    conversation_id: str
+    sender_id: str
+    sender_name: str
+    sender_role: UserRole
+    content: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    is_read: bool = False
+
+class MessageCreate(BaseModel):
+    content: str
+    recipient_type: str = "admin"  # "admin" or "user"
+    recipient_id: Optional[str] = None
+
+class Conversation(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    participants: List[str]  # List of user IDs
+    title: str
+    created_by: str
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_message_at: datetime = Field(default_factory=datetime.utcnow)
+    unread_count: Dict[str, int] = {}  # user_id -> unread count
+
+# Helper function to send notifications
+async def send_notification(notification_type: NotificationType, title: str, message: str, 
+                           user_id: str = None, project_id: str = None, task_id: str = None):
+    notification = Notification(
+        type=notification_type,
+        title=title,
+        message=message,
+        user_id=user_id,
+        project_id=project_id,
+        task_id=task_id
+    )
+    
+    notification_data = {
+        "type": "notification",
+        "data": notification.dict()
+    }
+    
+    if project_id:
+        # Send to project members
+        await manager.broadcast_to_project_members(notification_data, project_id)
+    else:
+        # Send to all admins
+        await manager.broadcast_to_admins(notification_data)
+
 # Helper Functions
 def hash_password(password: str) -> str:
     """Hash password with salt"""
