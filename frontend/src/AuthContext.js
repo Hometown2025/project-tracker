@@ -117,9 +117,6 @@ export const AuthProvider = ({ children }) => {
         // Set default axios header
         axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         
-        // Start polling for notifications
-        startPolling();
-        
         // Request notification permission
         requestNotificationPermission();
         
