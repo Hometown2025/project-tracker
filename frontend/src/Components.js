@@ -1260,6 +1260,7 @@ export default {
   IdeasBoard,
   ProjectView,
   CreateTaskModal,
+  EditTaskModal,
   CreateIdeaModal,
   CreateProjectModal
 };
