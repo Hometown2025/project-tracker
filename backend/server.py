@@ -775,6 +775,15 @@ async def update_project(project_id: str, updates: ProjectCreate, current_user: 
         raise HTTPException(status_code=404, detail="Project not found")
     
     updated_project = await db.projects.find_one({"id": project_id})
+    
+    # Send notification
+    await send_notification(
+        NotificationType.PROJECT_UPDATED,
+        "Project Updated",
+        f"Project '{updated_project['name']}' has been updated by {current_user.username}",
+        project_id=project_id
+    )
+    
     return Project(**updated_project)
 
 @api_router.delete("/projects/{project_id}")
