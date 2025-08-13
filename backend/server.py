@@ -441,13 +441,25 @@ async def get_conversations(current_user: User = Depends(get_current_user)):
         "participants": current_user.id
     }).sort("last_message_at", -1).to_list(1000)
     
-    # Add last message to each conversation
+    # Add last message to each conversation and clean up data
     for conv in conversations:
+        # Remove MongoDB ObjectId if present
+        if "_id" in conv:
+            del conv["_id"]
+            
         last_message = await db.messages.find_one(
             {"conversation_id": conv["id"]},
             sort=[("created_at", -1)]
         )
-        conv["last_message"] = last_message
+        
+        if last_message:
+            # Remove MongoDB ObjectId from message if present
+            if "_id" in last_message:
+                del last_message["_id"]
+            conv["last_message"] = last_message
+        else:
+            conv["last_message"] = None
+            
         conv["unread_count_for_user"] = conv.get("unread_count", {}).get(current_user.id, 0)
     
     return conversations
