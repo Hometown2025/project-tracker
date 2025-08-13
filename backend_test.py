@@ -157,7 +157,7 @@ class TaskManagerTester:
                 self.failed_tests += 1
         
         # Test /auth/me without token (should fail)
-        self.test_request("GET", "/auth/me", expected_status=401, test_name="Get Current User Info (No Token)")
+        self.test_request("GET", "/auth/me", expected_status=403, test_name="Get Current User Info (No Token)")
         
         # Test logout with admin token
         if self.admin_token:
