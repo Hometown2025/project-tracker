@@ -65,6 +65,8 @@ class Task(BaseModel):
     description: Optional[str] = None
     priority: Priority = Priority.MEDIUM
     due_date: Optional[date] = None
+    order_date: Optional[date] = None
+    delivery_date: Optional[date] = None
     status: TaskStatus = TaskStatus.TODO
     completed: bool = False
     created_date: datetime = Field(default_factory=datetime.utcnow)
@@ -76,6 +78,8 @@ class TaskCreate(BaseModel):
     description: Optional[str] = None
     priority: Priority = Priority.MEDIUM
     due_date: Optional[date] = None
+    order_date: Optional[date] = None
+    delivery_date: Optional[date] = None
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
