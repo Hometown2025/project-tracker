@@ -461,20 +461,15 @@ async def send_message(message_data: MessageCreate, current_user: User = Depends
         }
     )
     
-    # Send real-time notification
-    notification_data = {
-        "type": "message",
-        "data": {
-            "conversation_id": conversation_id,
-            "message": message.dict(),
-            "conversation_title": conversation["title"]
-        }
-    }
-    
-    # Send to all participants except sender
+    # Send real-time notification via database (for polling)
     for participant_id in conversation["participants"]:
         if participant_id != current_user.id:
-            await manager.send_personal_message(notification_data, participant_id)
+            await create_notification(
+                NotificationType.MESSAGE_RECEIVED,
+                "New Message",
+                f"New message in {conversation['title']}",
+                participant_id
+            )
     
     return message
 
