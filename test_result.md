@@ -261,10 +261,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "WebSocket Client Integration"
     - "Message Center Interface"
   stuck_tasks:
-    - "WebSocket Client Integration"
     - "Message Center Interface"
   test_all: false
   test_priority: "stuck_first"
