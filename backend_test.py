@@ -177,11 +177,19 @@ class TaskManagerTester:
         ]
         
         for task_data in tasks_to_create:
-            created_task = self.test_request("POST", "/tasks", task_data, 200, f"Create Task - {task_data['priority']} priority")
+            created_task = self.test_request("POST", "/tasks", task_data, 200, f"Create Task - {task_data['title']}")
             
             if created_task:
                 self.test_data['tasks'].append(created_task)
-                self.log(f"✅ Created task with {task_data['priority']} priority")
+                self.log(f"✅ Created task: {task_data['title']}")
+                
+                # Verify new date fields are properly stored
+                if task_data.get('order_date') and created_task.get('order_date'):
+                    self.log(f"✅ Order date stored: {created_task['order_date']}")
+                if task_data.get('delivery_date') and created_task.get('delivery_date'):
+                    self.log(f"✅ Delivery date stored: {created_task['delivery_date']}")
+                if task_data.get('due_date') and created_task.get('due_date'):
+                    self.log(f"✅ Due date stored: {created_task['due_date']}")
         
         if self.test_data['tasks']:
             task_id = self.test_data['tasks'][0]['id']
@@ -191,6 +199,15 @@ class TaskManagerTester:
             
             if all_tasks:
                 self.log(f"✅ Retrieved {len(all_tasks)} tasks")
+                
+                # Verify date deserialization works
+                for task in all_tasks:
+                    if task.get('due_date'):
+                        self.log(f"✅ Due date deserialized: {task['due_date']}")
+                    if task.get('order_date'):
+                        self.log(f"✅ Order date deserialized: {task['order_date']}")
+                    if task.get('delivery_date'):
+                        self.log(f"✅ Delivery date deserialized: {task['delivery_date']}")
             
             # Test Get Tasks by Project
             project_tasks = self.test_request("GET", f"/tasks?project_id={project_id}", test_name="Get Tasks by Project")
@@ -203,6 +220,23 @@ class TaskManagerTester:
             
             if single_task:
                 self.log(f"✅ Retrieved task: {single_task['title']}")
+            
+            # Test Enhanced Task Updates with new date fields
+            enhanced_update = {
+                "title": "Updated Website Launch",
+                "order_date": (date.today() + timedelta(days=2)).isoformat(),
+                "delivery_date": (date.today() + timedelta(days=14)).isoformat(),
+                "priority": "high"
+            }
+            updated_task = self.test_request("PUT", f"/tasks/{task_id}", enhanced_update, 200, "Update Task with New Date Fields")
+            
+            if updated_task:
+                if updated_task.get('order_date') == enhanced_update['order_date']:
+                    self.log("✅ Order date updated successfully")
+                if updated_task.get('delivery_date') == enhanced_update['delivery_date']:
+                    self.log("✅ Delivery date updated successfully")
+                if updated_task.get('title') == enhanced_update['title']:
+                    self.log("✅ Task title updated successfully")
             
             # Test Task Completion
             completion_update = {"completed": True}
@@ -217,13 +251,6 @@ class TaskManagerTester:
                 
                 if uncompleted_task and not uncompleted_task['completed']:
                     self.log("✅ Task marked as uncompleted successfully")
-            
-            # Test Priority Update
-            priority_update = {"priority": "high"}
-            updated_task = self.test_request("PUT", f"/tasks/{task_id}", priority_update, 200, "Update Task Priority")
-            
-            if updated_task and updated_task['priority'] == "high":
-                self.log("✅ Task priority updated successfully")
     
     def test_ideas_crud(self):
         """Test Ideas CRUD operations with image data and Pinterest URLs"""
