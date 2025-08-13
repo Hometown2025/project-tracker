@@ -152,6 +152,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "Message system backend fully functional. Fixed MongoDB ObjectId serialization issue. All endpoints working: POST /api/messages (✅), GET /api/conversations (✅), GET /api/conversations/{id}/messages (✅), POST /api/conversations/{id}/mark-read (✅). Conversation creation between users and admins working correctly. Role-based access control properly implemented. Database operations for messages and conversations working perfectly. Authentication integration successful."
+        - working: true
+          agent: "testing"
+          comment: "POLLING-BASED MESSAGE SYSTEM INTEGRATION CONFIRMED: All message system endpoints continue to work perfectly with the new polling-based approach. GET /api/messages/poll endpoint working (✅) - returns accurate unread message counts. Message notifications properly created in database when messages are sent. Conversation and message data integrity maintained. Unread count polling accurate and updates correctly when conversations marked as read. Role-based messaging working (users to admins, admins to specific users). Authentication integration solid. Database operations for messages and conversations fully functional. System is production-ready with polling-based real-time updates."
 
 frontend:
   - task: "WebSocket Client Integration"
