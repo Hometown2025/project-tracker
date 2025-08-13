@@ -21,23 +21,6 @@ const AppContent = () => {
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [appLoading, setAppLoading] = useState(false);
 
-  // Show loading screen while checking authentication
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-content">
-          <div className="loading-spinner"></div>
-          <p>Loading TaskFlow...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show login page if not authenticated
-  if (!isAuthenticated) {
-    return <LoginPage />;
-  }
-
   // Fetch data functions
   const fetchProjects = async () => {
     try {
@@ -91,20 +74,6 @@ const AppContent = () => {
     }
   };
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      setAppLoading(true);
-      Promise.all([
-        fetchProjects(),
-        fetchDashboardStats(),
-        fetchTasks(),
-        fetchIdeas()
-      ]).finally(() => {
-        setAppLoading(false);
-      });
-    }
-  }, [isAuthenticated]); // Only depend on authentication state
-
   const refreshData = () => {
     fetchProjects();
     fetchDashboardStats();
@@ -122,6 +91,39 @@ const AppContent = () => {
     setDashboardStats(null);
   };
 
+  // Load initial data when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      setAppLoading(true);
+      Promise.all([
+        fetchProjects(),
+        fetchDashboardStats(),
+        fetchTasks(),
+        fetchIdeas()
+      ]).finally(() => {
+        setAppLoading(false);
+      });
+    }
+  }, [isAuthenticated]);
+
+  // Show loading screen while checking authentication
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-content">
+          <div className="loading-spinner"></div>
+          <p>Loading TaskFlow...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show login page if not authenticated
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  // Show app loading screen while fetching data
   if (appLoading) {
     return (
       <div className="loading-screen">
