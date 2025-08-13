@@ -916,6 +916,689 @@ class TaskManagerTester:
             # Clean up test task
             self.test_request("DELETE", f"/tasks/{created_task['id']}", auth_token=self.admin_token, test_name="Delete Backwards Compatibility Test Task")
     
+    def test_websocket_infrastructure(self):
+        """Test WebSocket Infrastructure Setup"""
+        self.log("\n=== Testing WebSocket Infrastructure ===")
+        
+        if not self.admin_user:
+            self.log("❌ No admin user available for WebSocket testing", "ERROR")
+            return
+        
+        # Test WebSocket connection
+        ws_url = BACKEND_URL.replace("https://", "wss://").replace("/api", "") + f"/ws/{self.admin_user['id']}"
+        self.log(f"Testing WebSocket connection to: {ws_url}")
+        
+        try:
+            def on_message(ws, message):
+                self.websocket_messages.append(json.loads(message))
+                self.log(f"✅ WebSocket message received: {message}")
+            
+            def on_error(ws, error):
+                self.log(f"❌ WebSocket error: {error}", "ERROR")
+                self.failed_tests += 1
+            
+            def on_close(ws, close_status_code, close_msg):
+                self.log("WebSocket connection closed")
+                self.websocket_connected = False
+            
+            def on_open(ws):
+                self.log("✅ WebSocket connection established")
+                self.websocket_connected = True
+                self.passed_tests += 1
+                # Send a test message to keep connection alive
+                ws.send("ping")
+            
+            # Create WebSocket connection
+            ws = websocket.WebSocketApp(ws_url,
+                                      on_open=on_open,
+                                      on_message=on_message,
+                                      on_error=on_error,
+                                      on_close=on_close)
+            
+            # Run WebSocket in a separate thread
+            wst = threading.Thread(target=ws.run_forever)
+            wst.daemon = True
+            wst.start()
+            
+            # Wait for connection
+            time.sleep(2)
+            
+            if self.websocket_connected:
+                self.log("✅ WebSocket infrastructure working")
+                # Close the connection
+                ws.close()
+                time.sleep(1)
+            else:
+                self.log("❌ WebSocket connection failed", "ERROR")
+                self.failed_tests += 1
+                
+        except Exception as e:
+            self.log(f"❌ WebSocket test failed: {str(e)}", "ERROR")
+            self.failed_tests += 1
+    
+    def test_message_system_backend(self):
+        """Test Message System Backend"""
+        self.log("\n=== Testing Message System Backend ===")
+        
+        if not self.admin_token or not self.demo_token:
+            self.log("❌ Missing admin or demo tokens for message system testing", "ERROR")
+            return
+        
+        # Test 1: Demo user sends message to admin
+        message_data = {
+            "content": "Hello admin, I need help with my project setup.",
+            "recipient_type": "admin"
+        }
+        
+        sent_message = self.test_request("POST", "/messages", message_data, 200, 
+                                       "Send Message to Admin (Demo User)", auth_token=self.demo_token)
+        
+        if sent_message:
+            self.log(f"✅ Message sent successfully: {sent_message['content']}")
+            conversation_id = sent_message['conversation_id']
+            
+            # Test 2: Get conversations for demo user
+            demo_conversations = self.test_request("GET", "/conversations", auth_token=self.demo_token, 
+                                                 test_name="Get Conversations (Demo User)")
+            
+            if demo_conversations and len(demo_conversations) > 0:
+                self.log(f"✅ Demo user has {len(demo_conversations)} conversations")
+                
+                # Verify the conversation contains our message
+                found_conversation = None
+                for conv in demo_conversations:
+                    if conv['id'] == conversation_id:
+                        found_conversation = conv
+                        break
+                
+                if found_conversation:
+                    self.log("✅ Conversation found in user's conversation list")
+                    
+                    # Check unread count
+                    unread_count = found_conversation.get('unread_count_for_user', 0)
+                    self.log(f"✅ Unread count for demo user: {unread_count}")
+                else:
+                    self.log("❌ Conversation not found in user's list", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 3: Get conversations for admin user
+            admin_conversations = self.test_request("GET", "/conversations", auth_token=self.admin_token, 
+                                                  test_name="Get Conversations (Admin User)")
+            
+            if admin_conversations and len(admin_conversations) > 0:
+                self.log(f"✅ Admin user has {len(admin_conversations)} conversations")
+            
+            # Test 4: Get messages in conversation
+            conversation_messages = self.test_request("GET", f"/conversations/{conversation_id}/messages", 
+                                                    auth_token=self.demo_token, 
+                                                    test_name="Get Messages in Conversation")
+            
+            if conversation_messages and len(conversation_messages) > 0:
+                self.log(f"✅ Retrieved {len(conversation_messages)} messages from conversation")
+                
+                # Verify our message is there
+                found_message = False
+                for msg in conversation_messages:
+                    if msg['content'] == message_data['content']:
+                        found_message = True
+                        self.log(f"✅ Message found: sender={msg['sender_name']}, role={msg['sender_role']}")
+                        break
+                
+                if not found_message:
+                    self.log("❌ Sent message not found in conversation", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 5: Admin replies to the message
+            admin_reply = {
+                "content": "Hi! I'd be happy to help you with your project setup. What specific issues are you facing?",
+                "recipient_type": "user",
+                "recipient_id": self.demo_user['id']
+            }
+            
+            admin_message = self.test_request("POST", "/messages", admin_reply, 200, 
+                                            "Admin Reply to User", auth_token=self.admin_token)
+            
+            if admin_message:
+                self.log("✅ Admin reply sent successfully")
+                
+                # Verify it's in the same conversation or creates appropriate conversation
+                reply_conversation_id = admin_message['conversation_id']
+                self.log(f"✅ Admin reply conversation ID: {reply_conversation_id}")
+            
+            # Test 6: Mark conversation as read
+            mark_read_response = self.test_request("POST", f"/conversations/{conversation_id}/mark-read", 
+                                                 auth_token=self.demo_token, 
+                                                 test_name="Mark Conversation as Read")
+            
+            if mark_read_response:
+                self.log("✅ Conversation marked as read successfully")
+                
+                # Verify unread count is reset
+                updated_conversations = self.test_request("GET", "/conversations", auth_token=self.demo_token, 
+                                                        test_name="Verify Unread Count Reset")
+                
+                if updated_conversations:
+                    for conv in updated_conversations:
+                        if conv['id'] == conversation_id:
+                            unread_count = conv.get('unread_count_for_user', 0)
+                            if unread_count == 0:
+                                self.log("✅ Unread count reset to 0 after marking as read")
+                            else:
+                                self.log(f"❌ Unread count not reset: {unread_count}", "ERROR")
+                                self.failed_tests += 1
+                            break
+        
+        # Test 7: Test access control - user cannot message specific user
+        invalid_message = {
+            "content": "This should fail",
+            "recipient_type": "user",
+            "recipient_id": self.admin_user['id']
+        }
+        
+        self.test_request("POST", "/messages", invalid_message, 403, 
+                         "User Message to Specific User (Should Fail)", auth_token=self.demo_token)
+        
+        # Test 8: Test conversation access control
+        if 'conversation_id' in locals():
+            # Try to access conversation with wrong user (should work since both are participants)
+            # But let's test with a non-existent conversation
+            fake_conversation_id = "fake-conversation-id-12345"
+            self.test_request("GET", f"/conversations/{fake_conversation_id}/messages", 
+                            expected_status=403, auth_token=self.demo_token, 
+                            test_name="Access Non-existent Conversation (Should Fail)")
+    
+    def test_real_time_notification_system(self):
+        """Test Real-time Notification System"""
+        self.log("\n=== Testing Real-time Notification System ===")
+        
+        if not self.admin_token or not self.demo_token:
+            self.log("❌ Missing admin or demo tokens for notification testing", "ERROR")
+            return
+        
+        # Clear previous WebSocket messages
+        self.websocket_messages = []
+        
+        # Set up WebSocket connection for demo user to receive notifications
+        if self.demo_user:
+            ws_url = BACKEND_URL.replace("https://", "wss://").replace("/api", "") + f"/ws/{self.demo_user['id']}"
+            
+            try:
+                def on_notification(ws, message):
+                    try:
+                        msg_data = json.loads(message)
+                        self.websocket_messages.append(msg_data)
+                        self.log(f"✅ Real-time notification received: {msg_data.get('type', 'unknown')}")
+                    except:
+                        pass
+                
+                def on_open_notification(ws):
+                    self.websocket_connected = True
+                    self.log("✅ WebSocket connected for notification testing")
+                
+                ws = websocket.WebSocketApp(ws_url,
+                                          on_open=on_open_notification,
+                                          on_message=on_notification)
+                
+                # Run WebSocket in background
+                wst = threading.Thread(target=ws.run_forever)
+                wst.daemon = True
+                wst.start()
+                time.sleep(2)
+                
+                if self.websocket_connected:
+                    # Test 1: Create a project and check for notifications
+                    test_project = {
+                        "name": "Notification Test Project",
+                        "description": "Testing real-time notifications",
+                        "color": "#FF6B6B"
+                    }
+                    
+                    # Assign demo user to receive notifications
+                    if self.test_data.get('projects'):
+                        # Use existing project for assignment
+                        existing_project_id = self.test_data['projects'][0]['id']
+                        assignment_data = {
+                            "user_id": self.demo_user['id'],
+                            "project_ids": [existing_project_id]
+                        }
+                        
+                        self.test_request("PUT", f"/admin/users/{self.demo_user['id']}/assign-projects", 
+                                        assignment_data, 200, "Assign Demo User to Project", 
+                                        auth_token=self.admin_token)
+                    
+                    created_project = self.test_request("POST", "/projects", test_project, 200, 
+                                                      "Create Project for Notification Test", 
+                                                      auth_token=self.admin_token)
+                    
+                    if created_project:
+                        self.test_data['projects'].append(created_project)
+                        project_id = created_project['id']
+                        
+                        # Wait for notification
+                        time.sleep(2)
+                        
+                        # Check if project creation notification was received
+                        project_notifications = [msg for msg in self.websocket_messages 
+                                               if msg.get('type') == 'notification' and 
+                                               msg.get('data', {}).get('type') == 'project_created']
+                        
+                        if project_notifications:
+                            self.log("✅ Project creation notification received via WebSocket")
+                            self.passed_tests += 1
+                        else:
+                            self.log("❌ Project creation notification not received", "ERROR")
+                            self.failed_tests += 1
+                        
+                        # Test 2: Update project and check for notifications
+                        update_data = {
+                            "name": "Updated Notification Test Project",
+                            "description": "Updated for notification testing",
+                            "color": "#4ECDC4"
+                        }
+                        
+                        updated_project = self.test_request("PUT", f"/projects/{project_id}", update_data, 200, 
+                                                          "Update Project for Notification Test", 
+                                                          auth_token=self.admin_token)
+                        
+                        if updated_project:
+                            time.sleep(2)
+                            
+                            # Check for project update notification
+                            update_notifications = [msg for msg in self.websocket_messages 
+                                                  if msg.get('type') == 'notification' and 
+                                                  msg.get('data', {}).get('type') == 'project_updated']
+                            
+                            if update_notifications:
+                                self.log("✅ Project update notification received via WebSocket")
+                                self.passed_tests += 1
+                            else:
+                                self.log("❌ Project update notification not received", "ERROR")
+                                self.failed_tests += 1
+                        
+                        # Test 3: Create task and check for notifications
+                        test_task = {
+                            "project_id": project_id,
+                            "title": "Notification Test Task",
+                            "description": "Testing task notifications",
+                            "priority": "high"
+                        }
+                        
+                        created_task = self.test_request("POST", "/tasks", test_task, 200, 
+                                                       "Create Task for Notification Test", 
+                                                       auth_token=self.admin_token)
+                        
+                        if created_task:
+                            self.test_data['tasks'].append(created_task)
+                            task_id = created_task['id']
+                            
+                            time.sleep(2)
+                            
+                            # Check for task creation notification
+                            task_notifications = [msg for msg in self.websocket_messages 
+                                                if msg.get('type') == 'notification' and 
+                                                msg.get('data', {}).get('type') == 'task_created']
+                            
+                            if task_notifications:
+                                self.log("✅ Task creation notification received via WebSocket")
+                                self.passed_tests += 1
+                            else:
+                                self.log("❌ Task creation notification not received", "ERROR")
+                                self.failed_tests += 1
+                            
+                            # Test 4: Update task and check for notifications
+                            task_update = {
+                                "title": "Updated Notification Test Task",
+                                "priority": "medium"
+                            }
+                            
+                            updated_task = self.test_request("PUT", f"/tasks/{task_id}", task_update, 200, 
+                                                            "Update Task for Notification Test", 
+                                                            auth_token=self.admin_token)
+                            
+                            if updated_task:
+                                time.sleep(2)
+                                
+                                # Check for task update notification
+                                task_update_notifications = [msg for msg in self.websocket_messages 
+                                                           if msg.get('type') == 'notification' and 
+                                                           msg.get('data', {}).get('type') == 'task_updated']
+                                
+                                if task_update_notifications:
+                                    self.log("✅ Task update notification received via WebSocket")
+                                    self.passed_tests += 1
+                                else:
+                                    self.log("❌ Task update notification not received", "ERROR")
+                                    self.failed_tests += 1
+                            
+                            # Test 5: Complete task and check for notifications
+                            completion_update = {"completed": True}
+                            
+                            completed_task = self.test_request("PUT", f"/tasks/{task_id}", completion_update, 200, 
+                                                             "Complete Task for Notification Test", 
+                                                             auth_token=self.admin_token)
+                            
+                            if completed_task:
+                                time.sleep(2)
+                                
+                                # Check for task completion notification
+                                completion_notifications = [msg for msg in self.websocket_messages 
+                                                          if msg.get('type') == 'notification' and 
+                                                          msg.get('data', {}).get('type') == 'task_completed']
+                                
+                                if completion_notifications:
+                                    self.log("✅ Task completion notification received via WebSocket")
+                                    self.passed_tests += 1
+                                else:
+                                    self.log("❌ Task completion notification not received", "ERROR")
+                                    self.failed_tests += 1
+                
+                # Close WebSocket connection
+                ws.close()
+                time.sleep(1)
+                
+            except Exception as e:
+                self.log(f"❌ Real-time notification test failed: {str(e)}", "ERROR")
+                self.failed_tests += 1
+    
+    def test_message_real_time_broadcasting(self):
+        """Test real-time message broadcasting through WebSocket"""
+        self.log("\n=== Testing Real-time Message Broadcasting ===")
+        
+        if not self.admin_token or not self.demo_token:
+            self.log("❌ Missing admin or demo tokens for message broadcasting testing", "ERROR")
+            return
+        
+        # Clear previous messages
+        self.websocket_messages = []
+        
+        # Set up WebSocket connection for admin user to receive message notifications
+        if self.admin_user:
+            ws_url = BACKEND_URL.replace("https://", "wss://").replace("/api", "") + f"/ws/{self.admin_user['id']}"
+            
+            try:
+                def on_message_notification(ws, message):
+                    try:
+                        msg_data = json.loads(message)
+                        self.websocket_messages.append(msg_data)
+                        if msg_data.get('type') == 'message':
+                            self.log(f"✅ Real-time message notification received")
+                    except:
+                        pass
+                
+                def on_open_message(ws):
+                    self.websocket_connected = True
+                    self.log("✅ WebSocket connected for message broadcasting test")
+                
+                ws = websocket.WebSocketApp(ws_url,
+                                          on_open=on_open_message,
+                                          on_message=on_message_notification)
+                
+                # Run WebSocket in background
+                wst = threading.Thread(target=ws.run_forever)
+                wst.daemon = True
+                wst.start()
+                time.sleep(2)
+                
+                if self.websocket_connected:
+                    # Send message from demo user to admin
+                    message_data = {
+                        "content": "Testing real-time message broadcasting functionality.",
+                        "recipient_type": "admin"
+                    }
+                    
+                    sent_message = self.test_request("POST", "/messages", message_data, 200, 
+                                                   "Send Message for Broadcasting Test", 
+                                                   auth_token=self.demo_token)
+                    
+                    if sent_message:
+                        # Wait for real-time notification
+                        time.sleep(3)
+                        
+                        # Check if message notification was received via WebSocket
+                        message_notifications = [msg for msg in self.websocket_messages 
+                                               if msg.get('type') == 'message']
+                        
+                        if message_notifications:
+                            self.log("✅ Real-time message broadcasting working")
+                            self.passed_tests += 1
+                            
+                            # Verify notification content
+                            notification = message_notifications[0]
+                            if notification.get('data', {}).get('message', {}).get('content') == message_data['content']:
+                                self.log("✅ Message content correctly broadcasted")
+                                self.passed_tests += 1
+                            else:
+                                self.log("❌ Message content not correctly broadcasted", "ERROR")
+                                self.failed_tests += 1
+                        else:
+                            self.log("❌ Real-time message broadcasting not working", "ERROR")
+                            self.failed_tests += 1
+                
+                # Close WebSocket connection
+                ws.close()
+                time.sleep(1)
+                
+            except Exception as e:
+                self.log(f"❌ Message broadcasting test failed: {str(e)}", "ERROR")
+                self.failed_tests += 1
+    
+    def test_authentication_integration_with_messaging(self):
+        """Test authentication integration with messaging endpoints"""
+        self.log("\n=== Testing Authentication Integration with Messaging ===")
+        
+        # Test 1: Access messaging endpoints without authentication
+        self.test_request("POST", "/messages", {"content": "test"}, 403, 
+                         "Send Message Without Auth (Should Fail)")
+        
+        self.test_request("GET", "/conversations", expected_status=403, 
+                         test_name="Get Conversations Without Auth (Should Fail)")
+        
+        # Test 2: Access with invalid token
+        invalid_token = "invalid_token_12345"
+        self.test_request("POST", "/messages", {"content": "test"}, 401, 
+                         "Send Message With Invalid Token (Should Fail)", 
+                         auth_token=invalid_token)
+        
+        self.test_request("GET", "/conversations", expected_status=401, 
+                         auth_token=invalid_token, 
+                         test_name="Get Conversations With Invalid Token (Should Fail)")
+        
+        # Test 3: Role-based access control for messaging
+        if self.demo_token:
+            # Demo user should be able to send messages to admin
+            valid_message = {
+                "content": "This should work - user to admin",
+                "recipient_type": "admin"
+            }
+            
+            self.test_request("POST", "/messages", valid_message, 200, 
+                             "User to Admin Message (Should Work)", 
+                             auth_token=self.demo_token)
+            
+            # Demo user should NOT be able to message specific users
+            invalid_message = {
+                "content": "This should fail - user to user",
+                "recipient_type": "user",
+                "recipient_id": "some-user-id"
+            }
+            
+            self.test_request("POST", "/messages", invalid_message, 403, 
+                             "User to User Message (Should Fail)", 
+                             auth_token=self.demo_token)
+        
+        # Test 4: Admin should be able to message specific users
+        if self.admin_token and self.demo_user:
+            admin_message = {
+                "content": "Admin message to specific user",
+                "recipient_type": "user",
+                "recipient_id": self.demo_user['id']
+            }
+            
+            self.test_request("POST", "/messages", admin_message, 200, 
+                             "Admin to User Message (Should Work)", 
+                             auth_token=self.admin_token)
+    
+    def test_database_operations_messaging(self):
+        """Test that conversations and messages are properly stored and retrieved from MongoDB"""
+        self.log("\n=== Testing Database Operations for Messaging ===")
+        
+        if not self.admin_token or not self.demo_token:
+            self.log("❌ Missing admin or demo tokens for database testing", "ERROR")
+            return
+        
+        # Test 1: Create message and verify storage
+        message_data = {
+            "content": "Database storage test message with special characters: àáâãäåæçèéêë",
+            "recipient_type": "admin"
+        }
+        
+        sent_message = self.test_request("POST", "/messages", message_data, 200, 
+                                       "Create Message for Database Test", 
+                                       auth_token=self.demo_token)
+        
+        if sent_message:
+            conversation_id = sent_message['conversation_id']
+            message_id = sent_message['id']
+            
+            # Verify message fields
+            required_fields = ['id', 'conversation_id', 'sender_id', 'sender_name', 
+                             'sender_role', 'content', 'created_at']
+            
+            for field in required_fields:
+                if field in sent_message:
+                    self.log(f"✅ Message field '{field}' present: {sent_message[field]}")
+                else:
+                    self.log(f"❌ Message field '{field}' missing", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 2: Retrieve message and verify data integrity
+            messages = self.test_request("GET", f"/conversations/{conversation_id}/messages", 
+                                       auth_token=self.demo_token, 
+                                       test_name="Retrieve Messages from Database")
+            
+            if messages:
+                found_message = None
+                for msg in messages:
+                    if msg['id'] == message_id:
+                        found_message = msg
+                        break
+                
+                if found_message:
+                    self.log("✅ Message retrieved from database successfully")
+                    
+                    # Verify data integrity
+                    if found_message['content'] == message_data['content']:
+                        self.log("✅ Message content preserved in database")
+                    else:
+                        self.log("❌ Message content corrupted in database", "ERROR")
+                        self.failed_tests += 1
+                    
+                    # Verify sender information
+                    if found_message['sender_name'] == self.demo_user['username']:
+                        self.log("✅ Sender name correctly stored")
+                    else:
+                        self.log("❌ Sender name not correctly stored", "ERROR")
+                        self.failed_tests += 1
+                    
+                    if found_message['sender_role'] == self.demo_user['role']:
+                        self.log("✅ Sender role correctly stored")
+                    else:
+                        self.log("❌ Sender role not correctly stored", "ERROR")
+                        self.failed_tests += 1
+                else:
+                    self.log("❌ Message not found in database", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 3: Verify conversation storage
+            conversations = self.test_request("GET", "/conversations", 
+                                            auth_token=self.demo_token, 
+                                            test_name="Retrieve Conversations from Database")
+            
+            if conversations:
+                found_conversation = None
+                for conv in conversations:
+                    if conv['id'] == conversation_id:
+                        found_conversation = conv
+                        break
+                
+                if found_conversation:
+                    self.log("✅ Conversation retrieved from database successfully")
+                    
+                    # Verify conversation fields
+                    conv_required_fields = ['id', 'participants', 'title', 'created_by', 
+                                          'created_at', 'last_message_at', 'unread_count']
+                    
+                    for field in conv_required_fields:
+                        if field in found_conversation:
+                            self.log(f"✅ Conversation field '{field}' present")
+                        else:
+                            self.log(f"❌ Conversation field '{field}' missing", "ERROR")
+                            self.failed_tests += 1
+                    
+                    # Verify participants
+                    if self.demo_user['id'] in found_conversation.get('participants', []):
+                        self.log("✅ Demo user in conversation participants")
+                    else:
+                        self.log("❌ Demo user not in conversation participants", "ERROR")
+                        self.failed_tests += 1
+                else:
+                    self.log("❌ Conversation not found in database", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 4: Test unread count functionality
+            mark_read_response = self.test_request("POST", f"/conversations/{conversation_id}/mark-read", 
+                                                 auth_token=self.demo_token, 
+                                                 test_name="Mark Conversation Read - Database Update")
+            
+            if mark_read_response:
+                # Verify unread count was updated in database
+                updated_conversations = self.test_request("GET", "/conversations", 
+                                                        auth_token=self.demo_token, 
+                                                        test_name="Verify Unread Count Database Update")
+                
+                if updated_conversations:
+                    for conv in updated_conversations:
+                        if conv['id'] == conversation_id:
+                            unread_count = conv.get('unread_count_for_user', 0)
+                            if unread_count == 0:
+                                self.log("✅ Unread count correctly updated in database")
+                            else:
+                                self.log(f"❌ Unread count not updated in database: {unread_count}", "ERROR")
+                                self.failed_tests += 1
+                            break
+        
+        # Test 5: Test conversation creation between admin and user
+        if self.admin_token and self.demo_user:
+            admin_to_user_message = {
+                "content": "Direct admin message to test conversation creation",
+                "recipient_type": "user",
+                "recipient_id": self.demo_user['id']
+            }
+            
+            admin_message = self.test_request("POST", "/messages", admin_to_user_message, 200, 
+                                            "Admin Direct Message - Database Test", 
+                                            auth_token=self.admin_token)
+            
+            if admin_message:
+                # Verify conversation was created/found
+                admin_conversations = self.test_request("GET", "/conversations", 
+                                                      auth_token=self.admin_token, 
+                                                      test_name="Admin Conversations - Database Test")
+                
+                if admin_conversations:
+                    # Find conversation with demo user
+                    found_direct_conv = False
+                    for conv in admin_conversations:
+                        participants = conv.get('participants', [])
+                        if self.admin_user['id'] in participants and self.demo_user['id'] in participants:
+                            found_direct_conv = True
+                            self.log("✅ Direct admin-user conversation created in database")
+                            break
+                    
+                    if not found_direct_conv:
+                        self.log("❌ Direct admin-user conversation not found in database", "ERROR")
+                        self.failed_tests += 1
+
     def cleanup_test_data(self):
         """Clean up test data"""
         self.log("\n=== Cleaning Up Test Data ===")
