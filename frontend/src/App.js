@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "./AuthContext";
 import LoginPage from "./LoginPage";
 import AdminPanel from "./AdminPanel";
 import Components from "./Components";
+import NotificationToast from "./components/NotificationToast";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
