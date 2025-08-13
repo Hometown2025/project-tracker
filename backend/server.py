@@ -86,6 +86,8 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = None
     priority: Optional[Priority] = None
     due_date: Optional[date] = None
+    order_date: Optional[date] = None
+    delivery_date: Optional[date] = None
     status: Optional[TaskStatus] = None
     completed: Optional[bool] = None
 
