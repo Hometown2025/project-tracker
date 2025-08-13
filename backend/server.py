@@ -199,6 +199,22 @@ async def send_notification(notification_type: NotificationType, title: str, mes
         # Send to all admins
         await manager.broadcast_to_admins(notification_data)
 
+# Helper function to create notifications in database (for polling)
+async def create_notification(notification_type: NotificationType, title: str, message: str, user_id: str):
+    """Create a notification in the database for polling-based system"""
+    notification = Notification(
+        type=notification_type,
+        title=title,
+        message=message,
+        user_id=user_id
+    )
+    
+    # Add is_read field for database storage
+    notification_dict = notification.dict()
+    notification_dict["is_read"] = False
+    
+    await db.notifications.insert_one(notification_dict)
+
 # Helper Functions
 def hash_password(password: str) -> str:
     """Hash password with salt"""
