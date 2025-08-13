@@ -334,25 +334,74 @@ class TaskManagerTester:
                 self.log("✅ Idea updated successfully")
     
     def test_calendar_api(self):
-        """Test Calendar API for tasks with due dates"""
-        self.log("\n=== Testing Calendar API ===")
+        """Test Enhanced Calendar API with multiple date types and emojis"""
+        self.log("\n=== Testing Enhanced Calendar API ===")
         
-        calendar_data = self.test_request("GET", "/calendar", test_name="Get Calendar Data")
+        calendar_data = self.test_request("GET", "/calendar", test_name="Get Enhanced Calendar Data")
         
         if calendar_data:
             self.log(f"✅ Retrieved {len(calendar_data)} calendar events")
             
-            # Verify calendar event structure
+            # Verify calendar event structure and enhanced features
             if calendar_data:
-                event = calendar_data[0]
-                required_fields = ['id', 'title', 'date', 'priority', 'status', 'project_id']
+                # Check for different event types
+                event_types_found = set()
+                emojis_found = set()
                 
-                for field in required_fields:
-                    if field in event:
-                        self.log(f"✅ Calendar event has field '{field}': {event[field]}")
-                    else:
-                        self.log(f"❌ Calendar event missing field: {field}", "ERROR")
-                        self.failed_tests += 1
+                for event in calendar_data:
+                    # Verify required fields
+                    required_fields = ['id', 'task_id', 'title', 'date', 'priority', 'status', 'project_id', 'event_type', 'event_label']
+                    
+                    for field in required_fields:
+                        if field not in event:
+                            self.log(f"❌ Calendar event missing field: {field}", "ERROR")
+                            self.failed_tests += 1
+                    
+                    # Track event types and emojis
+                    if 'event_type' in event:
+                        event_types_found.add(event['event_type'])
+                    
+                    if 'title' in event:
+                        title = event['title']
+                        if '📋' in title:
+                            emojis_found.add('📋')
+                        if '📦' in title:
+                            emojis_found.add('📦')
+                        if '🚚' in title:
+                            emojis_found.add('🚚')
+                
+                # Verify we have different event types
+                expected_event_types = {'due_date', 'order_date', 'delivery_date'}
+                found_event_types = event_types_found.intersection(expected_event_types)
+                
+                if found_event_types:
+                    self.log(f"✅ Found event types: {', '.join(found_event_types)}")
+                else:
+                    self.log("❌ No expected event types found", "ERROR")
+                    self.failed_tests += 1
+                
+                # Verify emojis are present
+                expected_emojis = {'📋', '📦', '🚚'}
+                found_emojis = emojis_found.intersection(expected_emojis)
+                
+                if found_emojis:
+                    self.log(f"✅ Found emojis in calendar events: {', '.join(found_emojis)}")
+                else:
+                    self.log("❌ No expected emojis found in calendar events", "ERROR")
+                    self.failed_tests += 1
+                
+                # Test that tasks with multiple dates create multiple events
+                task_event_counts = {}
+                for event in calendar_data:
+                    task_id = event.get('task_id')
+                    if task_id:
+                        task_event_counts[task_id] = task_event_counts.get(task_id, 0) + 1
+                
+                multiple_event_tasks = [task_id for task_id, count in task_event_counts.items() if count > 1]
+                if multiple_event_tasks:
+                    self.log(f"✅ Found {len(multiple_event_tasks)} tasks with multiple calendar events")
+                else:
+                    self.log("ℹ️ No tasks with multiple date events found (this is okay if test data doesn't have multiple dates)")
         
         return calendar_data
     
