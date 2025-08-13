@@ -76,6 +76,283 @@ class TaskManagerTester:
             self.log(f"❌ FAILED: {test_name} - Exception: {str(e)}", "ERROR")
             return None
     
+    
+    def test_user_initialization(self):
+        """Test that default admin and demo users were created"""
+        self.log("\n=== Testing User Initialization ===")
+        
+        # Test admin login to verify admin user exists
+        admin_login = {
+            "username": "admin",
+            "password": "admin"
+        }
+        
+        admin_response = self.test_request("POST", "/auth/login", admin_login, 200, "Admin User Login")
+        
+        if admin_response:
+            self.admin_token = admin_response.get('session_token')
+            self.admin_user = admin_response.get('user')
+            
+            if self.admin_user and self.admin_user.get('role') == 'admin':
+                self.log("✅ Default admin user (admin/admin) exists and has admin role")
+            else:
+                self.log("❌ Admin user role verification failed", "ERROR")
+                self.failed_tests += 1
+        
+        # Test demo login to verify demo user exists
+        demo_login = {
+            "username": "demo",
+            "password": "demo"
+        }
+        
+        demo_response = self.test_request("POST", "/auth/login", demo_login, 200, "Demo User Login")
+        
+        if demo_response:
+            self.demo_token = demo_response.get('session_token')
+            self.demo_user = demo_response.get('user')
+            
+            if self.demo_user and self.demo_user.get('role') == 'user':
+                self.log("✅ Default demo user (demo/demo) exists and has user role")
+                
+                # Check if demo user has assigned projects
+                assigned_projects = self.demo_user.get('assigned_projects', [])
+                if assigned_projects:
+                    self.log(f"✅ Demo user has {len(assigned_projects)} assigned projects")
+                else:
+                    self.log("ℹ️ Demo user has no assigned projects (this is okay if no existing projects)")
+            else:
+                self.log("❌ Demo user role verification failed", "ERROR")
+                self.failed_tests += 1
+    
+    def test_authentication_endpoints(self):
+        """Test authentication endpoints"""
+        self.log("\n=== Testing Authentication Endpoints ===")
+        
+        # Test invalid login
+        invalid_login = {
+            "username": "invalid_user",
+            "password": "wrong_password"
+        }
+        
+        self.test_request("POST", "/auth/login", invalid_login, 400, "Invalid Login Credentials")
+        
+        # Test /auth/me with admin token
+        if self.admin_token:
+            me_response = self.test_request("GET", "/auth/me", auth_token=self.admin_token, test_name="Get Current User Info (Admin)")
+            
+            if me_response and me_response.get('username') == 'admin':
+                self.log("✅ /auth/me endpoint working with admin token")
+            else:
+                self.log("❌ /auth/me endpoint failed for admin", "ERROR")
+                self.failed_tests += 1
+        
+        # Test /auth/me with demo token
+        if self.demo_token:
+            me_response = self.test_request("GET", "/auth/me", auth_token=self.demo_token, test_name="Get Current User Info (Demo)")
+            
+            if me_response and me_response.get('username') == 'demo':
+                self.log("✅ /auth/me endpoint working with demo token")
+            else:
+                self.log("❌ /auth/me endpoint failed for demo", "ERROR")
+                self.failed_tests += 1
+        
+        # Test /auth/me without token (should fail)
+        self.test_request("GET", "/auth/me", expected_status=401, test_name="Get Current User Info (No Token)")
+        
+        # Test logout with admin token
+        if self.admin_token:
+            logout_response = self.test_request("POST", "/auth/logout", auth_token=self.admin_token, test_name="Admin Logout")
+            
+            if logout_response:
+                self.log("✅ Admin logout successful")
+                
+                # Verify token is invalidated
+                self.test_request("GET", "/auth/me", auth_token=self.admin_token, expected_status=401, test_name="Verify Token Invalidated After Logout")
+                
+                # Re-login admin for further tests
+                admin_login = {"username": "admin", "password": "admin"}
+                admin_response = self.test_request("POST", "/auth/login", admin_login, 200, "Re-login Admin")
+                if admin_response:
+                    self.admin_token = admin_response.get('session_token')
+    
+    def test_admin_user_management(self):
+        """Test admin user management endpoints"""
+        self.log("\n=== Testing Admin User Management ===")
+        
+        if not self.admin_token:
+            self.log("❌ No admin token available for user management tests", "ERROR")
+            return
+        
+        # Test creating new user (admin only)
+        new_user_data = {
+            "username": "test_user_auth",
+            "password": "test_password_123",
+            "email": "testuser@example.com",
+            "role": "user"
+        }
+        
+        created_user = self.test_request("POST", "/admin/users", new_user_data, 200, "Create New User (Admin)", auth_token=self.admin_token)
+        
+        if created_user:
+            self.test_data['users'].append(created_user)
+            self.log(f"✅ Created new user: {created_user['username']}")
+            
+            # Test that demo user cannot create users
+            if self.demo_token:
+                self.test_request("POST", "/admin/users", new_user_data, 403, "Create User (Demo - Should Fail)", auth_token=self.demo_token)
+        
+        # Test getting all users (admin only)
+        all_users = self.test_request("GET", "/admin/users", auth_token=self.admin_token, test_name="Get All Users (Admin)")
+        
+        if all_users:
+            self.log(f"✅ Retrieved {len(all_users)} users")
+            
+            # Verify admin and demo users are in the list
+            usernames = [user['username'] for user in all_users]
+            if 'admin' in usernames and 'demo' in usernames:
+                self.log("✅ Admin and demo users found in user list")
+            else:
+                self.log("❌ Admin or demo user missing from user list", "ERROR")
+                self.failed_tests += 1
+        
+        # Test that demo user cannot get all users
+        if self.demo_token:
+            self.test_request("GET", "/admin/users", expected_status=403, auth_token=self.demo_token, test_name="Get All Users (Demo - Should Fail)")
+        
+        # Test project assignment (admin only)
+        if created_user and self.test_data.get('projects'):
+            project_ids = [project['id'] for project in self.test_data['projects']]
+            assignment_data = {
+                "user_id": created_user['id'],
+                "project_ids": project_ids[:1]  # Assign first project
+            }
+            
+            assignment_response = self.test_request("PUT", f"/admin/users/{created_user['id']}/assign-projects", 
+                                                  assignment_data, 200, "Assign Projects to User (Admin)", auth_token=self.admin_token)
+            
+            if assignment_response:
+                self.log("✅ Project assignment successful")
+                
+                # Test that demo user cannot assign projects
+                if self.demo_token:
+                    self.test_request("PUT", f"/admin/users/{created_user['id']}/assign-projects", 
+                                    assignment_data, 403, "Assign Projects (Demo - Should Fail)", auth_token=self.demo_token)
+    
+    def test_role_based_access_control(self):
+        """Test role-based access control"""
+        self.log("\n=== Testing Role-Based Access Control ===")
+        
+        if not self.admin_token or not self.demo_token:
+            self.log("❌ Missing admin or demo tokens for RBAC testing", "ERROR")
+            return
+        
+        # Test project access - Admin should see all projects
+        admin_projects = self.test_request("GET", "/projects", auth_token=self.admin_token, test_name="Get Projects (Admin)")
+        
+        if admin_projects:
+            self.log(f"✅ Admin can see {len(admin_projects)} projects")
+        
+        # Test project access - Demo should see only assigned projects
+        demo_projects = self.test_request("GET", "/projects", auth_token=self.demo_token, test_name="Get Projects (Demo)")
+        
+        if demo_projects is not None:  # Could be empty list
+            self.log(f"✅ Demo user can see {len(demo_projects)} assigned projects")
+            
+            # Demo should see fewer or equal projects than admin
+            if admin_projects and len(demo_projects) <= len(admin_projects):
+                self.log("✅ Demo user sees appropriate number of projects (≤ admin)")
+            elif not admin_projects:
+                self.log("ℹ️ No projects available for comparison")
+        
+        # Test task access with different roles
+        admin_tasks = self.test_request("GET", "/tasks", auth_token=self.admin_token, test_name="Get Tasks (Admin)")
+        demo_tasks = self.test_request("GET", "/tasks", auth_token=self.demo_token, test_name="Get Tasks (Demo)")
+        
+        if admin_tasks is not None and demo_tasks is not None:
+            self.log(f"✅ Admin can see {len(admin_tasks)} tasks")
+            self.log(f"✅ Demo user can see {len(demo_tasks)} tasks from assigned projects")
+        
+        # Test project creation (admin only)
+        test_project = {
+            "name": "RBAC Test Project",
+            "description": "Testing role-based access control",
+            "color": "#FF5722"
+        }
+        
+        admin_create = self.test_request("POST", "/projects", test_project, 200, "Create Project (Admin)", auth_token=self.admin_token)
+        
+        if admin_create:
+            self.test_data['projects'].append(admin_create)
+            self.log("✅ Admin can create projects")
+            
+            # Demo user should not be able to create projects
+            self.test_request("POST", "/projects", test_project, 403, "Create Project (Demo - Should Fail)", auth_token=self.demo_token)
+        
+        # Test task creation (admin only)
+        if self.test_data.get('projects'):
+            test_task = {
+                "project_id": self.test_data['projects'][0]['id'],
+                "title": "RBAC Test Task",
+                "description": "Testing role-based access for task creation",
+                "priority": "medium"
+            }
+            
+            admin_task_create = self.test_request("POST", "/tasks", test_task, 200, "Create Task (Admin)", auth_token=self.admin_token)
+            
+            if admin_task_create:
+                self.test_data['tasks'].append(admin_task_create)
+                self.log("✅ Admin can create tasks")
+                
+                # Demo user should not be able to create tasks
+                self.test_request("POST", "/tasks", test_task, 403, "Create Task (Demo - Should Fail)", auth_token=self.demo_token)
+    
+    def test_session_management(self):
+        """Test session management"""
+        self.log("\n=== Testing Session Management ===")
+        
+        # Test multiple login sessions
+        admin_login = {"username": "admin", "password": "admin"}
+        
+        # First login
+        session1 = self.test_request("POST", "/auth/login", admin_login, 200, "Admin Login Session 1")
+        
+        if session1:
+            token1 = session1.get('session_token')
+            expires_at1 = session1.get('expires_at')
+            
+            self.log(f"✅ Session 1 created, expires at: {expires_at1}")
+            
+            # Second login (should invalidate first session)
+            session2 = self.test_request("POST", "/auth/login", admin_login, 200, "Admin Login Session 2")
+            
+            if session2:
+                token2 = session2.get('session_token')
+                self.log("✅ Session 2 created")
+                
+                # Verify first token is invalidated
+                self.test_request("GET", "/auth/me", auth_token=token1, expected_status=401, test_name="Verify Session 1 Invalidated")
+                
+                # Verify second token still works
+                me_response = self.test_request("GET", "/auth/me", auth_token=token2, test_name="Verify Session 2 Active")
+                
+                if me_response:
+                    self.log("✅ Session management working - old sessions cleaned up")
+                
+                # Update admin token for further tests
+                self.admin_token = token2
+        
+        # Test session expiration (we can't wait 24 hours, but we can verify the structure)
+        if self.admin_token:
+            # Get current user to verify session is active
+            current_user = self.test_request("GET", "/auth/me", auth_token=self.admin_token, test_name="Verify Session Active")
+            
+            if current_user:
+                self.log("✅ Session token validation working")
+        
+        # Test invalid session token
+        invalid_token = "invalid_token_12345"
+        self.test_request("GET", "/auth/me", auth_token=invalid_token, expected_status=401, test_name="Invalid Session Token")
+
     def test_dashboard_stats(self):
         """Test Enhanced Dashboard Stats API with new date handling"""
         self.log("\n=== Testing Enhanced Dashboard Stats API ===")
