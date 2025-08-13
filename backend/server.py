@@ -396,16 +396,20 @@ async def send_message(message_data: MessageCreate, current_user: User = Depends
         if not existing_conv:
             # Create new conversation with admins
             admin_users = await db.users.find({"role": "admin", "is_active": True}).to_list(1000)
-            admin_ids = [admin["id"] for admin in admin_users]
+            admin_ids = [admin["id"] for admin in admin_users if admin.get("id")]  # Filter out None values
             participants = [current_user.id] + admin_ids
+            
+            # Initialize unread count for all participants
+            unread_count = {current_user.id: 0}
+            for admin_id in admin_ids:
+                unread_count[admin_id] = 0
             
             conversation = Conversation(
                 participants=participants,
                 title=f"Support Request - {current_user.username}",
                 created_by=current_user.id,
-                unread_count={admin_id: 0 for admin_id in admin_ids}
+                unread_count=unread_count
             )
-            conversation.unread_count[current_user.id] = 0
             
             await db.conversations.insert_one(conversation.dict())
             conversation_id = conversation.id
