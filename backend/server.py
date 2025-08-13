@@ -1,4 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
@@ -8,9 +9,11 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
 import uuid
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import json
 from enum import Enum
+import hashlib
+import secrets
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -25,6 +28,9 @@ app = FastAPI()
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
+
+# Security
+security = HTTPBearer()
 
 # Enums
 class Priority(str, Enum):
@@ -41,6 +47,301 @@ class ProjectStatus(str, Enum):
     ACTIVE = "active"
     COMPLETED = "completed"
     ARCHIVED = "archived"
+
+class UserRole(str, Enum):
+    ADMIN = "admin"
+    USER = "user"
+
+# User Models
+class User(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    username: str
+    email: Optional[str] = None
+    role: UserRole = UserRole.USER
+    assigned_projects: List[str] = []  # List of project IDs user can access
+    created_date: datetime = Field(default_factory=datetime.utcnow)
+    last_login: Optional[datetime] = None
+    is_active: bool = True
+
+class UserCreate(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
+    role: UserRole = UserRole.USER
+
+class UserLogin(BaseModel):
+    username: str
+    password: str
+
+class UserSession(BaseModel):
+    user_id: str
+    username: str
+    role: UserRole
+    session_token: str
+    expires_at: datetime
+
+class UserAssignment(BaseModel):
+    user_id: str
+    project_ids: List[str]
+
+# Helper Functions
+def hash_password(password: str) -> str:
+    """Hash password with salt"""
+    salt = secrets.token_hex(16)
+    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+    return salt + pwd_hash.hex()
+
+def verify_password(password: str, hashed: str) -> bool:
+    """Verify password against hash"""
+    salt = hashed[:32]
+    stored_hash = hashed[32:]
+    pwd_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+    return pwd_hash.hex() == stored_hash
+
+def generate_session_token() -> str:
+    """Generate secure session token"""
+    return secrets.token_urlsafe(32)
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> User:
+    """Get current user from session token"""
+    session_token = credentials.credentials
+    
+    # Find active session
+    session = await db.sessions.find_one({
+        "session_token": session_token,
+        "expires_at": {"$gt": datetime.utcnow()}
+    })
+    
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired session"
+        )
+    
+    # Get user
+    user = await db.users.find_one({"id": session["user_id"], "is_active": True})
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive"
+        )
+    
+    return User(**user)
+
+async def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Require admin role"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
+
+async def initialize_default_data():
+    """Initialize default admin and demo user"""
+    # Check if admin already exists
+    admin_exists = await db.users.find_one({"username": "admin"})
+    if not admin_exists:
+        admin_user = User(
+            username="admin",
+            role=UserRole.ADMIN,
+            email="admin@taskflow.com"
+        )
+        admin_password = hash_password("admin")
+        
+        await db.users.insert_one(admin_user.dict())
+        await db.user_passwords.insert_one({
+            "user_id": admin_user.id,
+            "password_hash": admin_password
+        })
+        print("✅ Default admin user created (admin/admin)")
+    
+    # Check if demo user exists
+    demo_exists = await db.users.find_one({"username": "demo"})
+    if not demo_exists:
+        demo_user = User(
+            username="demo",
+            role=UserRole.USER,
+            email="demo@taskflow.com"
+        )
+        demo_password = hash_password("demo")
+        
+        await db.users.insert_one(demo_user.dict())
+        await db.user_passwords.insert_one({
+            "user_id": demo_user.id,
+            "password_hash": demo_password
+        })
+        
+        # Assign existing projects to demo user
+        existing_projects = await db.projects.find({}).to_list(1000)
+        project_ids = [p["id"] for p in existing_projects]
+        
+        if project_ids:
+            # Update demo user with project assignments
+            await db.users.update_one(
+                {"id": demo_user.id},
+                {"$set": {"assigned_projects": project_ids}}
+            )
+            
+            # Add owner field to existing projects
+            for project in existing_projects:
+                await db.projects.update_one(
+                    {"id": project["id"]},
+                    {"$set": {"owner_id": demo_user.id}}
+                )
+            
+            # Add owner field to existing tasks
+            existing_tasks = await db.tasks.find({}).to_list(1000)
+            for task in existing_tasks:
+                await db.tasks.update_one(
+                    {"id": task["id"]},
+                    {"$set": {"owner_id": demo_user.id}}
+                )
+            
+            # Add owner field to existing ideas
+            existing_ideas = await db.ideas.find({}).to_list(1000)
+            for idea in existing_ideas:
+                await db.ideas.update_one(
+                    {"id": idea["id"]},
+                    {"$set": {"owner_id": demo_user.id}}
+                )
+        
+        print("✅ Demo user created and assigned existing projects")
+
+# Authentication Routes
+@api_router.post("/auth/login")
+async def login(login_data: UserLogin):
+    """User login"""
+    # Find user
+    user = await db.users.find_one({"username": login_data.username, "is_active": True})
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid username or password")
+    
+    # Check password
+    password_record = await db.user_passwords.find_one({"user_id": user["id"]})
+    if not password_record or not verify_password(login_data.password, password_record["password_hash"]):
+        raise HTTPException(status_code=400, detail="Invalid username or password")
+    
+    # Create session
+    session_token = generate_session_token()
+    expires_at = datetime.utcnow() + timedelta(hours=24)  # 24 hour sessions
+    
+    session = UserSession(
+        user_id=user["id"],
+        username=user["username"],
+        role=user["role"],
+        session_token=session_token,
+        expires_at=expires_at
+    )
+    
+    # Clean up old sessions for this user
+    await db.sessions.delete_many({"user_id": user["id"]})
+    
+    # Store new session
+    await db.sessions.insert_one(session.dict())
+    
+    # Update last login
+    await db.users.update_one(
+        {"id": user["id"]},
+        {"$set": {"last_login": datetime.utcnow()}}
+    )
+    
+    return {
+        "session_token": session_token,
+        "user": User(**user).dict(),
+        "expires_at": expires_at
+    }
+
+@api_router.post("/auth/logout")
+async def logout(current_user: User = Depends(get_current_user)):
+    """User logout"""
+    # Delete all sessions for this user
+    await db.sessions.delete_many({"user_id": current_user.id})
+    return {"message": "Logged out successfully"}
+
+@api_router.get("/auth/me")
+async def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Get current user information"""
+    return current_user
+
+# Admin User Management Routes
+@api_router.post("/admin/users", response_model=User)
+async def create_user(user_data: UserCreate, admin_user: User = Depends(require_admin)):
+    """Admin: Create new user"""
+    # Check if username already exists
+    existing = await db.users.find_one({"username": user_data.username})
+    if existing:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    # Create user
+    user = User(
+        username=user_data.username,
+        email=user_data.email,
+        role=user_data.role
+    )
+    
+    # Hash password
+    password_hash = hash_password(user_data.password)
+    
+    # Store user and password
+    await db.users.insert_one(user.dict())
+    await db.user_passwords.insert_one({
+        "user_id": user.id,
+        "password_hash": password_hash
+    })
+    
+    return user
+
+@api_router.get("/admin/users", response_model=List[User])
+async def get_all_users(admin_user: User = Depends(require_admin)):
+    """Admin: Get all users"""
+    users = await db.users.find({"is_active": True}).to_list(1000)
+    return [User(**user) for user in users]
+
+@api_router.put("/admin/users/{user_id}/assign-projects")
+async def assign_projects_to_user(
+    user_id: str, 
+    assignment: UserAssignment, 
+    admin_user: User = Depends(require_admin)
+):
+    """Admin: Assign projects to user"""
+    # Verify user exists
+    user = await db.users.find_one({"id": user_id, "is_active": True})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify all projects exist
+    for project_id in assignment.project_ids:
+        project = await db.projects.find_one({"id": project_id})
+        if not project:
+            raise HTTPException(status_code=404, detail=f"Project {project_id} not found")
+    
+    # Update user's assigned projects
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"assigned_projects": assignment.project_ids}}
+    )
+    
+    return {"message": "Projects assigned successfully"}
+
+@api_router.delete("/admin/users/{user_id}")
+async def deactivate_user(user_id: str, admin_user: User = Depends(require_admin)):
+    """Admin: Deactivate user"""
+    if user_id == admin_user.id:
+        raise HTTPException(status_code=400, detail="Cannot deactivate your own account")
+    
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_active": False}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Delete user's sessions
+    await db.sessions.delete_many({"user_id": user_id})
+    
+    return {"message": "User deactivated successfully"}
 
 # Models
 class Project(BaseModel):
