@@ -834,8 +834,15 @@ const ProjectView = ({ projects, refreshData, setSelectedProject, setCurrentView
               </div>
               <span className="progress-text">
                 {project.completed_tasks}/{project.task_count} tasks completed
+                {project.file_count > 0 && ` • ${project.file_count} files`}
               </span>
             </div>
+            
+            {/* File Manager for Projects */}
+            <FileManager 
+              projectId={project.id}
+              title={`Files (${project.file_count || 0})`}
+            />
             
             <div className="project-card-footer">
               <span className="project-date">
