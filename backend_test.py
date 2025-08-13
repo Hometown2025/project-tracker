@@ -68,10 +68,10 @@ class TaskManagerTester:
             return None
     
     def test_dashboard_stats(self):
-        """Test Dashboard Stats API"""
-        self.log("\n=== Testing Dashboard Stats API ===")
+        """Test Enhanced Dashboard Stats API with new date handling"""
+        self.log("\n=== Testing Enhanced Dashboard Stats API ===")
         
-        result = self.test_request("GET", "/dashboard", test_name="Dashboard Stats")
+        result = self.test_request("GET", "/dashboard", test_name="Enhanced Dashboard Stats")
         
         if result:
             required_fields = ['total_projects', 'active_projects', 'total_tasks', 
@@ -83,6 +83,13 @@ class TaskManagerTester:
                 else:
                     self.log(f"❌ Missing dashboard field: {field}", "ERROR")
                     self.failed_tests += 1
+            
+            # Test enhanced date handling in dashboard stats
+            if 'overdue_tasks' in result:
+                self.log(f"✅ Overdue tasks calculation (considers due_date and delivery_date): {result['overdue_tasks']}")
+            
+            if 'today_tasks' in result:
+                self.log(f"✅ Today tasks calculation (considers due_date, order_date, and delivery_date): {result['today_tasks']}")
         
         return result
     
