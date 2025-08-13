@@ -15,7 +15,6 @@ import json
 from enum import Enum
 import hashlib
 import secrets
-import asyncio
 import aiofiles
 import shutil
 from PIL import Image
