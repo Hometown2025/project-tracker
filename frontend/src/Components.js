@@ -349,15 +349,22 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
               {task.description && <p className="task-card-description">{task.description}</p>}
               
               <div className="task-card-footer">
-                {project && (
-                  <div className="task-project">
-                    <div 
-                      className="project-color-small" 
-                      style={{ backgroundColor: project.color }}
-                    ></div>
-                    <span className="project-name-small">{project.name}</span>
-                  </div>
-                )}
+                <div className="task-project-section">
+                  {project ? (
+                    <div className="task-project">
+                      <div 
+                        className="project-color-small" 
+                        style={{ backgroundColor: project.color }}
+                      ></div>
+                      <span className="project-name-small">{project.name}</span>
+                    </div>
+                  ) : (
+                    <div className="task-project unassigned">
+                      <div className="project-color-small unassigned-color"></div>
+                      <span className="project-name-small">Unassigned</span>
+                    </div>
+                  )}
+                </div>
                 <div className="task-dates">
                   {task.due_date && (
                     <span className="task-date task-due">
