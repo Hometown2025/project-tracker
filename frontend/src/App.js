@@ -103,7 +103,7 @@ const AppContent = () => {
         setAppLoading(false);
       });
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated]); // Only depend on authentication state
 
   const refreshData = () => {
     fetchProjects();
