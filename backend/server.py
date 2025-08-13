@@ -175,47 +175,21 @@ class Conversation(BaseModel):
     last_message_at: datetime = Field(default_factory=datetime.utcnow)
     unread_count: Dict[str, int] = {}  # user_id -> unread count
 
-# Helper function to send notifications
-async def send_notification(notification_type: NotificationType, title: str, message: str, 
-                           user_id: str = None, project_id: str = None, task_id: str = None):
-    notification = Notification(
-        type=notification_type,
-        title=title,
-        message=message,
-        user_id=user_id,
-        project_id=project_id,
-        task_id=task_id
-    )
-    
-    notification_data = {
-        "type": "notification",
-        "data": notification.dict()
-    }
-    
-    if project_id:
-        # Send to project members
-        await manager.broadcast_to_project_members(notification_data, project_id)
-    else:
-        # Send to all admins
-        await manager.broadcast_to_admins(notification_data)
-
-# Helper function to send notifications to project members
+# Helper function to send notifications to project members (polling-based)
 async def send_notification_to_project_members(notification_type: NotificationType, title: str, message: str, project_id: str):
-    """Send notification specifically to project members and admins"""
-    notification = Notification(
-        type=notification_type,
-        title=title,
-        message=message,
-        project_id=project_id
-    )
+    """Send notification to project members and admins via database storage"""
+    # Get users assigned to this project
+    users = await db.users.find({"assigned_projects": project_id, "is_active": True}).to_list(1000)
     
-    notification_data = {
-        "type": "notification",
-        "data": notification.dict()
-    }
+    # Get all admin users
+    admin_users = await db.users.find({"role": "admin", "is_active": True}).to_list(1000)
     
-    # Send to project members and admins
-    await manager.broadcast_to_project_members(notification_data, project_id)
+    # Combine and deduplicate user IDs
+    all_user_ids = list(set([user["id"] for user in users] + [admin["id"] for admin in admin_users]))
+    
+    # Create notification for each user
+    for user_id in all_user_ids:
+        await create_notification(notification_type, title, message, user_id)
 
 # Helper function to send notifications to all admins (polling-based)
 async def send_notification_to_admins(notification_type: NotificationType, title: str, message: str):
