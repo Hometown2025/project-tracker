@@ -12,7 +12,7 @@ import sys
 import os
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://d627ba87-f652-484b-9633-b99e5f8fdffe.preview.emergentagent.com/api"
+BACKEND_URL = "https://pastel-tasks.preview.emergentagent.com/api"
 
 class TaskManagerTester:
     def __init__(self):
