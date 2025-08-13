@@ -513,6 +513,21 @@ body {
   margin-bottom: 1rem;
 }
 
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.task-edit {
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.task-card:hover .task-edit {
+  opacity: 1;
+}
+
 .task-card-priority {
   display: flex;
   align-items: center;
