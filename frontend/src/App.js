@@ -227,6 +227,17 @@ const AppContent = () => {
       {showAdminPanel && (
         <AdminPanel onClose={() => setShowAdminPanel(false)} />
       )}
+
+      {/* Notification Toasts */}
+      {activeToasts.map((toast, index) => (
+        <div key={toast.toastId} style={{ top: `${20 + index * 80}px` }}>
+          <NotificationToast 
+            notification={toast}
+            onClose={() => removeToast(toast.toastId)}
+            duration={5000}
+          />
+        </div>
+      ))}
     </div>
   );
 };
