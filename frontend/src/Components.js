@@ -936,7 +936,21 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API}/tasks`, formData);
+      // Only send non-empty fields to backend
+      const submitData = {};
+      Object.keys(formData).forEach(key => {
+        if (formData[key] && formData[key].toString().trim() !== '') {
+          submitData[key] = formData[key];
+        }
+      });
+      
+      // Title is always required
+      if (!submitData.title) {
+        alert('Task title is required');
+        return;
+      }
+
+      await axios.post(`${API}/tasks`, submitData);
       onSuccess();
       onClose();
     } catch (error) {
@@ -954,23 +968,25 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
         
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="form-group">
-            <label className="form-label">Title</label>
+            <label className="form-label">Title <span className="required">*</span></label>
             <input 
               type="text"
               className="form-input"
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
               required
+              placeholder="Enter task title..."
             />
           </div>
 
           <div className="form-group">
-            <label className="form-label">Description</label>
+            <label className="form-label">Description <span className="optional">(optional)</span></label>
             <textarea 
               className="form-textarea"
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               rows={3}
+              placeholder="Add task description (can be added later)..."
             />
           </div>
 
@@ -989,51 +1005,61 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Due Date</label>
+              <label className="form-label">Due Date <span className="optional">(optional)</span></label>
               <input 
                 type="date"
                 className="form-input"
                 value={formData.due_date}
                 onChange={(e) => setFormData({...formData, due_date: e.target.value})}
+                placeholder="Set due date later if needed"
               />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Order Date</label>
+              <label className="form-label">Order Date <span className="optional">(optional)</span></label>
               <input 
                 type="date"
                 className="form-input"
                 value={formData.order_date}
                 onChange={(e) => setFormData({...formData, order_date: e.target.value})}
+                placeholder="Set order date later if needed"
               />
             </div>
 
             <div className="form-group">
-              <label className="form-label">Delivery Date</label>
+              <label className="form-label">Delivery Date <span className="optional">(optional)</span></label>
               <input 
                 type="date"
                 className="form-input"
                 value={formData.delivery_date}
                 onChange={(e) => setFormData({...formData, delivery_date: e.target.value})}
+                placeholder="Set delivery date later if needed"
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label className="form-label">Project</label>
+            <label className="form-label">Project <span className="optional">(optional)</span></label>
             <select 
               className="form-select"
               value={formData.project_id}
               onChange={(e) => setFormData({...formData, project_id: e.target.value})}
-              required
             >
-              <option value="">Select a project</option>
+              <option value="">No Project (Unassigned)</option>
               {projects.map(project => (
                 <option key={project.id} value={project.id}>{project.name}</option>
               ))}
             </select>
+            <small className="form-hint">You can assign this task to a project later</small>
+          </div>
+
+          <div className="quick-create-note">
+            <p className="note-text">
+              💡 <strong>Quick Create:</strong> Just add a title to create the task quickly. 
+              You can fill in the details later by editing the task.
+            </p>
           </div>
 
           <div className="modal-actions">
