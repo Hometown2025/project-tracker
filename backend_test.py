@@ -1969,12 +1969,11 @@ class TaskManagerTester:
             self.test_priority_system()
             self.test_project_stats()
             
-            # Test real-time messaging and WebSocket features
-            self.log("\n🔄 Testing Real-time Features...")
-            self.test_websocket_infrastructure()
+            # Test polling-based real-time messaging and notification features
+            self.log("\n🔄 Testing Polling-Based Real-time Features...")
             self.test_message_system_backend()
-            self.test_real_time_notification_system()
-            self.test_message_real_time_broadcasting()
+            self.test_polling_based_notification_system()
+            self.test_polling_based_message_system()
             self.test_authentication_integration_with_messaging()
             self.test_database_operations_messaging()
             
