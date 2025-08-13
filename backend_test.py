@@ -10,6 +10,10 @@ import base64
 from datetime import datetime, date, timedelta
 import sys
 import os
+import websocket
+import threading
+import time
+import asyncio
 
 # Get backend URL from frontend .env
 BACKEND_URL = "https://pastel-tasks.preview.emergentagent.com/api"
