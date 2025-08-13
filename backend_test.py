@@ -729,6 +729,10 @@ class TaskManagerTester:
         """Test enhanced data relationships with new date fields"""
         self.log("\n=== Testing Enhanced Data Relationships ===")
         
+        if not self.admin_token:
+            self.log("❌ No admin token available for relationship testing", "ERROR")
+            return
+        
         if not self.test_data['projects'] or not self.test_data['tasks']:
             self.log("❌ No projects or tasks available for relationship testing", "ERROR")
             return
@@ -736,7 +740,7 @@ class TaskManagerTester:
         project_id = self.test_data['projects'][0]['id']
         
         # Get project with task counts
-        project = self.test_request("GET", f"/projects/{project_id}", test_name="Get Project with Enhanced Task Data")
+        project = self.test_request("GET", f"/projects/{project_id}", auth_token=self.admin_token, test_name="Get Project with Enhanced Task Data")
         
         if project:
             task_count = project.get('task_count', 0)
@@ -746,7 +750,7 @@ class TaskManagerTester:
             self.log(f"✅ Project has {completed_tasks} completed tasks")
             
             # Verify task counts match actual tasks
-            project_tasks = self.test_request("GET", f"/tasks?project_id={project_id}", test_name="Verify Enhanced Task Count")
+            project_tasks = self.test_request("GET", f"/tasks?project_id={project_id}", auth_token=self.admin_token, test_name="Verify Enhanced Task Count")
             
             if project_tasks:
                 # Count tasks with different date types
