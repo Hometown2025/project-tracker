@@ -476,6 +476,11 @@ async def get_messages(conversation_id: str, current_user: User = Depends(get_cu
         "conversation_id": conversation_id
     }).sort("created_at", 1).to_list(1000)
     
+    # Clean up MongoDB ObjectIds from messages
+    for message in messages:
+        if "_id" in message:
+            del message["_id"]
+    
     # Mark messages as read for current user
     await db.conversations.update_one(
         {"id": conversation_id},
