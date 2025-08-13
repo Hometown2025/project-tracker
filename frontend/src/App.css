@@ -1605,7 +1605,363 @@ body {
   font-weight: 700;
 }
 
-/* Responsive Design */
+/* Admin Panel Styles */
+.admin-modal {
+  max-width: 900px;
+  max-height: 80vh;
+}
+
+.admin-content {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.admin-section {
+  margin-bottom: 2rem;
+}
+
+.admin-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.admin-section-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0;
+}
+
+.btn-sm {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+}
+
+.users-table {
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 1rem;
+  background: #f8fafc;
+  padding: 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem;
+  border-top: 1px solid #e2e8f0;
+  transition: background-color 0.2s ease;
+}
+
+.table-row:hover {
+  background: #f8fafc;
+}
+
+.username-large {
+  font-weight: 600;
+  color: #1a202c;
+  font-size: 1rem;
+}
+
+.user-email {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.user-meta {
+  color: #94a3b8;
+  font-size: 0.625rem;
+  margin-top: 0.25rem;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.role-admin {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.role-user {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.access-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.full-access {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.limited-access {
+  background: #e0f2fe;
+  color: #0c4a6e;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-danger.btn-sm {
+  background: #ef4444;
+  color: white;
+  border: 1px solid #ef4444;
+}
+
+.btn-danger.btn-sm:hover {
+  background: #dc2626;
+}
+
+.system-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #8b5cf6;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.5rem;
+}
+
+/* Create User Modal Styles */
+.form-note {
+  background: #f0f9ff;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border-left: 4px solid #0ea5e9;
+  margin-bottom: 1.5rem;
+}
+
+.form-note p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #0c4a6e;
+}
+
+.password-input-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.password-input-group .form-input {
+  flex: 1;
+}
+
+.btn-generate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+}
+
+.btn-generate:hover {
+  background: #8b5cf6;
+  color: white;
+  border-color: #8b5cf6;
+}
+
+.role-explanation {
+  margin: 1rem 0;
+}
+
+.role-note {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.user-role-note {
+  background: #eff6ff;
+  color: #1e40af;
+  border-left: 4px solid #3b82f6;
+}
+
+.admin-role-note {
+  background: #fef3c7;
+  color: #92400e;
+  border-left: 4px solid #f59e0b;
+}
+
+.role-note strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.role-note p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+/* User Details Modal Styles */
+.user-details-content {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.detail-section {
+  margin-bottom: 2rem;
+}
+
+.detail-section h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.detail-item label {
+  font-weight: 600;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.detail-item span {
+  color: #1a202c;
+  font-size: 0.875rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-badge.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.inactive {
+  background: #fecaca;
+  color: #b91c1c;
+}
+
+.assigned-projects {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.assigned-project {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.project-info .project-name {
+  font-weight: 600;
+  color: #1a202c;
+  margin-bottom: 0.25rem;
+}
+
+.project-info .project-description {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.no-projects {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.admin-access-note {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef3c7;
+  border-radius: 0.5rem;
+  border-left: 4px solid #f59e0b;
+  color: #92400e;
+}
+
+.admin-access-note p {
+  margin: 0;
+  margin-bottom: 0.25rem;
+}
+
+.admin-access-note p:last-child {
+  margin-bottom: 0;
+  opacity: 0.8;
+}
 @media (max-width: 768px) {
   .App {
     flex-direction: column;
