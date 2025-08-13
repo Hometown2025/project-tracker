@@ -3,7 +3,6 @@ import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
-const WS_URL = BACKEND_URL.replace(/^http/, 'ws');
 
 const AuthContext = createContext();
 
@@ -22,76 +21,66 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
-  const wsRef = useRef(null);
+  const pollIntervalRef = useRef(null);
 
   useEffect(() => {
     checkAuth();
   }, []);
 
-  // WebSocket connection management
-  const connectWebSocket = (userId) => {
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-
-    const ws = new WebSocket(`${WS_URL}/ws/${userId}`);
+  // Polling for notifications and messages
+  const startPolling = () => {
+    if (pollIntervalRef.current) return; // Already polling
     
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-    };
-    
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log('WebSocket message received:', data);
-      
-      if (data.type === 'notification') {
-        // Add notification to state
-        setNotifications(prev => [data.data, ...prev.slice(0, 49)]); // Keep last 50 notifications
-        
-        // Show browser notification if permitted
-        if (Notification.permission === 'granted') {
-          new Notification(data.data.title, {
-            body: data.data.message,
-            icon: '/favicon.ico'
+    pollIntervalRef.current = setInterval(async () => {
+      if (isAuthenticated && token) {
+        try {
+          // Poll for notifications
+          const notificationsResponse = await axios.get(`${API}/notifications/poll`, {
+            headers: { Authorization: `Bearer ${token}` }
           });
-        }
-      } else if (data.type === 'message') {
-        // Handle incoming message
-        setUnreadMessages(prev => prev + 1);
-        
-        // Show browser notification
-        if (Notification.permission === 'granted') {
-          new Notification('New Message', {
-            body: `New message in ${data.data.conversation_title}`,
-            icon: '/favicon.ico'
-          });
-        }
-      }
-    };
-    
-    ws.onclose = () => {
-      console.log('WebSocket disconnected');
-      // Attempt to reconnect after 5 seconds if user is still authenticated
-      if (isAuthenticated) {
-        setTimeout(() => {
-          if (isAuthenticated && user) {
-            connectWebSocket(user.id);
+          
+          // Update notifications if there are new ones
+          if (notificationsResponse.data.length > 0) {
+            setNotifications(prev => {
+              const newNotifications = notificationsResponse.data.filter(newNotif => 
+                !prev.some(existingNotif => existingNotif.id === newNotif.id)
+              );
+              
+              // Show browser notification for new notifications
+              newNotifications.forEach(notification => {
+                if (Notification.permission === 'granted') {
+                  new Notification(notification.title, {
+                    body: notification.message,
+                    icon: '/favicon.ico'
+                  });
+                }
+              });
+              
+              return [...newNotifications, ...prev.slice(0, 49)]; // Keep last 50
+            });
           }
-        }, 5000);
+          
+          // Poll for unread messages
+          const messagesResponse = await axios.get(`${API}/messages/poll`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          
+          setUnreadMessages(messagesResponse.data.unread_count);
+          
+        } catch (error) {
+          if (error.response?.status === 401) {
+            // Token expired, logout
+            logout();
+          }
+        }
       }
-    };
-    
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-    
-    wsRef.current = ws;
+    }, 3000); // Poll every 3 seconds
   };
 
-  const disconnectWebSocket = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+  const stopPolling = () => {
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+      pollIntervalRef.current = null;
     }
   };
 
@@ -117,8 +106,8 @@ export const AuthProvider = ({ children }) => {
         // Set default axios header
         axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
         
-        // Connect WebSocket
-        connectWebSocket(response.data.id);
+        // Start polling for notifications
+        startPolling();
         
         // Request notification permission
         requestNotificationPermission();
@@ -153,8 +142,8 @@ export const AuthProvider = ({ children }) => {
       // Set default axios header
       axios.defaults.headers.common['Authorization'] = `Bearer ${session_token}`;
 
-      // Connect WebSocket
-      connectWebSocket(userData.id);
+      // Start polling for notifications
+      startPolling();
       
       // Request notification permission
       requestNotificationPermission();
@@ -177,8 +166,8 @@ export const AuthProvider = ({ children }) => {
       console.log('Logout API call failed, but continuing with local logout');
     }
 
-    // Disconnect WebSocket
-    disconnectWebSocket();
+    // Stop polling
+    stopPolling();
 
     // Clear local storage and state
     localStorage.removeItem('session_token');
@@ -190,8 +179,15 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
   };
 
-  const clearNotifications = () => {
-    setNotifications([]);
+  const clearNotifications = async () => {
+    try {
+      await axios.post(`${API}/notifications/mark-read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setNotifications([]);
+    } catch (error) {
+      console.error('Error clearing notifications:', error);
+    }
   };
 
   const markMessagesAsRead = () => {
