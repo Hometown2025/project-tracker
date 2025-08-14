@@ -657,8 +657,38 @@ async def download_file(file_id: str, current_user: User = Depends(get_current_u
         media_type=file_record["mime_type"]
     )
 
-@api_router.get("/files/thumbnail/{file_id}")
-async def get_thumbnail(file_id: str, current_user: User = Depends(get_current_user)):
+@api_router.get("/files/view/{file_id}")
+async def view_file(file_id: str, current_user: User = Depends(get_current_user)):
+    """View a file inline (for browser viewing)"""
+    file_record = await db.file_attachments.find_one({"id": file_id})
+    if not file_record:
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Check permissions (same as download)
+    if file_record.get("project_id"):
+        project_id = file_record["project_id"]
+        if current_user.role != UserRole.ADMIN and project_id not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif file_record.get("task_id"):
+        task = await db.tasks.find_one({"id": file_record["task_id"]})
+        if task and current_user.role != UserRole.ADMIN:
+            task_project_id = task.get("project_id")
+            if task_project_id and task_project_id not in current_user.assigned_projects:
+                raise HTTPException(status_code=403, detail="Access denied")
+            elif not task_project_id and task.get("owner_id") != current_user.id:
+                raise HTTPException(status_code=403, detail="Access denied")
+    
+    file_path = file_record["file_path"]
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found on disk")
+    
+    # Return file for inline viewing with appropriate headers
+    return FileResponse(
+        path=file_path,
+        filename=file_record["original_filename"],
+        media_type=file_record["mime_type"],
+        headers={"Content-Disposition": "inline"}  # This makes it display inline instead of download
+    )
     """Get thumbnail for an image file"""
     file_record = await db.file_attachments.find_one({"id": file_id})
     if not file_record:
