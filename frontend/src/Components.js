@@ -393,7 +393,7 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
           <h1 className="page-title">
             {selectedProject ? `${selectedProject.name} Tasks` : 'House Rooms'}
           </h1>
-          <p className="page-subtitle">{filteredTasks.length} rooms found</p>
+          <p className="page-subtitle">{filteredTasks.length} house rooms found across all projects</p>
         </div>
         <button 
           className="btn-primary"
