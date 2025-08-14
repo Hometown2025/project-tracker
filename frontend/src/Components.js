@@ -1552,6 +1552,7 @@ const CreateProjectModal = ({ onClose, onSuccess }) => {
             <label className="form-label">Project Name</label>
             <input 
               type="text"
+              placeholder="Enter house project name (e.g., '123 Main Street House')"
               className="form-input"
               value={formData.name}
               onChange={(e) => setFormData({...formData, name: e.target.value})}
@@ -1562,6 +1563,7 @@ const CreateProjectModal = ({ onClose, onSuccess }) => {
           <div className="form-group">
             <label className="form-label">Description</label>
             <textarea 
+              placeholder="Project details: client info, lot specifications, house type, etc. (optional)"
               className="form-textarea"
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
