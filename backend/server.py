@@ -1493,7 +1493,7 @@ async def get_task(task_id: str, current_user: User = Depends(get_current_user))
 
 @api_router.put("/tasks/{task_id}", response_model=Task)
 async def update_task(task_id: str, updates: TaskUpdate, current_user: User = Depends(get_current_user)):
-    """Update task (Admin only)"""
+    """Update task or subtask (Admin only)"""
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Only admins can edit tasks")
     
