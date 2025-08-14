@@ -566,7 +566,11 @@ async def upload_file(
         is_image=is_image_file(file.filename)
     )
     
-    await db.file_attachments.insert_one(file_attachment.dict())
+    # Add viewable flag to the record for frontend
+    file_data = file_attachment.dict()
+    file_data['can_view_inline'] = can_view_inline(file.filename)
+    
+    await db.file_attachments.insert_one(file_data)
     
     # Send notification
     if project_id:
