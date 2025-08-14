@@ -172,7 +172,10 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
 
       {/* Expanded Subtask Content */}
       {isExpanded && (
-        <div className="subtask-content">
+        <div 
+          className="subtask-content"
+          style={{ borderLeft: `3px solid ${taskColor}` }}
+        >
           {loading ? (
             <div className="flex items-center justify-center py-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
