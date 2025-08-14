@@ -273,13 +273,15 @@ async def get_next_subtask_order(parent_task_id: str) -> int:
     return (max_order_task.get("subtask_order", 0) + 1) if max_order_task else 1
 
 # Helper function to create notifications in database (for polling)
-async def create_notification(notification_type: NotificationType, title: str, message: str, user_id: str):
+async def create_notification(notification_type: NotificationType, title: str, message: str, user_id: str, project_id: Optional[str] = None, task_id: Optional[str] = None):
     """Create a notification in the database for polling-based system"""
     notification = Notification(
         type=notification_type,
         title=title,
         message=message,
-        user_id=user_id
+        user_id=user_id,
+        project_id=project_id,
+        task_id=task_id
     )
     
     # Add is_read field for database storage
