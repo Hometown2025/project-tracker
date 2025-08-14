@@ -1126,7 +1126,7 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
               value={formData.title}
               onChange={(e) => setFormData({...formData, title: e.target.value})}
               required
-              placeholder="Enter task title..."
+              placeholder="Room name (e.g., Master Bedroom, Kitchen, Living Room)"
             />
           </div>
 
@@ -1137,7 +1137,7 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               rows={3}
-              placeholder="Add room description (can be added later)..."
+              placeholder="Room specifications, materials needed, special requirements (optional)"
             />
           </div>
 
