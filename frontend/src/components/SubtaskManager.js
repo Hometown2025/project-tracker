@@ -252,7 +252,7 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
               {/* Subtask List */}
               <div className="subtasks-list">
                 {subtasks.map((subtask) => (
-                  <div key={subtask.id} className="subtask-item">
+                  <div key={subtask.id} className="subtask-item" style={{ borderLeft: `3px solid ${taskColor}` }}>
                     <div className="subtask-main">
                       <div className="flex items-start gap-3">
                         {/* Completion Checkbox */}
@@ -260,6 +260,10 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
                           onClick={() => toggleSubtaskCompletion(subtask)}
                           className={`subtask-checkbox ${subtask.completed ? 'completed' : ''}`}
                           disabled={!canEdit()}
+                          style={{ 
+                            borderColor: subtask.completed ? '#10b981' : taskColor,
+                            backgroundColor: subtask.completed ? '#10b981' : 'white'
+                          }}
                         >
                           {subtask.completed && (
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,9 +275,16 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
                         {/* Subtask Content */}
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
-                            <h4 className={`subtask-title ${subtask.completed ? 'completed' : ''}`}>
-                              {subtask.title}
-                            </h4>
+                            <div className="flex items-center gap-2">
+                              <h4 className={`subtask-title ${subtask.completed ? 'completed' : ''}`}>
+                                {subtask.title}
+                              </h4>
+                              <div 
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: taskColor }}
+                                title={`Room: ${parentTask.title}`}
+                              ></div>
+                            </div>
                             
                             {/* Subtask Actions */}
                             <div className="flex items-center gap-1">
