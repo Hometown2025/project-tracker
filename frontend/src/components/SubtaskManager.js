@@ -209,20 +209,28 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
                         rows="2"
                       />
                       <div className="grid grid-cols-2 gap-2 mb-2">
-                        <input
-                          type="date"
-                          placeholder="Order Date"
-                          value={newSubtask.order_date}
-                          onChange={(e) => setNewSubtask({ ...newSubtask, order_date: e.target.value })}
-                          className="form-input"
-                        />
-                        <input
-                          type="date"
-                          placeholder="Delivery Date"
-                          value={newSubtask.delivery_date}
-                          onChange={(e) => setNewSubtask({ ...newSubtask, delivery_date: e.target.value })}
-                          className="form-input"
-                        />
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Order Date (optional)
+                          </label>
+                          <input
+                            type="date"
+                            value={newSubtask.order_date}
+                            onChange={(e) => setNewSubtask({ ...newSubtask, order_date: e.target.value })}
+                            className="form-input"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Delivery Date (optional)
+                          </label>
+                          <input
+                            type="date"
+                            value={newSubtask.delivery_date}
+                            onChange={(e) => setNewSubtask({ ...newSubtask, delivery_date: e.target.value })}
+                            className="form-input"
+                          />
+                        </div>
                       </div>
                       <div className="flex gap-2">
                         <button onClick={createSubtask} className="btn-primary-small">Create</button>
