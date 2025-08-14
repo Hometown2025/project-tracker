@@ -1129,6 +1129,7 @@ class TaskCreate(BaseModel):
     due_date: Optional[date] = None
     order_date: Optional[date] = None
     delivery_date: Optional[date] = None
+    parent_task_id: Optional[str] = None  # For creating subtasks
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
@@ -1139,6 +1140,7 @@ class TaskUpdate(BaseModel):
     delivery_date: Optional[date] = None
     status: Optional[TaskStatus] = None
     completed: Optional[bool] = None
+    subtask_order: Optional[int] = None  # For reordering subtasks
 
 class Idea(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
