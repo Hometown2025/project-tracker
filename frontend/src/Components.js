@@ -1113,7 +1113,7 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">Create New Task</h2>
+          <h2 className="modal-title">Add House Room</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         
