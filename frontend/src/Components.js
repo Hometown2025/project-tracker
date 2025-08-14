@@ -1192,13 +1192,13 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Project <span className="optional">(optional)</span></label>
+            <label className="form-label">House Project (required)</label>
             <select 
               className="form-select"
               value={formData.project_id}
               onChange={(e) => setFormData({...formData, project_id: e.target.value})}
             >
-              <option value="">No Project (Unassigned)</option>
+              <option value="">Select which house project this room belongs to</option>
               {projects.map(project => (
                 <option key={project.id} value={project.id}>{project.name}</option>
               ))}
