@@ -9,6 +9,7 @@ const FileList = ({ projectId, taskId, refreshTrigger = 0 }) => {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [imagePreview, setImagePreview] = useState(null);
+  const [fileViewer, setFileViewer] = useState(null);
   const { canDelete } = useAuth();
 
   useEffect(() => {
