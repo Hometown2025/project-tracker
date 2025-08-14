@@ -2297,6 +2297,7 @@ class TaskManagerTester:
             self.test_dashboard_stats()
             self.test_projects_crud()
             self.test_tasks_crud()
+            self.test_subtask_system()  # Add subtask testing
             self.test_role_based_access_control()
             self.test_date_serialization()
             self.test_calendar_api()
