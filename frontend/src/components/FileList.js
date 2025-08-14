@@ -286,29 +286,53 @@ const FileList = ({ projectId, taskId, refreshTrigger = 0 }) => {
         ))}
       </div>
 
-      {/* Image Preview Modal */}
-      {imagePreview && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center" onClick={() => setImagePreview(null)}>
-          <div className="max-w-4xl max-h-full p-4">
-            <div className="bg-white rounded-lg overflow-hidden">
+      {/* File Viewer Modal */}
+      {fileViewer && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center" onClick={() => setFileViewer(null)}>
+          <div className="max-w-6xl max-h-full w-full h-full p-4">
+            <div className="bg-white rounded-lg overflow-hidden h-full flex flex-col">
               <div className="flex justify-between items-center p-4 border-b">
-                <h3 className="font-medium text-gray-900">{imagePreview.filename}</h3>
-                <button
-                  onClick={() => setImagePreview(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <h3 className="font-medium text-gray-900">{fileViewer.filename}</h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => downloadFile(fileViewer.id, fileViewer.filename)}
+                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                    title="Download"
+                  >
+                    Download
+                  </button>
+                  <button
+                    onClick={() => setFileViewer(null)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <div className="p-4">
-                <img
-                  src={imagePreview.url}
-                  alt={imagePreview.filename}
-                  className="max-w-full max-h-96 mx-auto"
-                  onClick={(e) => e.stopPropagation()}
-                />
+              <div className="flex-1 p-4 overflow-auto">
+                {fileViewer.type === 'image' ? (
+                  <img
+                    src={fileViewer.url}
+                    alt={fileViewer.filename}
+                    className="max-w-full max-h-full mx-auto"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                ) : fileViewer.type === 'document' && fileViewer.filename.toLowerCase().endsWith('.pdf') ? (
+                  <iframe
+                    src={fileViewer.url}
+                    className="w-full h-full border-0"
+                    title={fileViewer.filename}
+                  />
+                ) : (
+                  <iframe
+                    src={fileViewer.url}
+                    className="w-full h-full border-0 bg-white"
+                    title={fileViewer.filename}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
               </div>
             </div>
           </div>
