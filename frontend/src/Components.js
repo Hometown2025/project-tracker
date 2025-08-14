@@ -1137,7 +1137,7 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               rows={3}
-              placeholder="Add task description (can be added later)..."
+              placeholder="Add room description (can be added later)..."
             />
           </div>
 
