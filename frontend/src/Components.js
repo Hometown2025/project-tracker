@@ -391,7 +391,7 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
       <div className="view-header">
         <div>
           <h1 className="page-title">
-            {selectedProject ? `${selectedProject.name} Tasks` : 'All Rooms'}
+            {selectedProject ? `${selectedProject.name} Tasks` : 'House Rooms'}
           </h1>
           <p className="page-subtitle">{filteredTasks.length} rooms found</p>
         </div>
