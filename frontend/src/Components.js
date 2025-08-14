@@ -471,6 +471,14 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
               <h3 className="task-card-title">{task.title}</h3>
               {task.description && <p className="task-card-description">{task.description}</p>}
               
+              {/* Subtask Manager */}
+              {task.subtask_level === 0 && (
+                <SubtaskManager 
+                  parentTask={task}
+                  onSubtaskUpdate={refreshData}
+                />
+              )}
+              
               {/* File Manager for Tasks */}
               <FileManager 
                 taskId={task.id}
