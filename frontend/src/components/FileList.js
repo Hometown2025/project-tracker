@@ -74,7 +74,16 @@ const FileList = ({ projectId, taskId, refreshTrigger = 0 }) => {
     setImagePreview({
       id: fileId,
       filename: filename,
-      url: `${API}/files/download/${fileId}`
+      url: `${API}/files/view/${fileId}`
+    });
+  };
+
+  const viewFile = (fileId, filename, fileType) => {
+    setFileViewer({
+      id: fileId,
+      filename: filename,
+      url: `${API}/files/view/${fileId}`,
+      type: fileType
     });
   };
 
