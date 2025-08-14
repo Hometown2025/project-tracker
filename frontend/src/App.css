@@ -2196,18 +2196,23 @@ body {
   cursor: pointer;
   padding: 0.75rem;
   border-radius: 8px;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
   user-select: none;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 .subtask-header:hover {
-  background: #f3f4f6;
+  background: #f1f5f9;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .subtask-content {
   margin-top: 1rem;
   padding-left: 1rem;
-  border-left: 2px solid #e5e7eb;
+  background: #fdfdfd;
+  border-radius: 0 8px 8px 0;
 }
 
 .create-subtask-section {
@@ -2235,11 +2240,13 @@ body {
   border-radius: 8px;
   padding: 0.75rem;
   transition: all 0.2s;
+  position: relative;
 }
 
 .subtask-item:hover {
   border-color: #d1d5db;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
 }
 
 .subtask-main {
@@ -2249,7 +2256,7 @@ body {
 .subtask-checkbox {
   width: 18px;
   height: 18px;
-  border: 2px solid #d1d5db;
+  border: 2px solid;
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -2262,12 +2269,10 @@ body {
 }
 
 .subtask-checkbox:hover {
-  border-color: #8b5cf6;
+  transform: scale(1.1);
 }
 
 .subtask-checkbox.completed {
-  background: #10b981;
-  border-color: #10b981;
   color: white;
 }
 
@@ -2307,16 +2312,20 @@ body {
   padding: 0.25rem 0.5rem;
   border-radius: 12px;
   font-weight: 500;
+  border: 1px solid;
+  position: relative;
 }
 
 .subtask-date.order {
   background: #fef3c7;
   color: #92400e;
+  border-color: #fbbf24;
 }
 
 .subtask-date.delivery {
   background: #dcfce7;
   color: #166534;
+  border-color: #22c55e;
 }
 
 .sub-subtasks {
@@ -2349,6 +2358,7 @@ body {
 .btn-icon-small:hover {
   background: #f3f4f6;
   color: #374151;
+  transform: scale(1.1);
 }
 
 .btn-primary-small {
@@ -2365,6 +2375,8 @@ body {
 
 .btn-primary-small:hover {
   background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
 }
 
 .btn-secondary-small {
@@ -2382,6 +2394,7 @@ body {
 .btn-secondary-small:hover {
   background: #e5e7eb;
   border-color: #9ca3af;
+  transform: translateY(-1px);
 }
 
 /* Modal Styles for Subtask Editing */
