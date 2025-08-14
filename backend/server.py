@@ -211,6 +211,67 @@ async def send_notification_to_admins(notification_type: NotificationType, title
     for admin in admin_users:
         await create_notification(notification_type, title, message, admin["id"])
 
+# Subtask helper functions
+async def calculate_subtask_counts(task_id: str):
+    """Calculate and return subtask counts for a task"""
+    total_subtasks = await db.tasks.count_documents({"parent_task_id": task_id})
+    completed_subtasks = await db.tasks.count_documents({"parent_task_id": task_id, "completed": True})
+    
+    return total_subtasks, completed_subtasks
+
+async def update_parent_task_progress(parent_task_id: str):
+    """Update parent task progress based on subtask completion"""
+    total_subtasks, completed_subtasks = await calculate_subtask_counts(parent_task_id)
+    
+    # Update parent task with subtask counts
+    await db.tasks.update_one(
+        {"id": parent_task_id},
+        {
+            "$set": {
+                "subtask_count": total_subtasks,
+                "completed_subtasks": completed_subtasks
+            }
+        }
+    )
+    
+    # Auto-complete parent task if all subtasks are completed
+    if total_subtasks > 0 and completed_subtasks == total_subtasks:
+        parent_task = await db.tasks.find_one({"id": parent_task_id})
+        if parent_task and not parent_task.get("completed", False):
+            await db.tasks.update_one(
+                {"id": parent_task_id},
+                {
+                    "$set": {
+                        "completed": True,
+                        "completed_date": datetime.utcnow(),
+                        "status": TaskStatus.COMPLETED
+                    }
+                }
+            )
+            
+            # Send notification about parent task completion
+            project_name = "Unassigned"
+            if parent_task.get("project_id"):
+                project = await db.projects.find_one({"id": parent_task["project_id"]})
+                if project:
+                    project_name = project["name"]
+            
+            await send_notification_to_project_members(
+                NotificationType.TASK_COMPLETED,
+                "Task Auto-Completed",
+                f"Task '{parent_task['title']}' in {project_name} was completed automatically (all subtasks finished)",
+                parent_task.get("project_id")
+            )
+
+async def get_next_subtask_order(parent_task_id: str) -> int:
+    """Get the next order number for a new subtask"""
+    max_order_task = await db.tasks.find_one(
+        {"parent_task_id": parent_task_id},
+        sort=[("subtask_order", -1)]
+    )
+    
+    return (max_order_task.get("subtask_order", 0) + 1) if max_order_task else 1
+
 # Helper function to create notifications in database (for polling)
 async def create_notification(notification_type: NotificationType, title: str, message: str, user_id: str):
     """Create a notification in the database for polling-based system"""
