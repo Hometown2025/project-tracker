@@ -188,7 +188,7 @@ class Conversation(BaseModel):
     unread_count: Dict[str, int] = {}  # user_id -> unread count
 
 # Helper function to send notifications to project members (polling-based)
-async def send_notification_to_project_members(notification_type: NotificationType, title: str, message: str, project_id: str):
+async def send_notification_to_project_members(notification_type: NotificationType, title: str, message: str, project_id: str, task_id: Optional[str] = None):
     """Send notification to project members and admins via database storage"""
     # Get users assigned to this project
     users = await db.users.find({"assigned_projects": project_id, "is_active": True}).to_list(1000)
