@@ -945,7 +945,7 @@ const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">Edit Task</h2>
+          <h2 className="modal-title">Edit Room</h2>
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         
