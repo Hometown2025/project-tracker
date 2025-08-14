@@ -1539,6 +1539,8 @@ async def update_task(task_id: str, updates: TaskUpdate, current_user: User = De
         if project:
             project_name = project["name"]
     
+    task_type = "Subtask" if updated_task.get("parent_task_id") else "Task"
+    
     if task_completed:
         if updated_task.get("project_id"):
             await send_notification_to_project_members(
