@@ -282,6 +282,25 @@ async def create_thumbnail(file_path: str, thumbnail_path: str) -> bool:
         print(f"Error creating thumbnail: {e}")
         return False
 
+def can_view_inline(filename: str) -> bool:
+    """Check if file can be viewed inline in browser"""
+    extension = get_file_extension(filename)
+    
+    # Files that can be viewed inline
+    viewable_extensions = {
+        # Images
+        'jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg',
+        # Documents
+        'pdf', 'txt', 
+        # Web files
+        'html', 'htm', 'css', 'js', 'json', 'xml', 'md',
+        # Code files (will be displayed as text)
+        'py', 'java', 'cpp', 'c', 'php', 'rb', 'go', 'rs', 'swift', 'kt',
+        'yaml', 'yml', 'sql', 'sh', 'bat', 'ps1'
+    }
+    
+    return extension in viewable_extensions
+
 def get_safe_filename(filename: str) -> str:
     """Generate safe filename for storage"""
     # Remove dangerous characters and limit length
