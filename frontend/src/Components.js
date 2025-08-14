@@ -791,8 +791,8 @@ const ProjectView = ({ projects, refreshData, setSelectedProject, setCurrentView
     <div className="project-view">
       <div className="view-header">
         <div>
-          <h1 className="page-title">Projects</h1>
-          <p className="page-subtitle">Manage your project portfolio</p>
+          <h1 className="page-title">House Building Projects</h1>
+          <p className="page-subtitle">Manage your house building projects</p>
         </div>
         <button 
           className="btn-primary"
@@ -801,7 +801,7 @@ const ProjectView = ({ projects, refreshData, setSelectedProject, setCurrentView
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          New Project
+          New House Project
         </button>
       </div>
 
