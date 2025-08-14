@@ -1501,6 +1501,62 @@ async def get_task(task_id: str, current_user: User = Depends(get_current_user))
     
     return Task(**task)
 
+@api_router.get("/tasks/{task_id}/subtasks", response_model=List[Task])
+async def get_subtasks(task_id: str, current_user: User = Depends(get_current_user)):
+    """Get all subtasks for a specific task"""
+    # Verify parent task exists and user has access
+    parent_task = await db.tasks.find_one({"id": task_id})
+    if not parent_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Check permissions
+    if current_user.role != UserRole.ADMIN:
+        if parent_task.get("project_id") and parent_task["project_id"] not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
+        elif not parent_task.get("project_id") and parent_task.get("owner_id") != current_user.id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get subtasks ordered by subtask_order
+    subtasks = await db.tasks.find({
+        "parent_task_id": task_id
+    }).sort("subtask_order", 1).to_list(1000)
+    
+    # Deserialize dates and add computed counts for response
+    for subtask in subtasks:
+        deserialize_dates(subtask)
+        
+        # Add file count
+        file_count = await db.file_attachments.count_documents({"task_id": subtask["id"]})
+        subtask['file_count'] = file_count
+        
+        # Add subtask counts for level 1 subtasks (can have sub-subtasks)
+        if subtask.get("subtask_level", 0) == 1:
+            total_subtasks, completed_subtasks = await calculate_subtask_counts(subtask["id"])
+            subtask['subtask_count'] = total_subtasks
+            subtask['completed_subtasks'] = completed_subtasks
+    
+    return [Task(**subtask) for subtask in subtasks]
+
+@api_router.put("/tasks/{task_id}/reorder", response_model=dict)
+async def reorder_subtasks(task_id: str, subtask_orders: Dict[str, int], current_user: User = Depends(get_current_user)):
+    """Reorder subtasks within a parent task"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can reorder subtasks")
+    
+    # Verify parent task exists
+    parent_task = await db.tasks.find_one({"id": task_id})
+    if not parent_task:
+        raise HTTPException(status_code=404, detail="Parent task not found")
+    
+    # Update subtask orders
+    for subtask_id, new_order in subtask_orders.items():
+        await db.tasks.update_one(
+            {"id": subtask_id, "parent_task_id": task_id},
+            {"$set": {"subtask_order": new_order}}
+        )
+    
+    return {"message": "Subtasks reordered successfully"}
+
 @api_router.put("/tasks/{task_id}", response_model=Task)
 async def update_task(task_id: str, updates: TaskUpdate, current_user: User = Depends(get_current_user)):
     """Update task or subtask (Admin only)"""
