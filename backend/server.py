@@ -1375,17 +1375,45 @@ def deserialize_dates(data, date_fields=['due_date', 'order_date', 'delivery_dat
 # Task Routes
 @api_router.post("/tasks", response_model=Task)
 async def create_task(task: TaskCreate, current_user: User = Depends(get_current_user)):
-    """Create task (Admin only)"""
+    """Create task or subtask (Admin only)"""
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Only admins can create tasks")
     
     task_dict = task.dict()
+    
+    # Handle subtask creation
+    if task.parent_task_id:
+        # Validate parent task exists
+        parent_task = await db.tasks.find_one({"id": task.parent_task_id})
+        if not parent_task:
+            raise HTTPException(status_code=404, detail="Parent task not found")
+        
+        # Check nesting level limit (max 2 levels)
+        parent_level = parent_task.get("subtask_level", 0)
+        if parent_level >= 2:
+            raise HTTPException(status_code=400, detail="Maximum subtask nesting level (2) exceeded")
+        
+        # Set subtask properties
+        task_dict["subtask_level"] = parent_level + 1
+        task_dict["subtask_order"] = await get_next_subtask_order(task.parent_task_id)
+        
+        # Inherit project from parent if not specified
+        if not task_dict.get("project_id"):
+            task_dict["project_id"] = parent_task.get("project_id")
+        
+        # Subtasks don't have due dates (as per requirement)
+        task_dict["due_date"] = None
+    
     task_obj = Task(**task_dict, owner_id=current_user.id)
     
     # Serialize dates for MongoDB storage
     task_data = serialize_dates(task_obj.dict())
     
     await db.tasks.insert_one(task_data)
+    
+    # Update parent task progress if this is a subtask
+    if task.parent_task_id:
+        await update_parent_task_progress(task.parent_task_id)
     
     # Send notification
     project_name = "Unassigned"
@@ -1394,18 +1422,19 @@ async def create_task(task: TaskCreate, current_user: User = Depends(get_current
         if project:
             project_name = project["name"]
     
+    task_type = "Subtask" if task.parent_task_id else "Task"
     if task_obj.project_id:
         await send_notification_to_project_members(
             NotificationType.TASK_CREATED,
-            "New Task Created",
-            f"Task '{task_obj.title}' has been created in {project_name} by {current_user.username}",
+            f"New {task_type} Created",
+            f"{task_type} '{task_obj.title}' has been created in {project_name} by {current_user.username}",
             task_obj.project_id
         )
     else:
         await send_notification_to_admins(
             NotificationType.TASK_CREATED,
-            "New Task Created",
-            f"Task '{task_obj.title}' has been created in {project_name} by {current_user.username}"
+            f"New {task_type} Created",
+            f"{task_type} '{task_obj.title}' has been created in {project_name} by {current_user.username}"
         )
     
     return task_obj
