@@ -1528,6 +1528,10 @@ async def update_task(task_id: str, updates: TaskUpdate, current_user: User = De
     updated_task = await db.tasks.find_one({"id": task_id})
     deserialize_dates(updated_task)
     
+    # Update parent task progress if this is a subtask and completion status changed
+    if existing_task.get("parent_task_id") and updates.completed is not None:
+        await update_parent_task_progress(existing_task["parent_task_id"])
+    
     # Send notification
     project_name = "Unassigned"
     if updated_task.get("project_id"):
