@@ -645,10 +645,13 @@ async def get_task_files(task_id: str, current_user: User = Depends(get_current_
     
     files = await db.file_attachments.find({"task_id": task_id}).to_list(1000)
     
-    # Clean up MongoDB ObjectIds
+    # Clean up MongoDB ObjectIds and add viewable flag
     for file_obj in files:
         if "_id" in file_obj:
             del file_obj["_id"]
+        # Add viewable flag if not present
+        if 'can_view_inline' not in file_obj:
+            file_obj['can_view_inline'] = can_view_inline(file_obj.get('original_filename', ''))
     
     return files
 
