@@ -328,13 +328,24 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
                           {/* Subtask Dates */}
                           <div className="subtask-dates">
                             {subtask.order_date && (
-                              <span className="subtask-date order">
-                                📦 Order: {formatDate(subtask.order_date)}
+                              <span 
+                                className="subtask-date order"
+                                style={{ borderColor: taskColor }}
+                              >
+                                📦 Order Date: {formatDate(subtask.order_date)}
                               </span>
                             )}
                             {subtask.delivery_date && (
-                              <span className="subtask-date delivery">
-                                🚚 Delivery: {formatDate(subtask.delivery_date)}
+                              <span 
+                                className="subtask-date delivery"
+                                style={{ borderColor: taskColor }}
+                              >
+                                🚚 Delivery Date: {formatDate(subtask.delivery_date)}
+                              </span>
+                            )}
+                            {!subtask.order_date && !subtask.delivery_date && (
+                              <span className="text-xs text-gray-400 italic">
+                                No dates set (can be added later)
                               </span>
                             )}
                           </div>
