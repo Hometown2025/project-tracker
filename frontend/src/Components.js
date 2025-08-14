@@ -1218,7 +1218,7 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
               Cancel
             </button>
             <button type="submit" className="btn-primary">
-              Create Task
+              Create Room
             </button>
           </div>
         </form>
