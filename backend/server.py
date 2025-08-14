@@ -1443,7 +1443,7 @@ async def create_task(task: TaskCreate, current_user: User = Depends(get_current
 
 @api_router.get("/tasks", response_model=List[Task])
 async def get_tasks(project_id: Optional[str] = None, status: Optional[TaskStatus] = None, current_user: User = Depends(get_current_user)):
-    """Get tasks - Admin sees all, Users see tasks from assigned projects only"""
+    """Get tasks and subtasks - Admin sees all, Users see tasks from assigned projects only"""
     query = {}
     if project_id:
         # Check if user has access to this project
