@@ -399,18 +399,28 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
                 placeholder="Description"
               />
               <div className="grid grid-cols-2 gap-3 mb-3">
-                <input
-                  type="date"
-                  value={editingSubtask.order_date || ''}
-                  onChange={(e) => setEditingSubtask({ ...editingSubtask, order_date: e.target.value })}
-                  className="form-input"
-                />
-                <input
-                  type="date"
-                  value={editingSubtask.delivery_date || ''}
-                  onChange={(e) => setEditingSubtask({ ...editingSubtask, delivery_date: e.target.value })}
-                  className="form-input"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Order Date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={editingSubtask.order_date || ''}
+                    onChange={(e) => setEditingSubtask({ ...editingSubtask, order_date: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Delivery Date (optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={editingSubtask.delivery_date || ''}
+                    onChange={(e) => setEditingSubtask({ ...editingSubtask, delivery_date: e.target.value })}
+                    className="form-input"
+                  />
+                </div>
               </div>
             </div>
             <div className="modal-footer">
