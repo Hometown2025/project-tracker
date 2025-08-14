@@ -124,6 +124,7 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
   const totalSubtasks = parentTask.subtask_count || 0;
   const completedSubtasks = parentTask.completed_subtasks || 0;
   const progressPercentage = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0;
+  const taskColor = getSubtaskColor(parentTask);
 
   return (
     <div className="subtask-manager">
@@ -131,9 +132,14 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
       <div 
         className="subtask-header"
         onClick={() => setIsExpanded(!isExpanded)}
+        style={{ borderLeft: `4px solid ${taskColor}` }}
       >
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
+            <div 
+              className="w-3 h-3 rounded-full flex-shrink-0"
+              style={{ backgroundColor: taskColor }}
+            ></div>
             <svg 
               className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
               fill="none" 
@@ -144,6 +150,9 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
             </svg>
             <span className="font-medium text-gray-700">
               Subtasks ({completedSubtasks}/{totalSubtasks})
+            </span>
+            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+              Room: {parentTask.title}
             </span>
           </div>
           
