@@ -83,6 +83,33 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
     setExpandedSubtasks(newExpanded);
   };
 
+  const getSubtaskColor = (parentTask) => {
+    // Use parent task/room color for subtask identification
+    const colors = [
+      '#8B5CF6', // Purple (default)
+      '#3B82F6', // Blue
+      '#10B981', // Green
+      '#F59E0B', // Yellow
+      '#EF4444', // Red
+      '#8B5A2B', // Brown
+      '#EC4899', // Pink
+      '#6366F1', // Indigo
+      '#84CC16', // Lime
+      '#F97316'  // Orange
+    ];
+    
+    // Generate consistent color based on parent task ID
+    if (parentTask && parentTask.id) {
+      const hash = parentTask.id.split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+      }, 0);
+      return colors[Math.abs(hash) % colors.length];
+    }
+    
+    return colors[0]; // Default purple
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString();
