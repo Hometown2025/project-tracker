@@ -1072,7 +1072,7 @@ const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
   );
 };
 
-// Create Task Modal
+// Create Room Modal
 const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     title: '',
