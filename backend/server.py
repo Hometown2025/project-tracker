@@ -1568,8 +1568,8 @@ async def update_task(task_id: str, updates: TaskUpdate, current_user: User = De
         else:
             await send_notification_to_admins(
                 NotificationType.TASK_UPDATED,
-                "Task Updated",
-                f"Task '{updated_task['title']}' in {project_name} has been updated by {current_user.username}"
+                f"{task_type} Updated",
+                f"{task_type} '{updated_task['title']}' has been updated by {current_user.username}"
             )
     
     return Task(**updated_task)
