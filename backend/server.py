@@ -1113,6 +1113,13 @@ class Task(BaseModel):
     created_date: datetime = Field(default_factory=datetime.utcnow)
     completed_date: Optional[datetime] = None
     file_count: int = 0  # Computed field
+    
+    # Subtask fields
+    parent_task_id: Optional[str] = None  # If this is a subtask, ID of parent task
+    subtask_level: int = 0  # 0 = main task, 1 = subtask, 2 = sub-subtask
+    subtask_order: int = 0  # Order within the parent task
+    subtask_count: int = 0  # Computed field - number of subtasks
+    completed_subtasks: int = 0  # Computed field - number of completed subtasks
 
 class TaskCreate(BaseModel):
     project_id: Optional[str] = None
