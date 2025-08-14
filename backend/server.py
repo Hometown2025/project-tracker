@@ -1545,9 +1545,10 @@ async def update_task(task_id: str, updates: TaskUpdate, current_user: User = De
         if updated_task.get("project_id"):
             await send_notification_to_project_members(
                 NotificationType.TASK_COMPLETED,
-                "Task Completed",
-                f"Task '{updated_task['title']}' in {project_name} has been completed by {current_user.username}",
-                updated_task["project_id"]
+                f"{task_type} Completed",
+                f"{task_type} '{updated_task['title']}' in {project_name} has been completed by {current_user.username}",
+                updated_task["project_id"],
+                task_id
             )
         else:
             await send_notification_to_admins(
