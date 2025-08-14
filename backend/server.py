@@ -201,7 +201,7 @@ async def send_notification_to_project_members(notification_type: NotificationTy
     
     # Create notification for each user
     for user_id in all_user_ids:
-        await create_notification(notification_type, title, message, user_id)
+        await create_notification(notification_type, title, message, user_id, project_id, task_id)
 
 # Helper function to send notifications to all admins (polling-based)
 async def send_notification_to_admins(notification_type: NotificationType, title: str, message: str):
