@@ -578,7 +578,7 @@ async def upload_file(
         if not task:
             raise HTTPException(status_code=404, detail="Task not found")
         
-        # Check task permissions
+        # Check task permissions (works for both tasks and subtasks)
         if current_user.role != UserRole.ADMIN:
             task_project_id = task.get("project_id")
             if task_project_id and task_project_id not in current_user.assigned_projects:
