@@ -1463,11 +1463,19 @@ async def get_tasks(project_id: Optional[str] = None, status: Optional[TaskStatu
     
     tasks = await db.tasks.find(query).to_list(1000)
     
-    # Deserialize dates and add file counts for response
+    # Deserialize dates and add computed counts for response
     for task in tasks:
         deserialize_dates(task)
+        
+        # Add file count
         file_count = await db.file_attachments.count_documents({"task_id": task["id"]})
         task['file_count'] = file_count
+        
+        # Add subtask counts for main tasks (level 0)
+        if task.get("subtask_level", 0) == 0:
+            total_subtasks, completed_subtasks = await calculate_subtask_counts(task["id"])
+            task['subtask_count'] = total_subtasks
+            task['completed_subtasks'] = completed_subtasks
     
     return [Task(**task) for task in tasks]
 
