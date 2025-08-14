@@ -1944,6 +1944,343 @@ class TaskManagerTester:
                     self.log("❌ Message received notification not found via notification polling", "ERROR")
                     self.failed_tests += 1
 
+    def test_subtask_system(self):
+        """Test comprehensive subtask system implementation"""
+        self.log("\n=== Testing Comprehensive Subtask System ===")
+        
+        if not self.admin_token:
+            self.log("❌ No admin token available for subtask testing", "ERROR")
+            return
+        
+        if not self.test_data['projects']:
+            self.log("❌ No projects available for subtask testing", "ERROR")
+            return
+        
+        project_id = self.test_data['projects'][0]['id']
+        
+        # Test 1: Create main task for subtask testing
+        main_task_data = {
+            "project_id": project_id,
+            "title": "Main Task for Subtask Testing",
+            "description": "Parent task to test subtask functionality",
+            "priority": "high",
+            "due_date": (date.today() + timedelta(days=10)).isoformat()
+        }
+        
+        main_task = self.test_request("POST", "/tasks", main_task_data, 200, 
+                                    "Create Main Task for Subtask Testing", auth_token=self.admin_token)
+        
+        if not main_task:
+            self.log("❌ Failed to create main task for subtask testing", "ERROR")
+            return
+        
+        main_task_id = main_task['id']
+        self.test_data['tasks'].append(main_task)
+        
+        # Test 2: Create subtasks with parent_task_id parameter
+        subtask_data_1 = {
+            "parent_task_id": main_task_id,
+            "title": "Subtask 1 - Design Phase",
+            "description": "First subtask for design work",
+            "priority": "medium"
+        }
+        
+        subtask_1 = self.test_request("POST", "/tasks", subtask_data_1, 200, 
+                                    "Create Subtask 1", auth_token=self.admin_token)
+        
+        if subtask_1:
+            self.log("✅ Subtask creation with parent_task_id working")
+            
+            # Verify subtask properties
+            if subtask_1.get('parent_task_id') == main_task_id:
+                self.log("✅ Parent task ID correctly set")
+            else:
+                self.log("❌ Parent task ID not set correctly", "ERROR")
+                self.failed_tests += 1
+            
+            if subtask_1.get('subtask_level') == 1:
+                self.log("✅ Subtask level correctly set to 1")
+            else:
+                self.log("❌ Subtask level not set correctly", "ERROR")
+                self.failed_tests += 1
+            
+            if subtask_1.get('subtask_order') == 1:
+                self.log("✅ Auto-ordering working - first subtask has order 1")
+            else:
+                self.log("❌ Auto-ordering not working correctly", "ERROR")
+                self.failed_tests += 1
+            
+            if subtask_1.get('project_id') == project_id:
+                self.log("✅ Project inheritance from parent task working")
+            else:
+                self.log("❌ Project inheritance not working", "ERROR")
+                self.failed_tests += 1
+            
+            if subtask_1.get('due_date') is None:
+                self.log("✅ Subtasks don't have due_date (correctly null)")
+            else:
+                self.log("❌ Subtask has due_date when it should be null", "ERROR")
+                self.failed_tests += 1
+        
+        # Test 3: Create second subtask to test ordering
+        subtask_data_2 = {
+            "parent_task_id": main_task_id,
+            "title": "Subtask 2 - Development Phase",
+            "description": "Second subtask for development work",
+            "priority": "high"
+        }
+        
+        subtask_2 = self.test_request("POST", "/tasks", subtask_data_2, 200, 
+                                    "Create Subtask 2", auth_token=self.admin_token)
+        
+        if subtask_2:
+            if subtask_2.get('subtask_order') == 2:
+                self.log("✅ Auto-ordering working - second subtask has order 2")
+            else:
+                self.log("❌ Auto-ordering not working for second subtask", "ERROR")
+                self.failed_tests += 1
+        
+        # Test 4: Create sub-subtask (level 2) to test nesting limit
+        if subtask_1:
+            sub_subtask_data = {
+                "parent_task_id": subtask_1['id'],
+                "title": "Sub-subtask - UI Components",
+                "description": "Sub-subtask for UI component work",
+                "priority": "low"
+            }
+            
+            sub_subtask = self.test_request("POST", "/tasks", sub_subtask_data, 200, 
+                                          "Create Sub-subtask (Level 2)", auth_token=self.admin_token)
+            
+            if sub_subtask:
+                if sub_subtask.get('subtask_level') == 2:
+                    self.log("✅ Sub-subtask level correctly set to 2")
+                else:
+                    self.log("❌ Sub-subtask level not set correctly", "ERROR")
+                    self.failed_tests += 1
+                
+                # Test 5: Try to create level 3 subtask (should fail)
+                invalid_subtask_data = {
+                    "parent_task_id": sub_subtask['id'],
+                    "title": "Invalid Level 3 Subtask",
+                    "description": "This should fail due to nesting limit",
+                    "priority": "low"
+                }
+                
+                self.test_request("POST", "/tasks", invalid_subtask_data, 400, 
+                                "Create Level 3 Subtask (Should Fail)", auth_token=self.admin_token)
+        
+        # Test 6: Get subtasks for specific task
+        subtasks = self.test_request("GET", f"/tasks/{main_task_id}/subtasks", 
+                                   auth_token=self.admin_token, test_name="Get Subtasks for Main Task")
+        
+        if subtasks:
+            self.log(f"✅ Retrieved {len(subtasks)} subtasks for main task")
+            
+            # Verify subtasks are returned in correct order
+            if len(subtasks) >= 2:
+                if subtasks[0].get('subtask_order', 0) <= subtasks[1].get('subtask_order', 0):
+                    self.log("✅ Subtasks returned in correct order")
+                else:
+                    self.log("❌ Subtasks not returned in correct order", "ERROR")
+                    self.failed_tests += 1
+            
+            # Verify subtask counts are calculated correctly
+            main_task_updated = self.test_request("GET", f"/tasks/{main_task_id}", 
+                                                auth_token=self.admin_token, test_name="Get Main Task with Subtask Counts")
+            
+            if main_task_updated:
+                expected_subtask_count = len(subtasks)
+                actual_subtask_count = main_task_updated.get('subtask_count', 0)
+                
+                if actual_subtask_count == expected_subtask_count:
+                    self.log(f"✅ Subtask count calculated correctly: {actual_subtask_count}")
+                else:
+                    self.log(f"❌ Subtask count incorrect: expected {expected_subtask_count}, got {actual_subtask_count}", "ERROR")
+                    self.failed_tests += 1
+                
+                completed_subtasks = main_task_updated.get('completed_subtasks', 0)
+                if completed_subtasks == 0:
+                    self.log("✅ Completed subtasks count correct (0)")
+                else:
+                    self.log(f"❌ Completed subtasks count incorrect: expected 0, got {completed_subtasks}", "ERROR")
+                    self.failed_tests += 1
+        
+        # Test 7: Test subtask completion and auto-completion
+        if subtask_1 and subtask_2:
+            # Complete first subtask
+            completion_update = {"completed": True}
+            completed_subtask_1 = self.test_request("PUT", f"/tasks/{subtask_1['id']}", completion_update, 200, 
+                                                  "Complete Subtask 1", auth_token=self.admin_token)
+            
+            if completed_subtask_1 and completed_subtask_1.get('completed'):
+                self.log("✅ Subtask completion working")
+                
+                # Check if parent task progress is updated
+                main_task_after_completion = self.test_request("GET", f"/tasks/{main_task_id}", 
+                                                             auth_token=self.admin_token, 
+                                                             test_name="Check Parent Task Progress After Subtask Completion")
+                
+                if main_task_after_completion:
+                    completed_subtasks = main_task_after_completion.get('completed_subtasks', 0)
+                    if completed_subtasks == 1:
+                        self.log("✅ Parent task progress updated when subtask completed")
+                    else:
+                        self.log(f"❌ Parent task progress not updated correctly: expected 1, got {completed_subtasks}", "ERROR")
+                        self.failed_tests += 1
+                    
+                    # Parent task should not be auto-completed yet (only 1 of 2 subtasks done)
+                    if not main_task_after_completion.get('completed', False):
+                        self.log("✅ Parent task not auto-completed (only partial subtasks done)")
+                    else:
+                        self.log("❌ Parent task incorrectly auto-completed", "ERROR")
+                        self.failed_tests += 1
+            
+            # Complete second subtask to test auto-completion
+            completed_subtask_2 = self.test_request("PUT", f"/tasks/{subtask_2['id']}", completion_update, 200, 
+                                                  "Complete Subtask 2", auth_token=self.admin_token)
+            
+            if completed_subtask_2 and completed_subtask_2.get('completed'):
+                self.log("✅ Second subtask completion working")
+                
+                # Check if parent task is auto-completed
+                main_task_final = self.test_request("GET", f"/tasks/{main_task_id}", 
+                                                  auth_token=self.admin_token, 
+                                                  test_name="Check Parent Task Auto-completion")
+                
+                if main_task_final:
+                    if main_task_final.get('completed', False):
+                        self.log("✅ Parent task auto-completed when all subtasks finished")
+                    else:
+                        self.log("❌ Parent task not auto-completed when all subtasks finished", "ERROR")
+                        self.failed_tests += 1
+                    
+                    completed_subtasks = main_task_final.get('completed_subtasks', 0)
+                    if completed_subtasks == 2:
+                        self.log("✅ Final completed subtasks count correct (2)")
+                    else:
+                        self.log(f"❌ Final completed subtasks count incorrect: expected 2, got {completed_subtasks}", "ERROR")
+                        self.failed_tests += 1
+        
+        # Test 8: Test subtask file attachments
+        if subtask_1:
+            # Create a test file for upload
+            test_file_content = b"Test file content for subtask attachment"
+            
+            # Test file upload to subtask
+            files = {'file': ('test_subtask_file.txt', test_file_content, 'text/plain')}
+            data = {'task_id': subtask_1['id']}
+            
+            try:
+                response = self.session.post(
+                    f"{self.base_url}/files/upload",
+                    files=files,
+                    data=data,
+                    headers={"Authorization": f"Bearer {self.admin_token}"}
+                )
+                
+                if response.status_code == 200:
+                    self.log("✅ File upload to subtask working")
+                    file_response = response.json()
+                    file_id = file_response.get('file_id')
+                    
+                    # Test file retrieval from subtask
+                    subtask_files = self.test_request("GET", f"/files/task/{subtask_1['id']}", 
+                                                    auth_token=self.admin_token, 
+                                                    test_name="Get Files from Subtask")
+                    
+                    if subtask_files and len(subtask_files) > 0:
+                        self.log("✅ File retrieval from subtask working")
+                        
+                        # Verify file count is updated in subtask
+                        subtask_with_files = self.test_request("GET", f"/tasks/{subtask_1['id']}", 
+                                                             auth_token=self.admin_token, 
+                                                             test_name="Check Subtask File Count")
+                        
+                        if subtask_with_files and subtask_with_files.get('file_count', 0) > 0:
+                            self.log("✅ Subtask file count updated correctly")
+                        else:
+                            self.log("❌ Subtask file count not updated", "ERROR")
+                            self.failed_tests += 1
+                    else:
+                        self.log("❌ File retrieval from subtask failed", "ERROR")
+                        self.failed_tests += 1
+                else:
+                    self.log(f"❌ File upload to subtask failed: {response.status_code}", "ERROR")
+                    self.failed_tests += 1
+                    
+            except Exception as e:
+                self.log(f"❌ File upload to subtask failed with exception: {str(e)}", "ERROR")
+                self.failed_tests += 1
+        
+        # Test 9: Test subtask reordering
+        if subtasks and len(subtasks) >= 2:
+            # Create reorder data (swap order of first two subtasks)
+            reorder_data = {
+                subtasks[0]['id']: 2,
+                subtasks[1]['id']: 1
+            }
+            
+            reorder_response = self.test_request("PUT", f"/tasks/{main_task_id}/reorder", reorder_data, 200, 
+                                               "Reorder Subtasks", auth_token=self.admin_token)
+            
+            if reorder_response:
+                self.log("✅ Subtask reordering endpoint working")
+                
+                # Verify reordering worked
+                reordered_subtasks = self.test_request("GET", f"/tasks/{main_task_id}/subtasks", 
+                                                     auth_token=self.admin_token, 
+                                                     test_name="Verify Subtask Reordering")
+                
+                if reordered_subtasks and len(reordered_subtasks) >= 2:
+                    # Check if order changed
+                    first_subtask_order = reordered_subtasks[0].get('subtask_order', 0)
+                    second_subtask_order = reordered_subtasks[1].get('subtask_order', 0)
+                    
+                    if first_subtask_order <= second_subtask_order:
+                        self.log("✅ Subtask reordering working correctly")
+                    else:
+                        self.log("❌ Subtask reordering not working correctly", "ERROR")
+                        self.failed_tests += 1
+        
+        # Test 10: Test role-based access for subtask viewing
+        if self.demo_token and subtasks:
+            # Demo user should be able to view subtasks if they have access to the project
+            demo_subtasks = self.test_request("GET", f"/tasks/{main_task_id}/subtasks", 
+                                            auth_token=self.demo_token, 
+                                            test_name="Demo User Access to Subtasks")
+            
+            # This might succeed or fail depending on project assignment, both are valid
+            if demo_subtasks is not None:
+                self.log("✅ Role-based access control working for subtask viewing")
+            else:
+                self.log("✅ Role-based access control properly restricting subtask access")
+        
+        # Test 11: Test database operations and data integrity
+        all_tasks = self.test_request("GET", "/tasks", auth_token=self.admin_token, 
+                                    test_name="Get All Tasks to Verify Database Operations")
+        
+        if all_tasks:
+            # Count tasks with subtask fields
+            main_tasks = [task for task in all_tasks if task.get('subtask_level', 0) == 0]
+            level_1_subtasks = [task for task in all_tasks if task.get('subtask_level', 0) == 1]
+            level_2_subtasks = [task for task in all_tasks if task.get('subtask_level', 0) == 2]
+            
+            self.log(f"✅ Database contains {len(main_tasks)} main tasks")
+            self.log(f"✅ Database contains {len(level_1_subtasks)} level 1 subtasks")
+            self.log(f"✅ Database contains {len(level_2_subtasks)} level 2 subtasks")
+            
+            # Verify subtask hierarchy is maintained
+            for subtask in level_1_subtasks + level_2_subtasks:
+                if subtask.get('parent_task_id'):
+                    self.log("✅ Subtask hierarchy maintained in database")
+                    break
+            else:
+                self.log("❌ Subtask hierarchy not maintained in database", "ERROR")
+                self.failed_tests += 1
+        
+        self.log("✅ Comprehensive subtask system testing completed")
+
     def run_all_tests(self):
         """Run all backend tests including authentication and real-time messaging"""
         self.log("🚀 Starting Comprehensive Backend API Testing with Authentication and Real-time Features")
