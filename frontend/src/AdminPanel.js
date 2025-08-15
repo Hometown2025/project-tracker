@@ -141,8 +141,10 @@ const AdminPanel = ({ onClose }) => {
                     </span>
                   </div>
                   <div>
-                    {u.role === 'admin' ? (
-                      <span className="access-badge full-access">Full Access</span>
+                    {u.role === 'super_admin' ? (
+                      <span className="access-badge super-admin-access">Global Access</span>
+                    ) : u.role === 'admin' ? (
+                      <span className="access-badge full-access">Store Access</span>
                     ) : (
                       <span className="access-badge limited-access">
                         {u.assigned_projects?.length || 0} project{u.assigned_projects?.length !== 1 ? 's' : ''}
