@@ -2732,6 +2732,7 @@ class TaskManagerTester:
             
             # Test core functionality
             self.test_dashboard_stats()
+            self.test_dashboard_role_based_filtering()  # New dashboard role-based filtering test
             self.test_projects_crud()
             self.test_tasks_crud()
             self.test_subtask_system()  # Add subtask testing
