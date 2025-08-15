@@ -835,6 +835,15 @@ const IdeasBoard = ({ ideas, projects, selectedProject, refreshData }) => {
           onSuccess={refreshData}
         />
       )}
+
+      {editingIdea && (
+        <EditIdeaModal 
+          idea={editingIdea}
+          projects={projects}
+          onClose={() => setEditingIdea(null)}
+          onSuccess={handleUpdateIdea}
+        />
+      )}
     </div>
   );
 };
