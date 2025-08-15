@@ -1667,6 +1667,180 @@ const CreateProjectModal = ({ onClose, onSuccess }) => {
   );
 };
 
+// Edit Idea Modal
+const EditIdeaModal = ({ idea, projects, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    title: idea?.title || '',
+    description: idea?.description || '',
+    pinterest_url: idea?.pinterest_url || '',
+    tags: idea?.tags?.join(', ') || '',
+    project_id: idea?.project_id || ''
+  });
+  const [imageFile, setImageFile] = useState(null);
+  const [currentImageData, setCurrentImageData] = useState(idea?.image_data || null);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      // Preview the new image
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setCurrentImageData(e.target.result.split(',')[1]);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setCurrentImageData(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      let imageData = currentImageData;
+      
+      if (imageFile) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          imageData = e.target.result.split(',')[1]; // Remove data:image/jpeg;base64,
+          
+          const submitData = {
+            ...formData,
+            tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+            image_data: imageData
+          };
+          
+          await onSuccess(submitData);
+        };
+        reader.readAsDataURL(imageFile);
+      } else {
+        const submitData = {
+          ...formData,
+          tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+          image_data: imageData
+        };
+        
+        await onSuccess(submitData);
+      }
+    } catch (error) {
+      console.error('Error updating idea:', error);
+      alert('Failed to update idea');
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">Edit Idea</h2>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-group">
+            <label className="form-label">Title</label>
+            <input 
+              type="text"
+              className="form-input"
+              value={formData.title}
+              onChange={(e) => setFormData({...formData, title: e.target.value})}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Description</label>
+            <textarea 
+              className="form-textarea"
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              rows={3}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Image</label>
+            {currentImageData && (
+              <div className="current-image-preview">
+                <img 
+                  src={`data:image/jpeg;base64,${currentImageData}`} 
+                  alt="Current idea" 
+                  style={{ maxWidth: '200px', maxHeight: '150px', objectFit: 'cover', marginBottom: '10px' }}
+                />
+                <button 
+                  type="button" 
+                  className="btn-secondary remove-image"
+                  onClick={removeImage}
+                  style={{ display: 'block', marginBottom: '10px' }}
+                >
+                  Remove Image
+                </button>
+              </div>
+            )}
+            <input 
+              type="file"
+              className="form-input"
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+            {!currentImageData && <p className="form-help">Choose a new image to upload</p>}
+            {currentImageData && <p className="form-help">Choose a file to replace the current image</p>}
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Pinterest URL</label>
+            <input 
+              type="url"
+              className="form-input"
+              value={formData.pinterest_url}
+              onChange={(e) => setFormData({...formData, pinterest_url: e.target.value})}
+              placeholder="https://pinterest.com/pin/..."
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Tags (comma-separated)</label>
+            <input 
+              type="text"
+              className="form-input"
+              value={formData.tags}
+              onChange={(e) => setFormData({...formData, tags: e.target.value})}
+              placeholder="inspiration, design, ui, ux"
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Project</label>
+            <select 
+              className="form-select"
+              value={formData.project_id}
+              onChange={(e) => setFormData({...formData, project_id: e.target.value})}
+              required
+            >
+              <option value="">Select a project</option>
+              {projects.map(project => (
+                <option key={project.id} value={project.id}>{project.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" className="btn-secondary" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              Update Idea
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Export all components
 export default {
   Navigation,
