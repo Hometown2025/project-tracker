@@ -402,15 +402,26 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
                   <p>Can view projects and tasks assigned by administrators. Cannot create, edit, or delete anything.</p>
                 </div>
               </div>
-            ) : (
+            ) : formData.role === 'admin' ? (
               <div className="role-note admin-role-note">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                         d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.031 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <div>
-                  <strong>Administrator</strong>
-                  <p>Full access to create, edit, and delete projects and tasks. Can manage users and assign project access.</p>
+                  <strong>Store Administrator</strong>
+                  <p>Can manage their store only: create, edit, and delete projects and tasks. Can create regular users for their store.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="role-note super-admin-role-note">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M5 3l14 9-14 9V3z" />
+                </svg>
+                <div>
+                  <strong>Super Administrator</strong>
+                  <p>Full system access: manage all stores, create store administrators, assign users across lumber yards.</p>
                 </div>
               </div>
             )}
