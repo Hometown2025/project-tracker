@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the comprehensive subtask system implementation. Please test the following backend functionality: Subtask Creation, Subtask Retrieval, Subtask Completion & Auto-completion, Subtask File Attachments, Database Operations, and Reordering & Management. Use existing admin/admin and demo/demo user accounts for testing."
+user_problem_statement: "Complete the Ideas Board edit functionality by implementing the missing EditIdeaModal component. Ensure the calendar for regular users is properly project-based, showing only events from their assigned projects."
 
 backend:
   - task: "Subtask Creation"
