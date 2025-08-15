@@ -83,6 +83,118 @@ class TaskManagerTester:
             return None
     
     
+    def test_multi_store_authentication(self):
+        """Test multi-store authentication system with store ID validation"""
+        self.log("\n=== Testing Multi-Store Authentication System ===")
+        
+        # Test Store 1 Login: admin/admin with STORE_001
+        store1_login = {
+            "username": "admin",
+            "password": "admin",
+            "store_id": "STORE_001"
+        }
+        
+        store1_response = self.test_request("POST", "/auth/login", store1_login, 200, "Store 1 Admin Login (admin/admin/STORE_001)")
+        
+        if store1_response:
+            store1_token = store1_response.get('session_token')
+            store1_user = store1_response.get('user')
+            
+            if store1_user and store1_user.get('role') == 'admin' and store1_user.get('store_id') == 'STORE_001':
+                self.log("✅ Store 1 admin login successful with correct store_id")
+                self.admin_token = store1_token  # Use for further tests
+                self.admin_user = store1_user
+            else:
+                self.log("❌ Store 1 admin login failed or incorrect store_id", "ERROR")
+                self.failed_tests += 1
+        
+        # Test Store 2 Login: manager/manager123 with STORE_002
+        store2_login = {
+            "username": "manager",
+            "password": "manager123",
+            "store_id": "STORE_002"
+        }
+        
+        store2_response = self.test_request("POST", "/auth/login", store2_login, 200, "Store 2 Manager Login (manager/manager123/STORE_002)")
+        
+        if store2_response:
+            store2_token = store2_response.get('session_token')
+            store2_user = store2_response.get('user')
+            
+            if store2_user and store2_user.get('store_id') == 'STORE_002':
+                self.log("✅ Store 2 manager login successful with correct store_id")
+                # Store for cross-store testing
+                self.store2_token = store2_token
+                self.store2_user = store2_user
+            else:
+                self.log("❌ Store 2 manager login failed or incorrect store_id", "ERROR")
+                self.failed_tests += 1
+        
+        # Test Store 3 Login: supervisor/super123 with STORE_003
+        store3_login = {
+            "username": "supervisor",
+            "password": "super123",
+            "store_id": "STORE_003"
+        }
+        
+        store3_response = self.test_request("POST", "/auth/login", store3_login, 200, "Store 3 Supervisor Login (supervisor/super123/STORE_003)")
+        
+        if store3_response:
+            store3_token = store3_response.get('session_token')
+            store3_user = store3_response.get('user')
+            
+            if store3_user and store3_user.get('store_id') == 'STORE_003':
+                self.log("✅ Store 3 supervisor login successful with correct store_id")
+                # Store for cross-store testing
+                self.store3_token = store3_token
+                self.store3_user = store3_user
+            else:
+                self.log("❌ Store 3 supervisor login failed or incorrect store_id", "ERROR")
+                self.failed_tests += 1
+        
+        # Test Cross-Store Verification: admin/admin with STORE_002 (should fail)
+        cross_store_login = {
+            "username": "admin",
+            "password": "admin",
+            "store_id": "STORE_002"
+        }
+        
+        self.test_request("POST", "/auth/login", cross_store_login, 400, "Cross-Store Login Failure (admin/admin with STORE_002)")
+        
+        # Test Cross-Store Verification: manager/manager123 with STORE_001 (should fail)
+        cross_store_login2 = {
+            "username": "manager",
+            "password": "manager123",
+            "store_id": "STORE_001"
+        }
+        
+        self.test_request("POST", "/auth/login", cross_store_login2, 400, "Cross-Store Login Failure (manager/manager123 with STORE_001)")
+        
+        # Test authentication requires all three fields
+        incomplete_login1 = {
+            "username": "admin",
+            "password": "admin"
+            # Missing store_id
+        }
+        
+        self.test_request("POST", "/auth/login", incomplete_login1, 422, "Incomplete Login - Missing store_id")
+        
+        incomplete_login2 = {
+            "username": "admin",
+            "store_id": "STORE_001"
+            # Missing password
+        }
+        
+        self.test_request("POST", "/auth/login", incomplete_login2, 422, "Incomplete Login - Missing password")
+        
+        incomplete_login3 = {
+            "password": "admin",
+            "store_id": "STORE_001"
+            # Missing username
+        }
+        
+        self.test_request("POST", "/auth/login", incomplete_login3, 422, "Incomplete Login - Missing username")
+
     def test_user_initialization(self):
         """Test that default admin and demo users were created"""
         self.log("\n=== Testing User Initialization ===")
@@ -90,7 +202,8 @@ class TaskManagerTester:
         # Test admin login to verify admin user exists
         admin_login = {
             "username": "admin",
-            "password": "admin"
+            "password": "admin",
+            "store_id": "STORE_001"  # Updated to include store_id
         }
         
         admin_response = self.test_request("POST", "/auth/login", admin_login, 200, "Admin User Login")
