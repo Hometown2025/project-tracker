@@ -6,7 +6,8 @@ const LoginPage = () => {
   const { login } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
-    password: ''
+    password: '',
+    store_id: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
