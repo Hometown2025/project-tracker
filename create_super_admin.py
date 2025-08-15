@@ -13,7 +13,7 @@ import uuid
 
 # Database connection
 MONGO_URL = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-DATABASE_NAME = 'taskflow_db'
+DATABASE_NAME = os.environ.get('DB_NAME', 'test_database')
 
 def hash_password(password: str) -> str:
     """Hash password with salt"""
