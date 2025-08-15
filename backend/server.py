@@ -1688,8 +1688,9 @@ async def create_idea(idea: IdeaCreate, current_user: User = Depends(get_current
     return idea_obj
 
 @api_router.get("/ideas", response_model=List[Idea])
-async def get_ideas(project_id: Optional[str] = None):
-    query = {}
+async def get_ideas(project_id: Optional[str] = None, current_user: User = Depends(get_current_user)):
+    """Get ideas filtered by store and optionally by project"""
+    query = {"store_id": current_user.store_id}
     if project_id:
         query["project_id"] = project_id
     
