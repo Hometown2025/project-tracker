@@ -5,6 +5,7 @@ import MessageCenter from './components/MessageCenter';
 import NotificationToast from './components/NotificationToast';
 import FileManager from './components/FileManager';
 import SubtaskManager from './components/SubtaskManager';
+import BudgetView from './components/BudgetView';
 import { useAuth } from './AuthContext';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
