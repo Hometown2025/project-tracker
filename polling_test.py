@@ -11,7 +11,7 @@ import sys
 import os
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://pastel-tasks.preview.emergentagent.com/api"
+BACKEND_URL = "https://housebuild.preview.emergentagent.com/api"
 
 class PollingSystemTester:
     def __init__(self):

@@ -10,7 +10,7 @@ import threading
 import time
 import ssl
 
-BACKEND_URL = "https://pastel-tasks.preview.emergentagent.com/api"
+BACKEND_URL = "https://housebuild.preview.emergentagent.com/api"
 
 def test_websocket():
     print("🔄 Testing WebSocket Connection...")

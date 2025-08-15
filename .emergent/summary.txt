@@ -1,0 +1,115 @@
+<analysis>
+The previous AI engineer successfully developed a Notion-style task manager, iteratively enhancing its functionality based on user feedback. Key phases included establishing core CRUD operations for tasks and projects, implementing a robust role-based authentication system, and adding advanced features like custom date tracking, flexible task creation, and admin user management. When a WebSocket real-time update approach failed due to infrastructure limitations, the engineer seamlessly pivoted to a polling-based system. Subsequently, comprehensive file attachment with inline viewing, a detailed subtask system with two-level nesting, and significant terminology refactoring to suit a lumberyard house building context were added. The engineer consistently delivered features, debugged issues, and performed testing, always adapting to explicit user requirements. The current focus is on refining the Ideas section.
+</analysis>
+
+<product_requirements>
+The initial user request was for a Notion-style task manager, enabling CRUD operations on tasks, categories/priorities, and due dates, with a dashboard. This evolved significantly:
+*   **Project-specific organization**: All tasks (later rooms) and ideas are nested under projects (later house building projects).
+*   **Priority Levels**: High, Medium, Low with color coding.
+*   **Views**: Calendar (with custom order/delivery dates, filtered by user's assigned projects for regular users), Task/Room list (with filtering/sorting), Ideas board.
+*   **Editing**: Full edit capabilities for tasks/rooms, projects, and ideas.
+*   **Flexible Creation**: Tasks/rooms can be created with minimal fields, with others filled later.
+*   **User Authentication & Roles**: Secure login, Admin (full access, user management, create/assign users) and Regular User (view-only on assigned projects). Demo buttons removed.
+*   **Real-time Updates**: Initially requested WebSockets, pivoted to polling for notifications on task/project creation, updates, and completion.
+*   **Team Communication**: Messaging system for users to send messages to admins. Notifications can be turned off.
+*   **File Attachments**: Upload photos/PDFs/other files to projects and tasks/rooms, with support for inline viewing of many file types.
+*   **Subtasks**: Collapsible/expandable, 2-level nesting limit, auto-completion of parent task, optional order/delivery dates (no due date), file attachment support. Subtasks are color-coded based on their parent room.
+*   **Lumberyard Context**: Projects renamed to House Building Projects and tasks to House Rooms, with associated UI and placeholder text changes to fit a construction workflow, ensuring rooms are specific to projects.
+</product_requirements>
+
+<key_technical_concepts>
+-   **Full-stack Architecture**: React frontend, FastAPI backend, MongoDB database.
+-   **RESTful APIs**: Backend provides CRUD and specialized endpoints.
+-   **Environment Variables**: Strict usage of  and .
+-   **Role-Based Access Control (RBAC)**: Admin vs. Regular User roles for permissions.
+-   **Frontend State Management**: React Context () for authentication and global state.
+-   **Tailwind CSS**: For UI styling and responsive design.
+-   **Supervisor**: Manages backend and frontend services.
+-   **Kubernetes Ingress**: Routes backend API calls via  prefix.
+-   **Polling**: Alternative to WebSockets for real-time updates.
+-   **File Storage**: Local file system storage for attachments.
+</key_technical_concepts>
+
+<code_architecture>
+The application uses a standard full-stack structure:
+
+**Detailed Directory Structure:**
+
+
+-   :
+    -   **Importance**: Central FastAPI application. Defines API routes, handles database interactions (MongoDB), and implements core business logic, including authentication, authorization, notifications, file management, and subtask logic.
+    -   **Changes**:
+        -   Initial CRUD for projects, tasks (now rooms), ideas.
+        -   Task/Room model updated with , ,  (list of nested tasks/rooms), .
+        -   Project model updated with .
+        -   Authentication routes (, , ).
+        -   Role-based access control (, , ) implemented across routes.
+        -   User management endpoints for admins.
+        -   Initially added WebSocket integration for real-time notifications, then **replaced with polling-based endpoints** (, , ) due to Kubernetes ingress limitations.
+        -   Added file upload/download endpoints (, , , ).
+        -   Implemented  logic for files and modified file retrieval to include this flag.
+        -   Subtask creation, update (including auto-completion), and retrieval logic.
+        -   Calendar endpoint () modified to filter events based on user's assigned projects for regular users.
+        -   Ideas endpoints (, ) now support edit and delete operations.
+
+-   :
+    -   **Importance**: Main React component, handles routing and global layout.
+    -   **Changes**: Wrapped with . Implements conditional rendering for  vs. main app. Added  component for displaying pop-up notifications.
+
+-   :
+    -   **Importance**: Manages user authentication state, token storage, and user roles.
+    -   **Changes**: New file. Initially included WebSocket connection logic, then **refactored to implement polling** for notifications. Manages the ,  states and provides , ,  functions. Debugging focused on ensuring polling starts correctly post-authentication.
+
+-    and :
+    -   **Importance**: Define global and component-specific styles.
+    -   **Changes**: Styles added for date badges, edit buttons, login page, admin panel, notification/message components, file upload areas, and subtask components (including color coding for subtasks).
+
+-   :
+    -   **Importance**: A monolithic file that centralizes many reusable UI components and views, including ,  (formerly ), , and various modals (, , , , , ).
+    -   **Changes**:
+        -   Integrated , , , , , and  components.
+        -    component updated to include notification and message buttons (later hidden), and reorganized to place Project Rooms under Projects.
+        -    and  (now RoomCard) updated to include edit buttons, display date badges, and integrate  and .
+        -   Terminology changes ( to ,  to  etc.) implemented throughout titles, buttons, and form labels.
+        -    updated to include edit and delete buttons for ideas, and  was being implemented.
+        -   Subtask color coding implemented (left border, dot, progress bar) based on parent room's color. Date labels for subtasks were clarified.
+
+-   , , :
+    -   **Importance**: Handle the display and management of real-time notifications and messages.
+    -   **Changes**: New files. Part of the polling-based real-time communication system.
+
+-   , , :
+    -   **Importance**: Provide functionality for uploading, listing, and managing files associated with projects and tasks/rooms.
+    -   **Changes**: New files. Implement drag-and-drop upload, file listing, and (most recently) inline viewing capabilities with specific modals.
+
+-   :
+    -   **Importance**: Manages the creation, display, and interaction with subtasks within a task/room card.
+    -   **Changes**: New file. Implements collapsible UI, displays subtasks with their status, and supports file attachments for subtasks.
+
+</code_architecture>
+
+<pending_tasks>
+-   **Ideas Board Functionality**: The  component is in the process of being integrated to allow editing of ideas.
+-   **Pinterest Integration**: Deferred by user, requires API credentials and integration with .
+-   **Stripe Integration**: Mentioned in initial prompt, but not yet requested.
+-   **Slack Integration**: Mentioned in initial prompt, but not yet requested.
+</pending_tasks>
+
+<current_work>
+The application, now conceptually structured as a lumberyard house building tracker, is highly functional.
+**Key Features Implemented:**
+*   **Core Project & Room Management**: Users can create, view, edit, and delete House Building Projects and House Rooms. Rooms are specific to Projects with no overlap.
+*   **Custom Dates**: Rooms and Subtasks support , , and . Subtasks only use  and , which are optional and can be filled later.
+*   **Role-Based Authentication**: Secure login with distinct Admin and Regular User roles. Admins have full control, including comprehensive user management (create, assign projects, deactivate users). Regular users have view-only access to assigned projects/rooms.
+*   **Polling-Based Real-time System**: Backend and frontend are configured for polling to deliver real-time notifications (e.g., New Task Created) and messages. The notification UI elements (bell, message icons, and toast notifications) are active, though notifications were recently requested to be turned off.
+*   **Comprehensive File Attachment**: Users can drag-and-drop multiple file types (images, documents, archives, etc.) onto both projects and rooms. Files are stored and can be downloaded or viewed inline (PDFs, images, text, code files) directly within the browser using a modal viewer. Subtasks also support file attachments.
+*   **Granular Subtask System**: Each House Room can have subtasks with a 2-level nesting limit. Subtasks are collapsible/expandable, display their progress (completed/total), and can auto-complete the parent room when all subtasks are done.
+*   **Visual Enhancements**: Subtasks are now color-coded, inheriting the color of their parent House Room, with visual indicators like colored left borders, dot indicators, and matching checkbox borders. Date labels for subtasks (Order Date, Delivery Date) are explicitly shown and are optional.
+*   **Ideas Board**: Initial ideas functionality exists, but the ability to edit and delete ideas is currently being implemented.
+
+The current immediate work involves adding edit and delete functionality to the Ideas section, with the  component being the focus.
+</current_work>
+
+<optional_next_step>
+The next step is to complete the implementation of the  component in the frontend.
+</optional_next_step>

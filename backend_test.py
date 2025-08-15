@@ -16,7 +16,7 @@ import time
 import asyncio
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://ef3fae6a-c236-4f78-8567-9cd566a253be.preview.emergentagent.com/api"
+BACKEND_URL = "https://housebuild.preview.emergentagent.com/api"
 
 class TaskManagerTester:
     def __init__(self):
