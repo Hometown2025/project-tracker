@@ -1852,6 +1852,7 @@ export default {
   CreateTaskModal,
   EditTaskModal,
   CreateIdeaModal,
+  EditIdeaModal,
   CreateProjectModal,
   EditProjectModal
 };
