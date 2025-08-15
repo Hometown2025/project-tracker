@@ -689,10 +689,39 @@ const CalendarView = ({ tasks, projects, refreshData }) => {
 // Ideas Board Component
 const IdeasBoard = ({ ideas, projects, selectedProject, refreshData }) => {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingIdea, setEditingIdea] = useState(null);
+  const { canEdit, canDelete } = useAuth();
 
   const filteredIdeas = ideas.filter(idea => 
     !selectedProject || idea.project_id === selectedProject.id
   );
+
+  const handleDeleteIdea = async (ideaId, ideaTitle) => {
+    if (window.confirm(`Are you sure you want to delete the idea "${ideaTitle}"?`)) {
+      try {
+        await axios.delete(`${API}/ideas/${ideaId}`);
+        refreshData();
+      } catch (error) {
+        console.error('Error deleting idea:', error);
+        alert('Failed to delete idea');
+      }
+    }
+  };
+
+  const handleEditIdea = (idea) => {
+    setEditingIdea(idea);
+  };
+
+  const handleUpdateIdea = async (ideaData) => {
+    try {
+      await axios.put(`${API}/ideas/${editingIdea.id}`, ideaData);
+      setEditingIdea(null);
+      refreshData();
+    } catch (error) {
+      console.error('Error updating idea:', error);
+      alert('Failed to update idea');
+    }
+  };
 
   return (
     <div className="ideas-board">
