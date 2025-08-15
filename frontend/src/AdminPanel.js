@@ -475,7 +475,8 @@ const UserDetailsModal = ({ user, projects, onClose }) => {
                 <div className="detail-item">
                   <label>Role:</label>
                   <span className={`role-badge role-${user.role}`}>
-                    {user.role === 'admin' ? 'Administrator' : 'Regular User'}
+                    {user.role === 'super_admin' ? 'Super Administrator' : 
+                     user.role === 'admin' ? 'Store Administrator' : 'Regular User'}
                   </span>
                 </div>
                 <div className="detail-item">
