@@ -34,6 +34,10 @@ class TaskManagerTester:
         self.demo_token = None
         self.admin_user = None
         self.demo_user = None
+        self.store2_token = None
+        self.store2_user = None
+        self.store3_token = None
+        self.store3_user = None
         self.websocket_messages = []
         self.websocket_connected = False
         
