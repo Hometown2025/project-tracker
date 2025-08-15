@@ -244,11 +244,13 @@ const AdminPanel = ({ onClose }) => {
 };
 
 const CreateUserModal = ({ onClose, onSuccess }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     email: '',
-    role: 'user'
+    role: 'user',
+    store_id: user?.store_id || ''  // Default to current user's store
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -270,7 +272,7 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
     try {
       await axios.post(`${API}/admin/users`, formData);
       onSuccess();
-      alert(`User "${formData.username}" created successfully!\n\nCredentials:\nUsername: ${formData.username}\nPassword: ${formData.password}\n\nPlease provide these credentials to the user.`);
+      alert(`User "${formData.username}" created successfully!\n\nCredentials:\nStore ID: ${formData.store_id}\nUsername: ${formData.username}\nPassword: ${formData.password}\n\nPlease provide these credentials to the user.`);
     } catch (error) {
       setError(error.response?.data?.detail || 'Failed to create user');
     }
