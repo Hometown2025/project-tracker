@@ -1901,9 +1901,19 @@ async def get_calendar_data(current_user: User = Depends(get_current_user)):
     """Get calendar events filtered by user's assigned projects"""
     
     # Build query based on user role
-    if current_user.role == UserRole.ADMIN:
-        # Admin can see all calendar events
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super Admin can see all calendar events from all stores
         tasks_query = {
+            "$or": [
+                {"due_date": {"$exists": True, "$ne": None}},
+                {"order_date": {"$exists": True, "$ne": None}},
+                {"delivery_date": {"$exists": True, "$ne": None}}
+            ]
+        }
+    elif current_user.role == UserRole.ADMIN:
+        # Admin can see all calendar events from their store
+        tasks_query = {
+            "store_id": current_user.store_id,
             "$or": [
                 {"due_date": {"$exists": True, "$ne": None}},
                 {"order_date": {"$exists": True, "$ne": None}},
@@ -1914,20 +1924,12 @@ async def get_calendar_data(current_user: User = Depends(get_current_user)):
         # Regular users only see events from their assigned projects
         user_projects = current_user.assigned_projects or []
         tasks_query = {
-            "$and": [
-                {
-                    "$or": [
-                        {"due_date": {"$exists": True, "$ne": None}},
-                        {"order_date": {"$exists": True, "$ne": None}},
-                        {"delivery_date": {"$exists": True, "$ne": None}}
-                    ]
-                },
-                {
-                    "$or": [
-                        {"project_id": {"$in": user_projects}},
-                        {"project_id": None, "owner_id": current_user.id}
-                    ]
-                }
+            "project_id": {"$in": user_projects},
+            "store_id": current_user.store_id,
+            "$or": [
+                {"due_date": {"$exists": True, "$ne": None}},
+                {"order_date": {"$exists": True, "$ne": None}},
+                {"delivery_date": {"$exists": True, "$ne": None}}
             ]
         }
     
