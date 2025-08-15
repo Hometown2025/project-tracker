@@ -44,8 +44,9 @@ Your lumber yard task management system now provides a **customer-focused experi
 
 ### 🏪 **Store Admin Powers**  
 - **Manage Their Store Only**: Full control within their lumber yard
-- **Create Regular Users**: Add employees to their store only
+- **Create Customers**: Add customers to their store only
 - **Create Store Admins**: Can now create other administrators for their store
+- **Deactivate Customers**: Can deactivate (but not permanently delete) customers from their store
 - **Store-Specific Data**: See only their store's projects, tasks, and users
 
 ### 🛒 **Customer Experience**
