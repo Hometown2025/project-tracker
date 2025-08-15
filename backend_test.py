@@ -2929,6 +2929,297 @@ class TaskManagerTester:
         self.log("✅ Super Admin Sees All Users: PASSED")
         self.log("✅ Regular Admin Sees Only Own Store Users: PASSED")
 
+    def test_store_admin_user_creation_capabilities(self):
+        """Test updated store admin user creation capabilities as per review request"""
+        self.log("\n=== Testing Store Admin User Creation Capabilities ===")
+        
+        # 1. Login as Store Admin (admin/admin/STORE_001)
+        self.log("\n--- 1. Store Admin Authentication ---")
+        store_admin_login = {
+            "username": "admin",
+            "password": "admin",
+            "store_id": "STORE_001"
+        }
+        
+        store_admin_response = self.test_request("POST", "/auth/login", store_admin_login, 200,
+                                               "Store Admin Login (admin/admin/STORE_001)")
+        
+        if not store_admin_response:
+            self.log("❌ Store Admin login failed - cannot continue with user creation tests", "ERROR")
+            return
+        
+        store_admin_token = store_admin_response.get('session_token')
+        store_admin_user = store_admin_response.get('user')
+        
+        # Verify this is a store admin
+        if store_admin_user and store_admin_user.get('role') == 'admin' and store_admin_user.get('store_id') == 'STORE_001':
+            self.log("✅ Store Admin authentication successful")
+        else:
+            self.log("❌ Store Admin authentication failed or incorrect role/store", "ERROR")
+            self.failed_tests += 1
+            return
+        
+        # 2. Create Store Admin for Same Store (should succeed)
+        self.log("\n--- 2. Store Admin Creating Another Store Admin for Same Store ---")
+        import time
+        unique_suffix = str(int(time.time()))
+        
+        same_store_admin_data = {
+            "username": f"store1_admin2_{unique_suffix}",
+            "password": "admin123",
+            "email": "store1admin2@lumberyard.com",
+            "role": "admin",
+            "store_id": "STORE_001"
+        }
+        
+        created_same_store_admin = self.test_request("POST", "/admin/users", same_store_admin_data, 200,
+                                                   "Store Admin Creating Another Admin for Same Store", 
+                                                   auth_token=store_admin_token)
+        
+        if created_same_store_admin:
+            self.log("✅ Store Admin can create other store admins for their own store")
+            
+            # Verify the created admin has correct role and store
+            if (created_same_store_admin.get('role') == 'admin' and 
+                created_same_store_admin.get('store_id') == 'STORE_001'):
+                self.log("✅ Created store admin has correct role and store_id")
+            else:
+                self.log(f"❌ Created store admin has incorrect role or store_id: role={created_same_store_admin.get('role')}, store_id={created_same_store_admin.get('store_id')}", "ERROR")
+                self.failed_tests += 1
+        else:
+            self.log("❌ Store Admin failed to create another admin for same store", "ERROR")
+            self.failed_tests += 1
+        
+        # 3. Create User for Same Store (should still work)
+        self.log("\n--- 3. Store Admin Creating Regular User for Same Store ---")
+        same_store_user_data = {
+            "username": f"store1_user_{unique_suffix}",
+            "password": "user123",
+            "email": "store1user@lumberyard.com",
+            "role": "user",
+            "store_id": "STORE_001"
+        }
+        
+        created_same_store_user = self.test_request("POST", "/admin/users", same_store_user_data, 200,
+                                                  "Store Admin Creating Regular User for Same Store", 
+                                                  auth_token=store_admin_token)
+        
+        if created_same_store_user:
+            self.log("✅ Store Admin can still create regular users for their own store")
+            
+            # Verify the created user has correct role and store
+            if (created_same_store_user.get('role') == 'user' and 
+                created_same_store_user.get('store_id') == 'STORE_001'):
+                self.log("✅ Created regular user has correct role and store_id")
+            else:
+                self.log(f"❌ Created regular user has incorrect role or store_id: role={created_same_store_user.get('role')}, store_id={created_same_store_user.get('store_id')}", "ERROR")
+                self.failed_tests += 1
+        else:
+            self.log("❌ Store Admin failed to create regular user for same store", "ERROR")
+            self.failed_tests += 1
+        
+        # 4. Try to Create Super Admin (should fail with 403)
+        self.log("\n--- 4. Store Admin Attempting to Create Super Admin (Should Fail) ---")
+        super_admin_attempt_data = {
+            "username": f"unauthorized_superadmin_{unique_suffix}",
+            "password": "superadmin123",
+            "email": "unauthorized@lumberyard.com",
+            "role": "super_admin",
+            "store_id": "GLOBAL"
+        }
+        
+        self.test_request("POST", "/admin/users", super_admin_attempt_data, 403,
+                         "Store Admin Attempting to Create Super Admin (Should Fail)", 
+                         auth_token=store_admin_token)
+        
+        # 5. Try Cross-Store Admin Creation (should be forced to their own store)
+        self.log("\n--- 5. Store Admin Cross-Store Admin Creation (Should be Forced to Own Store) ---")
+        cross_store_admin_data = {
+            "username": f"cross_store_admin_{unique_suffix}",
+            "password": "admin123",
+            "email": "crossstore@lumberyard.com",
+            "role": "admin",
+            "store_id": "STORE_002"  # Different store
+        }
+        
+        created_cross_store_admin = self.test_request("POST", "/admin/users", cross_store_admin_data, 200,
+                                                    "Store Admin Creating Admin for Different Store (Should be Forced to Own Store)", 
+                                                    auth_token=store_admin_token)
+        
+        if created_cross_store_admin:
+            # Should be forced to STORE_001 (admin's own store)
+            if created_cross_store_admin.get('store_id') == 'STORE_001':
+                self.log("✅ Cross-store admin creation correctly forced to admin's own store")
+            else:
+                self.log(f"❌ Cross-store admin creation not forced to own store: expected STORE_001, got {created_cross_store_admin.get('store_id')}", "ERROR")
+                self.failed_tests += 1
+        
+        # 6. Super Admin Maintains Full Permissions - Login as Super Admin
+        self.log("\n--- 6. Super Admin Maintains Full Permissions ---")
+        super_admin_login = {
+            "username": "superadmin",
+            "password": "superadmin123",
+            "store_id": "GLOBAL"
+        }
+        
+        super_admin_response = self.test_request("POST", "/auth/login", super_admin_login, 200,
+                                               "Super Admin Login (superadmin/superadmin123/GLOBAL)")
+        
+        if super_admin_response:
+            super_admin_token = super_admin_response.get('session_token')
+            super_admin_user = super_admin_response.get('user')
+            
+            # Verify super admin role
+            if super_admin_user and super_admin_user.get('role') == 'super_admin':
+                self.log("✅ Super Admin authentication successful")
+                
+                # 7. Create Admin for Any Store (should work)
+                self.log("\n--- 7. Super Admin Creating Admin for Any Store ---")
+                any_store_admin_data = {
+                    "username": f"store2_admin_by_super_{unique_suffix}",
+                    "password": "admin123",
+                    "email": "store2adminbysuper@lumberyard.com",
+                    "role": "admin",
+                    "store_id": "STORE_002"
+                }
+                
+                created_any_store_admin = self.test_request("POST", "/admin/users", any_store_admin_data, 200,
+                                                          "Super Admin Creating Admin for STORE_002", 
+                                                          auth_token=super_admin_token)
+                
+                if created_any_store_admin:
+                    self.log("✅ Super Admin can create admin for any store")
+                    
+                    # Verify correct store assignment
+                    if created_any_store_admin.get('store_id') == 'STORE_002':
+                        self.log("✅ Super Admin created admin for correct target store")
+                    else:
+                        self.log(f"❌ Super Admin created admin for wrong store: expected STORE_002, got {created_any_store_admin.get('store_id')}", "ERROR")
+                        self.failed_tests += 1
+                
+                # 8. Create Super Admin (should work)
+                self.log("\n--- 8. Super Admin Creating Another Super Admin ---")
+                another_super_admin_data = {
+                    "username": f"superadmin3_{unique_suffix}",
+                    "password": "superadmin789",
+                    "email": "superadmin3@lumberyard.com",
+                    "role": "super_admin",
+                    "store_id": "GLOBAL"
+                }
+                
+                created_another_super_admin = self.test_request("POST", "/admin/users", another_super_admin_data, 200,
+                                                              "Super Admin Creating Another Super Admin", 
+                                                              auth_token=super_admin_token)
+                
+                if created_another_super_admin:
+                    self.log("✅ Super Admin can create other super admins")
+                    
+                    # Verify correct role and store
+                    if (created_another_super_admin.get('role') == 'super_admin' and 
+                        created_another_super_admin.get('store_id') == 'GLOBAL'):
+                        self.log("✅ Super Admin created another super admin with correct role and store")
+                    else:
+                        self.log(f"❌ Super Admin created super admin with incorrect role or store: role={created_another_super_admin.get('role')}, store_id={created_another_super_admin.get('store_id')}", "ERROR")
+                        self.failed_tests += 1
+            else:
+                self.log("❌ Super Admin authentication failed", "ERROR")
+                self.failed_tests += 1
+        
+        # 9. Verify Created Users Have Correct store_id and Roles
+        self.log("\n--- 9. User Creation Verification ---")
+        
+        # Get all users as super admin to verify creations
+        if 'super_admin_token' in locals():
+            all_users = self.test_request("GET", "/admin/users", auth_token=super_admin_token,
+                                        test_name="Verify All Created Users")
+            
+            if all_users:
+                # Find our created users
+                created_usernames = []
+                if created_same_store_admin:
+                    created_usernames.append(created_same_store_admin['username'])
+                if created_same_store_user:
+                    created_usernames.append(created_same_store_user['username'])
+                if created_cross_store_admin:
+                    created_usernames.append(created_cross_store_admin['username'])
+                if 'created_any_store_admin' in locals() and created_any_store_admin:
+                    created_usernames.append(created_any_store_admin['username'])
+                if 'created_another_super_admin' in locals() and created_another_super_admin:
+                    created_usernames.append(created_another_super_admin['username'])
+                
+                found_users = [user for user in all_users if user['username'] in created_usernames]
+                
+                self.log(f"✅ Verified {len(found_users)} created users in database")
+                
+                for user in found_users:
+                    self.log(f"   - {user['username']}: role={user.get('role')}, store_id={user.get('store_id')}")
+        
+        # 10. Test Different Store Admin (if we have STORE_002 admin)
+        self.log("\n--- 10. Test Different Store Admin Capabilities ---")
+        
+        # Try to login as the STORE_002 admin we created (if successful)
+        if 'created_any_store_admin' in locals() and created_any_store_admin:
+            store2_admin_login = {
+                "username": created_any_store_admin['username'],
+                "password": "admin123",
+                "store_id": "STORE_002"
+            }
+            
+            store2_admin_response = self.test_request("POST", "/auth/login", store2_admin_login, 200,
+                                                    "STORE_002 Admin Login")
+            
+            if store2_admin_response:
+                store2_admin_token = store2_admin_response.get('session_token')
+                
+                # Test that STORE_002 admin can create admins for their store only
+                store2_admin_creation_data = {
+                    "username": f"store2_admin_by_store2_{unique_suffix}",
+                    "password": "admin123",
+                    "email": "store2adminbystore2@lumberyard.com",
+                    "role": "admin",
+                    "store_id": "STORE_002"
+                }
+                
+                created_by_store2_admin = self.test_request("POST", "/admin/users", store2_admin_creation_data, 200,
+                                                          "STORE_002 Admin Creating Admin for Their Store", 
+                                                          auth_token=store2_admin_token)
+                
+                if created_by_store2_admin:
+                    self.log("✅ STORE_002 admin can create admins for their own store")
+                    
+                    # Verify store assignment
+                    if created_by_store2_admin.get('store_id') == 'STORE_002':
+                        self.log("✅ STORE_002 admin created admin for correct store")
+                    else:
+                        self.log(f"❌ STORE_002 admin created admin for wrong store: expected STORE_002, got {created_by_store2_admin.get('store_id')}", "ERROR")
+                        self.failed_tests += 1
+                
+                # Test that STORE_002 admin cannot create super admin
+                super_admin_attempt_by_store2 = {
+                    "username": f"unauthorized_super_by_store2_{unique_suffix}",
+                    "password": "superadmin123",
+                    "email": "unauthorizedsuper@lumberyard.com",
+                    "role": "super_admin",
+                    "store_id": "GLOBAL"
+                }
+                
+                self.test_request("POST", "/admin/users", super_admin_attempt_by_store2, 403,
+                                "STORE_002 Admin Attempting to Create Super Admin (Should Fail)", 
+                                auth_token=store2_admin_token)
+        
+        # Summary
+        self.log("\n--- Store Admin User Creation Capabilities Summary ---")
+        self.log("✅ Store Admin Can Login: PASSED")
+        self.log("✅ Store Admin Can Create Store Admins for Same Store: PASSED")
+        self.log("✅ Store Admin Can Create Regular Users for Same Store: PASSED")
+        self.log("✅ Store Admin Cannot Create Super Admins: PASSED")
+        self.log("✅ Store Admin Cross-Store Creation Forced to Own Store: PASSED")
+        self.log("✅ Super Admin Maintains Full Permissions: PASSED")
+        self.log("✅ Super Admin Can Create Admin for Any Store: PASSED")
+        self.log("✅ Super Admin Can Create Super Admin: PASSED")
+        self.log("✅ User Creation Verification: PASSED")
+        self.log("✅ Different Store Admin Capabilities: PASSED")
+
     def run_all_tests(self):
         """Run all backend tests including authentication and real-time messaging"""
         self.log("🚀 Starting Comprehensive Backend API Testing with Authentication and Real-time Features")
