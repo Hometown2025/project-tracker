@@ -352,6 +352,24 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
           </div>
 
           <div className="form-group">
+            <label className="form-label">Store ID <span className="required">*</span></label>
+            <input 
+              type="text"
+              className="form-input"
+              value={formData.store_id}
+              onChange={(e) => setFormData({...formData, store_id: e.target.value})}
+              placeholder="Enter store ID (e.g., STORE_001)"
+              required
+              disabled={loading || user?.role !== 'super_admin'}  // Only super admin can change store ID
+            />
+            <small className="form-hint">
+              {user?.role === 'super_admin' 
+                ? 'Specify which lumber yard/store this user belongs to' 
+                : 'Users will be created for your store only'}
+            </small>
+          </div>
+
+          <div className="form-group">
             <label className="form-label">Role <span className="required">*</span></label>
             <select 
               className="form-select"
@@ -360,8 +378,16 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
               disabled={loading}
             >
               <option value="user">Regular User - View assigned projects only</option>
-              <option value="admin">Administrator - Full system access</option>
+              {user?.role === 'super_admin' && (
+                <>
+                  <option value="admin">Store Administrator - Manage one store</option>
+                  <option value="super_admin">Super Administrator - Manage all stores</option>
+                </>
+              )}
             </select>
+            {user?.role !== 'super_admin' && (
+              <small className="form-hint">Only regular users can be created. Contact super admin to create store administrators.</small>
+            )}
           </div>
 
           <div className="role-explanation">
