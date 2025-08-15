@@ -1870,6 +1870,7 @@ export default {
   CalendarView,
   IdeasBoard,
   ProjectView,
+  BudgetView,
   CreateTaskModal,
   EditTaskModal,
   CreateIdeaModal,
