@@ -1124,7 +1124,7 @@ const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
           </div>
 
           <div className="modal-actions">
-            {user?.role === 'admin' && (
+            {(user?.role === 'admin' || user?.role === 'super_admin') && (
               <button 
                 type="button" 
                 className="btn-danger" 
