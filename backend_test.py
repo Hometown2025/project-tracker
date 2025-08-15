@@ -221,7 +221,8 @@ class TaskManagerTester:
         # Test demo login to verify demo user exists
         demo_login = {
             "username": "demo",
-            "password": "demo"
+            "password": "demo",
+            "store_id": "STORE_001"  # Updated to include store_id
         }
         
         demo_response = self.test_request("POST", "/auth/login", demo_login, 200, "Demo User Login")
