@@ -52,7 +52,7 @@ const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject,
                 onClick={() => setShowMessages(true)}
               /> */}
               
-              {user?.role === 'admin' && (
+              {(user?.role === 'admin' || user?.role === 'super_admin') && (
                 <button className="user-action-btn" onClick={onShowAdmin} title="Admin Panel">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
