@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Complete the Ideas Board edit functionality by implementing the missing EditIdeaModal component. Ensure the calendar for regular users is properly project-based, showing only events from their assigned projects."
+user_problem_statement: "Add store ID to the login system to enable multi-tenancy. When multiple lumberyards use the system, admins and users should be separate for each location/store. This includes updating the login form to require Store ID, Username, and Password, and ensuring complete data isolation between different stores."
 
 backend:
   - task: "Multi-Store Authentication System"
