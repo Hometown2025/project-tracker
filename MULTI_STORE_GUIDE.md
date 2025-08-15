@@ -44,7 +44,7 @@ Your lumber yard task management system now supports **multiple stores with hier
 ### 🏪 **Store Admin Powers**  
 - **Manage Their Store Only**: Full control within their lumber yard
 - **Create Regular Users**: Add employees to their store only
-- **Cannot Create Admins**: Only super admin can create other administrators
+- **Create Store Admins**: Can now create other administrators for their store
 - **Store-Specific Data**: See only their store's projects, tasks, and users
 
 ### 👤 **Regular User Access**
