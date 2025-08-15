@@ -1123,13 +1123,15 @@ const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
           </div>
 
           <div className="modal-actions">
-            <button 
-              type="button" 
-              className="btn-danger" 
-              onClick={handleDelete}
-            >
-              Delete Task
-            </button>
+            {user?.role === 'admin' && (
+              <button 
+                type="button" 
+                className="btn-danger" 
+                onClick={handleDelete}
+              >
+                Delete Task
+              </button>
+            )}
             <div className="modal-actions-right">
               <button type="button" className="btn-secondary" onClick={onClose}>
                 Cancel
