@@ -116,6 +116,9 @@ backend:
         - working: true
           agent: "main"
           comment: "Backend PUT /api/ideas/{idea_id} endpoint already implemented and working correctly. Takes IdeaCreate object and updates idea in database."
+        - working: true
+          agent: "testing"
+          comment: "TESTED: PUT /api/ideas/{idea_id} endpoint working perfectly. Successfully updated idea title, description, tags, and Pinterest URL. Critical for EditIdeaModal functionality. All Ideas CRUD operations (GET, POST, PUT, DELETE) tested and working correctly with proper authentication and project filtering."
 
   - task: "Calendar Project-Based Filtering"
     implemented: true
@@ -128,6 +131,21 @@ backend:
         - working: true
           agent: "main"
           comment: "Calendar endpoint /api/calendar already properly filters events by user's assigned projects for regular users. Admin users see all events, regular users only see events from their assigned projects."
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Calendar project-based filtering working perfectly. Admin users see all calendar events from all projects (10 events tested). Demo users only see events from assigned projects (4 events from assigned project, 0 from unassigned). Authentication required for access. Multiple date types (due_date, order_date, delivery_date) create separate calendar events correctly."
+
+  - task: "Authentication System"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Authentication system working perfectly. Both admin/admin and demo/demo credentials authenticate successfully. Admin gets admin role, demo gets user role. Session management, token validation, logout functionality all working. Role-based access control properly implemented."
 
 frontend:
   - task: "EditIdeaModal Component"
