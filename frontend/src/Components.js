@@ -444,7 +444,7 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
                   <span className="priority-text">{task.priority}</span>
                 </div>
                 <div className="task-actions">
-                  {user?.role === 'admin' && (
+                  {(user?.role === 'admin' || user?.role === 'super_admin') && (
                     <button 
                       className="btn-icon task-edit"
                       onClick={(e) => {
