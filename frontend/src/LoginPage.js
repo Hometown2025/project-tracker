@@ -17,7 +17,7 @@ const LoginPage = () => {
     setError('');
     setLoading(true);
 
-    const result = await login(formData.username, formData.password);
+    const result = await login(formData.username, formData.password, formData.store_id);
     
     if (!result.success) {
       setError(result.error);
