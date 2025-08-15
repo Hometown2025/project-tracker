@@ -1677,9 +1677,13 @@ async def delete_task(task_id: str, current_user: User = Depends(get_current_use
 
 # Ideas Routes
 @api_router.post("/ideas", response_model=Idea)
-async def create_idea(idea: IdeaCreate):
+async def create_idea(idea: IdeaCreate, current_user: User = Depends(get_current_user)):
+    """Create idea (Admin only)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can create ideas")
+    
     idea_dict = idea.dict()
-    idea_obj = Idea(**idea_dict)
+    idea_obj = Idea(**idea_dict, owner_id=current_user.id, store_id=current_user.store_id)
     await db.ideas.insert_one(idea_obj.dict())
     return idea_obj
 
