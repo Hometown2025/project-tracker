@@ -1146,6 +1146,7 @@ async def get_all_users(current_user: User = Depends(get_current_user)):
     # Handle users without store_id (legacy users) - assign them to STORE_001 by default
     result_users = []
     for user in users:
+        # Remove MongoDB ObjectId if present
         if "_id" in user:
             del user["_id"]  # Remove MongoDB ObjectId
         
@@ -1158,7 +1159,22 @@ async def get_all_users(current_user: User = Depends(get_current_user)):
                 {"$set": {"store_id": "STORE_001"}}
             )
         
-        result_users.append(User(**user))
+        # Fix any remaining old 'user' roles to 'customer'
+        if user.get("role") == "user":
+            user["role"] = "customer"
+            # Update the user in database
+            await db.users.update_one(
+                {"id": user["id"]},
+                {"$set": {"role": "customer"}}
+            )
+        
+        try:
+            result_users.append(User(**user))
+        except Exception as e:
+            print(f"Error creating User object for {user.get('username', 'unknown')}: {e}")
+            print(f"User data: {user}")
+            # Skip this user for now
+            continue
     
     return result_users
 
