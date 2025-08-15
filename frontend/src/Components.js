@@ -361,6 +361,7 @@ const Dashboard = ({ stats, projects, tasks, setCurrentView, setSelectedProject 
 
 // Task View Component
 const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
+  const { user } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
