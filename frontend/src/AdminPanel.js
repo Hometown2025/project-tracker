@@ -206,7 +206,7 @@ const AdminPanel = ({ onClose }) => {
                 <div className="stat-label">Total Projects</div>
               </div>
               <div className="stat-card">
-                <div className="stat-number">{users.filter(u => u.role === 'admin').length}</div>
+                <div className="stat-number">{users.filter(u => u.role === 'admin' || u.role === 'super_admin').length}</div>
                 <div className="stat-label">Administrators</div>
               </div>
               <div className="stat-card">
