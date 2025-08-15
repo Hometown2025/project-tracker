@@ -103,7 +103,7 @@ class UserCreate(BaseModel):
     username: str
     password: str
     email: Optional[str] = None
-    role: UserRole = UserRole.USER
+    role: UserRole = UserRole.CUSTOMER
     store_id: str  # Store/Lumberyard identifier
 
 class UserLogin(BaseModel):
