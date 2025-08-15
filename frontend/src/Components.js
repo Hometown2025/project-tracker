@@ -396,7 +396,7 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
           </h1>
           <p className="page-subtitle">{filteredTasks.length} house rooms found across all projects</p>
         </div>
-        {user?.role === 'admin' && (
+        {(user?.role === 'admin' || user?.role === 'super_admin') && (
           <button 
             className="btn-primary"
             onClick={() => setShowCreateModal(true)}
