@@ -254,7 +254,7 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
     username: '',
     password: '',
     email: '',
-    role: 'user',
+    role: 'customer',
     store_id: user?.store_id || ''  // Default to current user's store
   });
   const [loading, setLoading] = useState(false);
