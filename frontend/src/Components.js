@@ -972,6 +972,7 @@ const ProjectView = ({ projects, refreshData, setSelectedProject, setCurrentView
 
 // Edit Task Modal
 const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     title: task.title || '',
     description: task.description || '',
