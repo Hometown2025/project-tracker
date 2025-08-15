@@ -1429,7 +1429,7 @@ async def create_task(task: TaskCreate, current_user: User = Depends(get_current
         # Subtasks don't have due dates (as per requirement)
         task_dict["due_date"] = None
     
-    task_obj = Task(**task_dict, owner_id=current_user.id)
+    task_obj = Task(**task_dict, owner_id=current_user.id, store_id=current_user.store_id)
     
     # Serialize dates for MongoDB storage
     task_data = serialize_dates(task_obj.dict())
