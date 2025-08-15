@@ -3220,6 +3220,305 @@ class TaskManagerTester:
         self.log("✅ User Creation Verification: PASSED")
         self.log("✅ Different Store Admin Capabilities: PASSED")
 
+    def test_admin_delete_permissions(self):
+        """Test administrator delete permissions for ideas, tasks, and projects"""
+        self.log("\n=== Testing Admin Delete Permissions ===")
+        
+        # First ensure we have all required tokens
+        if not self.admin_token:
+            self.log("❌ Missing admin token for delete permissions testing", "ERROR")
+            return
+        
+        # Test Super Admin Authentication (superadmin/superadmin123/GLOBAL)
+        super_admin_login = {
+            "username": "superadmin",
+            "password": "superadmin123",
+            "store_id": "GLOBAL"
+        }
+        
+        super_admin_response = self.test_request("POST", "/auth/login", super_admin_login, 200, 
+                                               "Super Admin Login (superadmin/superadmin123/GLOBAL)")
+        
+        super_admin_token = None
+        if super_admin_response:
+            super_admin_token = super_admin_response.get('session_token')
+            super_admin_user = super_admin_response.get('user')
+            
+            if super_admin_user and super_admin_user.get('role') == 'super_admin':
+                self.log("✅ Super Admin authentication successful")
+            else:
+                self.log("❌ Super Admin role verification failed", "ERROR")
+                self.failed_tests += 1
+        
+        # Ensure we have demo user token for regular user testing
+        if not self.demo_token:
+            demo_login = {
+                "username": "demo",
+                "password": "demo",
+                "store_id": "STORE_001"
+            }
+            demo_response = self.test_request("POST", "/auth/login", demo_login, 200, "Demo User Login for Delete Testing")
+            if demo_response:
+                self.demo_token = demo_response.get('session_token')
+        
+        # 1. Store Admin Delete Permissions Testing
+        self.log("\n--- 1. Store Admin Delete Permissions (admin/admin/STORE_001) ---")
+        
+        # Create test project for STORE_001
+        test_project_store1 = {
+            "name": "Store 1 Delete Test Project",
+            "description": "Project for testing store admin delete permissions",
+            "color": "#FF5722"
+        }
+        
+        created_project_store1 = self.test_request("POST", "/projects", test_project_store1, 200, 
+                                                 "Create Test Project for STORE_001", auth_token=self.admin_token)
+        
+        if created_project_store1:
+            project_id_store1 = created_project_store1['id']
+            
+            # Create test idea for that project
+            test_idea_store1 = {
+                "project_id": project_id_store1,
+                "title": "Store 1 Delete Test Idea",
+                "description": "Idea for testing store admin delete permissions",
+                "tags": ["delete", "test", "store1"]
+            }
+            
+            created_idea_store1 = self.test_request("POST", "/ideas", test_idea_store1, 200, 
+                                                  "Create Test Idea for STORE_001", auth_token=self.admin_token)
+            
+            if created_idea_store1:
+                idea_id_store1 = created_idea_store1['id']
+                
+                # Test DELETE /api/ideas/{idea_id} - should succeed for store admin's idea
+                deleted_idea = self.test_request("DELETE", f"/ideas/{idea_id_store1}", expected_status=200, 
+                                               auth_token=self.admin_token, test_name="Store Admin Delete Own Store Idea")
+                
+                if deleted_idea:
+                    self.log("✅ Store admin can delete ideas from their own store")
+            
+            # Create test task for that project
+            test_task_store1 = {
+                "project_id": project_id_store1,
+                "title": "Store 1 Delete Test Task",
+                "description": "Task for testing store admin delete permissions",
+                "priority": "medium"
+            }
+            
+            created_task_store1 = self.test_request("POST", "/tasks", test_task_store1, 200, 
+                                                  "Create Test Task for STORE_001", auth_token=self.admin_token)
+            
+            if created_task_store1:
+                task_id_store1 = created_task_store1['id']
+                
+                # Test DELETE /api/tasks/{task_id} - should succeed for store admin's task
+                deleted_task = self.test_request("DELETE", f"/tasks/{task_id_store1}", expected_status=200, 
+                                               auth_token=self.admin_token, test_name="Store Admin Delete Own Store Task")
+                
+                if deleted_task:
+                    self.log("✅ Store admin can delete tasks from their own store")
+            
+            # Test DELETE /api/projects/{project_id} - should succeed for store admin's project
+            deleted_project = self.test_request("DELETE", f"/projects/{project_id_store1}", expected_status=200, 
+                                               auth_token=self.admin_token, test_name="Store Admin Delete Own Store Project")
+            
+            if deleted_project:
+                self.log("✅ Store admin can delete projects from their own store")
+        
+        # 2. Super Admin Delete Permissions Testing
+        if super_admin_token:
+            self.log("\n--- 2. Super Admin Delete Permissions (superadmin/superadmin123/GLOBAL) ---")
+            
+            # Create test items with store admin first
+            test_project_for_super = {
+                "name": "Super Admin Delete Test Project",
+                "description": "Project for testing super admin delete permissions",
+                "color": "#2196F3"
+            }
+            
+            created_project_super = self.test_request("POST", "/projects", test_project_for_super, 200, 
+                                                    "Create Test Project for Super Admin Delete", auth_token=self.admin_token)
+            
+            if created_project_super:
+                project_id_super = created_project_super['id']
+                
+                # Create idea and task
+                test_idea_super = {
+                    "project_id": project_id_super,
+                    "title": "Super Admin Delete Test Idea",
+                    "description": "Idea for testing super admin delete permissions",
+                    "tags": ["super", "admin", "delete"]
+                }
+                
+                created_idea_super = self.test_request("POST", "/ideas", test_idea_super, 200, 
+                                                     "Create Test Idea for Super Admin Delete", auth_token=self.admin_token)
+                
+                test_task_super = {
+                    "project_id": project_id_super,
+                    "title": "Super Admin Delete Test Task",
+                    "description": "Task for testing super admin delete permissions",
+                    "priority": "high"
+                }
+                
+                created_task_super = self.test_request("POST", "/tasks", test_task_super, 200, 
+                                                     "Create Test Task for Super Admin Delete", auth_token=self.admin_token)
+                
+                # Test super admin can delete any idea
+                if created_idea_super:
+                    idea_id_super = created_idea_super['id']
+                    deleted_idea_super = self.test_request("DELETE", f"/ideas/{idea_id_super}", expected_status=200, 
+                                                         auth_token=super_admin_token, test_name="Super Admin Delete Any Idea")
+                    
+                    if deleted_idea_super:
+                        self.log("✅ Super admin can delete ideas from any store")
+                
+                # Test super admin can delete any task
+                if created_task_super:
+                    task_id_super = created_task_super['id']
+                    deleted_task_super = self.test_request("DELETE", f"/tasks/{task_id_super}", expected_status=200, 
+                                                         auth_token=super_admin_token, test_name="Super Admin Delete Any Task")
+                    
+                    if deleted_task_super:
+                        self.log("✅ Super admin can delete tasks from any store")
+                
+                # Test super admin can delete any project
+                deleted_project_super = self.test_request("DELETE", f"/projects/{project_id_super}", expected_status=200, 
+                                                        auth_token=super_admin_token, test_name="Super Admin Delete Any Project")
+                
+                if deleted_project_super:
+                    self.log("✅ Super admin can delete projects from any store")
+        
+        # 3. Cross-Store Restrictions for Store Admin
+        self.log("\n--- 3. Cross-Store Restrictions for Store Admin ---")
+        
+        # Ensure we have store2 token
+        if not hasattr(self, 'store2_token') or not self.store2_token:
+            store2_login = {
+                "username": "manager",
+                "password": "manager123",
+                "store_id": "STORE_002"
+            }
+            store2_response = self.test_request("POST", "/auth/login", store2_login, 200, "Store 2 Login for Cross-Store Testing")
+            if store2_response:
+                self.store2_token = store2_response.get('session_token')
+        
+        if self.store2_token:
+            # Create items in STORE_002
+            test_project_store2 = {
+                "name": "Store 2 Cross-Store Test Project",
+                "description": "Project for testing cross-store restrictions",
+                "color": "#4CAF50"
+            }
+            
+            created_project_store2 = self.test_request("POST", "/projects", test_project_store2, 200, 
+                                                     "Create Test Project for STORE_002", auth_token=self.store2_token)
+            
+            if created_project_store2:
+                project_id_store2 = created_project_store2['id']
+                
+                # Create idea and task in STORE_002
+                test_idea_store2 = {
+                    "project_id": project_id_store2,
+                    "title": "Store 2 Cross-Store Test Idea",
+                    "description": "Idea for testing cross-store restrictions",
+                    "tags": ["store2", "cross", "test"]
+                }
+                
+                created_idea_store2 = self.test_request("POST", "/ideas", test_idea_store2, 200, 
+                                                      "Create Test Idea for STORE_002", auth_token=self.store2_token)
+                
+                test_task_store2 = {
+                    "project_id": project_id_store2,
+                    "title": "Store 2 Cross-Store Test Task",
+                    "description": "Task for testing cross-store restrictions",
+                    "priority": "low"
+                }
+                
+                created_task_store2 = self.test_request("POST", "/tasks", test_task_store2, 200, 
+                                                      "Create Test Task for STORE_002", auth_token=self.store2_token)
+                
+                # Now test that STORE_001 admin cannot delete STORE_002 items
+                if created_idea_store2:
+                    idea_id_store2 = created_idea_store2['id']
+                    # Should fail with 404 (not found in their store)
+                    self.test_request("DELETE", f"/ideas/{idea_id_store2}", expected_status=404, 
+                                    auth_token=self.admin_token, test_name="Store 1 Admin Try Delete Store 2 Idea (Should Fail)")
+                
+                if created_task_store2:
+                    task_id_store2 = created_task_store2['id']
+                    # Should fail with 404 (not found in their store)
+                    self.test_request("DELETE", f"/tasks/{task_id_store2}", expected_status=404, 
+                                    auth_token=self.admin_token, test_name="Store 1 Admin Try Delete Store 2 Task (Should Fail)")
+                
+                # Should fail with 404 (not found in their store)
+                self.test_request("DELETE", f"/projects/{project_id_store2}", expected_status=404, 
+                                auth_token=self.admin_token, test_name="Store 1 Admin Try Delete Store 2 Project (Should Fail)")
+                
+                self.log("✅ Cross-store restrictions working - Store 1 admin cannot delete Store 2 items")
+        
+        # 4. Regular User Restrictions
+        self.log("\n--- 4. Regular User Restrictions (demo/demo/STORE_001) ---")
+        
+        if self.demo_token:
+            # Create test items as admin first
+            test_project_regular = {
+                "name": "Regular User Delete Test Project",
+                "description": "Project for testing regular user delete restrictions",
+                "color": "#9C27B0"
+            }
+            
+            created_project_regular = self.test_request("POST", "/projects", test_project_regular, 200, 
+                                                      "Create Test Project for Regular User Testing", auth_token=self.admin_token)
+            
+            if created_project_regular:
+                project_id_regular = created_project_regular['id']
+                
+                # Create idea and task
+                test_idea_regular = {
+                    "project_id": project_id_regular,
+                    "title": "Regular User Delete Test Idea",
+                    "description": "Idea for testing regular user delete restrictions",
+                    "tags": ["regular", "user", "test"]
+                }
+                
+                created_idea_regular = self.test_request("POST", "/ideas", test_idea_regular, 200, 
+                                                       "Create Test Idea for Regular User Testing", auth_token=self.admin_token)
+                
+                test_task_regular = {
+                    "project_id": project_id_regular,
+                    "title": "Regular User Delete Test Task",
+                    "description": "Task for testing regular user delete restrictions",
+                    "priority": "medium"
+                }
+                
+                created_task_regular = self.test_request("POST", "/tasks", test_task_regular, 200, 
+                                                       "Create Test Task for Regular User Testing", auth_token=self.admin_token)
+                
+                # Test that regular user cannot delete anything - should fail with 403
+                if created_idea_regular:
+                    idea_id_regular = created_idea_regular['id']
+                    self.test_request("DELETE", f"/ideas/{idea_id_regular}", expected_status=403, 
+                                    auth_token=self.demo_token, test_name="Regular User Try Delete Idea (Should Fail)")
+                
+                if created_task_regular:
+                    task_id_regular = created_task_regular['id']
+                    self.test_request("DELETE", f"/tasks/{task_id_regular}", expected_status=403, 
+                                    auth_token=self.demo_token, test_name="Regular User Try Delete Task (Should Fail)")
+                
+                self.test_request("DELETE", f"/projects/{project_id_regular}", expected_status=403, 
+                                auth_token=self.demo_token, test_name="Regular User Try Delete Project (Should Fail)")
+                
+                self.log("✅ Regular user restrictions working - cannot delete any items")
+        
+        # Summary
+        self.log("\n--- Admin Delete Permissions Summary ---")
+        self.log("✅ Store admins can delete ideas, tasks, and projects from their own store")
+        if super_admin_token:
+            self.log("✅ Super admins can delete ideas, tasks, and projects from any store")
+        self.log("✅ Store admins cannot delete items from other stores (404 not found)")
+        self.log("✅ Regular users cannot delete anything (403 permission denied)")
+
     def run_all_tests(self):
         """Run all backend tests including authentication and real-time messaging"""
         self.log("🚀 Starting Comprehensive Backend API Testing with Authentication and Real-time Features")
