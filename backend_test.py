@@ -608,7 +608,7 @@ class TaskManagerTester:
         self.log("\n=== Testing Session Management ===")
         
         # Test multiple login sessions
-        admin_login = {"username": "admin", "password": "admin"}
+        admin_login = {"username": "admin", "password": "admin", "store_id": "STORE_001"}  # Updated to include store_id
         
         # First login
         session1 = self.test_request("POST", "/auth/login", admin_login, 200, "Admin Login Session 1")
