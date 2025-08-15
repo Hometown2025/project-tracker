@@ -1015,16 +1015,20 @@ async def mark_conversation_read(conversation_id: str, current_user: User = Depe
 # Authentication Routes
 @api_router.post("/auth/login")
 async def login(login_data: UserLogin):
-    """User login"""
-    # Find user
-    user = await db.users.find_one({"username": login_data.username, "is_active": True})
+    """User login with store validation"""
+    # Find user with matching username, store_id, and active status
+    user = await db.users.find_one({
+        "username": login_data.username, 
+        "store_id": login_data.store_id,
+        "is_active": True
+    })
     if not user:
-        raise HTTPException(status_code=400, detail="Invalid username or password")
+        raise HTTPException(status_code=400, detail="Invalid username, store ID, or password")
     
     # Check password
     password_record = await db.user_passwords.find_one({"user_id": user["id"]})
     if not password_record or not verify_password(login_data.password, password_record["password_hash"]):
-        raise HTTPException(status_code=400, detail="Invalid username or password")
+        raise HTTPException(status_code=400, detail="Invalid username, store ID, or password")
     
     # Create session
     session_token = generate_session_token()
@@ -1034,6 +1038,7 @@ async def login(login_data: UserLogin):
         user_id=user["id"],
         username=user["username"],
         role=user["role"],
+        store_id=user["store_id"],
         session_token=session_token,
         expires_at=expires_at
     )
