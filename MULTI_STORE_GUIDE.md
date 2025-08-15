@@ -61,11 +61,13 @@ Your lumber yard task management system now supports **multiple stores with hier
 4. **Create Regular User**: Choose role "Regular User" for any store
 5. **View All Users**: See users from all stores in the user list
 
-### Test Store Admin Limitations:
+### Test Store Admin Capabilities:
 1. **Login as Store Admin** (`STORE_001` / `admin` / `admin`)
-2. **Go to Admin Panel** - notice you can only create "Regular User" role
-3. **Store ID is Fixed**: Cannot change store ID (locked to your store)
-4. **User List**: See only users from your store (STORE_001)
+2. **Go to Admin Panel** - notice you can now create "Store Administrator" role
+3. **Create Store Admin**: Choose role "Store Administrator" for your store
+4. **Store ID is Fixed**: Cannot change store ID (locked to your store)
+5. **User List**: See only users from your store (STORE_001)
+6. **Test Restriction**: Cannot create super admins (option not available)
 
 ### Test Regular User Restrictions:
 1. **Login as Regular User** (`STORE_001` / `demo` / `demo`)
