@@ -1220,6 +1220,7 @@ class Idea(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     project_id: str
     owner_id: Optional[str] = None  # User who owns this idea
+    store_id: str  # Store/Lumberyard identifier
     title: str
     description: Optional[str] = None
     image_data: Optional[str] = None  # Base64 encoded image
