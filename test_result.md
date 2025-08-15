@@ -162,7 +162,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Subtask System Testing Complete"
+    - "EditIdeaModal Component"
+    - "Ideas Board Edit/Delete Functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
