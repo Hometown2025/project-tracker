@@ -1738,14 +1738,41 @@ async def get_dashboard_stats():
 
 # Calendar data endpoint
 @api_router.get("/calendar")
-async def get_calendar_data():
-    tasks_with_dates = await db.tasks.find({
-        "$or": [
-            {"due_date": {"$exists": True, "$ne": None}},
-            {"order_date": {"$exists": True, "$ne": None}},
-            {"delivery_date": {"$exists": True, "$ne": None}}
-        ]
-    }).to_list(1000)
+async def get_calendar_data(current_user: User = Depends(get_current_user)):
+    """Get calendar events filtered by user's assigned projects"""
+    
+    # Build query based on user role
+    if current_user.role == UserRole.ADMIN:
+        # Admin can see all calendar events
+        tasks_query = {
+            "$or": [
+                {"due_date": {"$exists": True, "$ne": None}},
+                {"order_date": {"$exists": True, "$ne": None}},
+                {"delivery_date": {"$exists": True, "$ne": None}}
+            ]
+        }
+    else:
+        # Regular users only see events from their assigned projects
+        user_projects = current_user.assigned_projects or []
+        tasks_query = {
+            "$and": [
+                {
+                    "$or": [
+                        {"due_date": {"$exists": True, "$ne": None}},
+                        {"order_date": {"$exists": True, "$ne": None}},
+                        {"delivery_date": {"$exists": True, "$ne": None}}
+                    ]
+                },
+                {
+                    "$or": [
+                        {"project_id": {"$in": user_projects}},
+                        {"project_id": None, "owner_id": current_user.id}
+                    ]
+                }
+            ]
+        }
+    
+    tasks_with_dates = await db.tasks.find(tasks_query).to_list(1000)
     
     calendar_events = []
     for task in tasks_with_dates:
