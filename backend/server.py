@@ -92,6 +92,7 @@ class User(BaseModel):
     username: str
     email: Optional[str] = None
     role: UserRole = UserRole.USER
+    store_id: str  # Store/Lumberyard identifier
     assigned_projects: List[str] = []  # List of project IDs user can access
     created_date: datetime = Field(default_factory=datetime.utcnow)
     last_login: Optional[datetime] = None
@@ -102,15 +103,18 @@ class UserCreate(BaseModel):
     password: str
     email: Optional[str] = None
     role: UserRole = UserRole.USER
+    store_id: str  # Store/Lumberyard identifier
 
 class UserLogin(BaseModel):
     username: str
     password: str
+    store_id: str  # Store/Lumberyard identifier
 
 class UserSession(BaseModel):
     user_id: str
     username: str
     role: UserRole
+    store_id: str  # Store/Lumberyard identifier
     session_token: str
     expires_at: datetime
 
