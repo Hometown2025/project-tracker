@@ -130,101 +130,29 @@ backend:
           comment: "Calendar endpoint /api/calendar already properly filters events by user's assigned projects for regular users. Admin users see all events, regular users only see events from their assigned projects."
 
 frontend:
-  - task: "WebSocket Client Integration"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/AuthContext.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: false
-          agent: "main"
-          comment: "Added WebSocket connection management to AuthContext with auto-reconnection, notification permission requests, real-time message handling, and state management for notifications and unread messages count."
-        - working: false
-          agent: "testing"
-          comment: "CRITICAL ISSUE IDENTIFIED: Polling system not working in frontend despite backend endpoints functioning perfectly. Manual API tests confirm backend has 31 unread notifications and 13 unread messages, but frontend polling logic is not starting. Investigation shows: (1) No polling requests detected over 20+ seconds, (2) No polling interval found in AuthContext, (3) Axios auth headers not being set properly, (4) startPolling() function not being called or failing silently. The polling-based real-time system is correctly implemented in code but not executing at runtime. This is a critical frontend initialization issue preventing the entire real-time notification system from working."
-        - working: true
-          agent: "main"
-          comment: "FIXED: Updated AuthContext polling logic to use useEffect for proper initialization, removed dependency on isAuthenticated state within polling function, fixed polling startup timing, and resolved axios authentication headers. Polling now works correctly with 3-second intervals. Confirmed via screenshot testing - notification toast visible showing 'New Task Created', proving polling system is successfully retrieving and displaying notifications from backend."
-
-  - task: "Notification UI Components"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/components/NotificationPanel.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: false
-          agent: "main"
-          comment: "Created NotificationPanel component with sliding panel interface, notification list display, time formatting, notification icons, and clear all functionality."
-        - working: true
-          agent: "testing"
-          comment: "Minor: NotificationPanel UI component working correctly - opens/closes properly, displays 'No notifications yet' message correctly, Clear All button present and functional, proper styling and layout. The component itself is fully functional, but shows no notifications because the polling system is not feeding data to it."
-
-  - task: "Message Center Interface"
-    implemented: true
+  - task: "EditIdeaModal Component"
+    implemented: false
     working: false
-    file: "/app/frontend/src/components/MessageCenter.js"
-    stuck_count: 1
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: false
-          agent: "main"
-          comment: "Implemented MessageCenter modal with conversation list, message threads, real-time message sending, conversation management, and proper role-based messaging (users to admins, admins to specific users)."
-        - working: false
-          agent: "testing"
-          comment: "MessageCenter UI opens correctly but message sending fails with 500 server error. Interface displays properly with conversation list and message input, but core messaging functionality broken. Backend has 13 unread messages available via API, but frontend cannot send new messages due to server errors. This prevents testing of real-time message updates and conversation threading."
-
-  - task: "Notification Toast System"
-    implemented: true
-    working: true
-    file: "/app/frontend/src/components/NotificationToast.js"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-        - working: false
-          agent: "main"
-          comment: "Created NotificationToast component with fade in/out animations, auto-dismiss functionality, notification type styling, and proper positioning system."
-        - working: false
-          agent: "testing"
-          comment: "NotificationToast component not tested due to polling system failure. No toast notifications appear because the polling system is not delivering new notifications to trigger toast display. Component implementation appears correct but cannot be verified without functional polling system."
-        - working: true
-          agent: "main"
-          comment: "CONFIRMED WORKING: Screenshot testing shows notification toast appearing correctly with 'New Task Created' message in top-right corner. Toast displays with proper styling, positioning, and content. Auto-dismiss functionality implemented correctly. Toast system successfully receives notifications from polling system and displays them to user."
-
-  - task: "Navigation Integration"
-    implemented: true
-    working: true
     file: "/app/frontend/src/Components.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
           agent: "main"
-          comment: "Added NotificationButton and MessagesButton components to navigation with badge counts, integrated NotificationPanel and MessageCenter into Navigation component, and connected with useAuth hook for real-time data."
-        - working: true
-          agent: "testing"
-          comment: "Minor: Navigation integration working correctly - notification bell and message buttons visible and clickable, proper integration with panels, no notification badges shown (correct since polling not working). UI components properly integrated into navigation layout."
+          comment: "EditIdeaModal component is referenced in IdeasBoard component at line 840 but the actual component implementation is missing. Need to implement the modal following the pattern of CreateIdeaModal."
 
-  - task: "App Integration"
+  - task: "Ideas Board Edit/Delete Functionality"
     implemented: true
-    working: true
-    file: "/app/frontend/src/App.js"
+    working: false
+    file: "/app/frontend/src/Components.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: false
           agent: "main"
-          comment: "Integrated NotificationToast system into main App component with toast management, positioning logic, and automatic toast removal. Connected notifications from AuthContext to display pop-up notifications."
-        - working: true
-          agent: "testing"
-          comment: "Minor: App integration working correctly - authentication flow works, dashboard loads properly, toast positioning logic implemented correctly. No toasts appear due to polling system not working, but the integration code is functional."
+          comment: "Edit and delete buttons are implemented in the IdeasBoard component with proper handlers (handleEditIdea, handleDeleteIdea). Delete functionality is working with confirmation dialog. Edit functionality requires the missing EditIdeaModal component to be completed."
 
 metadata:
   created_by: "main_agent"
