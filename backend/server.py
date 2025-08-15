@@ -1739,17 +1739,51 @@ async def delete_idea(idea_id: str, current_user: User = Depends(get_current_use
 
 # Dashboard Route
 @api_router.get("/dashboard", response_model=DashboardStats)
-async def get_dashboard_stats():
+async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
+    """Get dashboard statistics filtered by user permissions and store"""
     today = date.today()
     today_str = today.isoformat()
     
-    total_projects = await db.projects.count_documents({})
-    active_projects = await db.projects.count_documents({"status": ProjectStatus.ACTIVE})
-    total_tasks = await db.tasks.count_documents({})
-    completed_tasks = await db.tasks.count_documents({"completed": True})
+    # Base filters for store isolation
+    if current_user.role == UserRole.ADMIN:
+        # Admin sees all projects in their store
+        project_filter = {"store_id": current_user.store_id}
+        task_filter = {"store_id": current_user.store_id}
+        idea_filter = {"store_id": current_user.store_id}
+    else:
+        # Regular users only see their assigned projects
+        project_filter = {
+            "id": {"$in": current_user.assigned_projects},
+            "store_id": current_user.store_id
+        }
+        # Tasks from assigned projects only
+        task_filter = {
+            "project_id": {"$in": current_user.assigned_projects},
+            "store_id": current_user.store_id
+        }
+        # Ideas from assigned projects only
+        idea_filter = {
+            "project_id": {"$in": current_user.assigned_projects},
+            "store_id": current_user.store_id
+        }
+    
+    # Count projects based on user permissions
+    total_projects = await db.projects.count_documents(project_filter)
+    active_projects = await db.projects.count_documents({
+        **project_filter,
+        "status": ProjectStatus.ACTIVE
+    })
+    
+    # Count tasks based on user permissions
+    total_tasks = await db.tasks.count_documents(task_filter)
+    completed_tasks = await db.tasks.count_documents({
+        **task_filter,
+        "completed": True
+    })
     
     # Count overdue tasks (check all date fields)
     overdue_tasks = await db.tasks.count_documents({
+        **task_filter,
         "$or": [
             {"due_date": {"$lt": today_str}, "completed": False},
             {"delivery_date": {"$lt": today_str}, "completed": False}
@@ -1758,6 +1792,7 @@ async def get_dashboard_stats():
     
     # Count tasks due today (check all date fields)
     today_tasks = await db.tasks.count_documents({
+        **task_filter,
         "$or": [
             {"due_date": today_str, "completed": False},
             {"order_date": today_str},
@@ -1765,7 +1800,8 @@ async def get_dashboard_stats():
         ]
     })
     
-    ideas_count = await db.ideas.count_documents({})
+    # Count ideas based on user permissions
+    ideas_count = await db.ideas.count_documents(idea_filter)
     
     return DashboardStats(
         total_projects=total_projects,
