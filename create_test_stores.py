@@ -116,7 +116,7 @@ async def create_test_stores():
     print("4. Verify you don't see STORE_001's data")
     print("5. Create different projects for STORE_002")
     
-    await client.close()
+    client.close()
 
 if __name__ == "__main__":
     asyncio.run(create_test_stores())
