@@ -251,7 +251,8 @@ class TaskManagerTester:
         # Test invalid login
         invalid_login = {
             "username": "invalid_user",
-            "password": "wrong_password"
+            "password": "wrong_password",
+            "store_id": "STORE_001"  # Updated to include store_id
         }
         
         self.test_request("POST", "/auth/login", invalid_login, 400, "Invalid Login Credentials")
