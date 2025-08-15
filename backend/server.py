@@ -1291,6 +1291,29 @@ class IdeaCreate(BaseModel):
     pinterest_url: Optional[str] = None
     tags: List[str] = []
 
+# Budget Models
+class BudgetItem(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    task_id: Optional[str] = None  # If linked to specific task
+    item_name: str
+    description: Optional[str] = None
+    category: str  # e.g., "Materials", "Labor", "Equipment"
+    estimated_cost: float
+    actual_cost: Optional[float] = None
+    quantity: int = 1
+    unit: str = "each"  # e.g., "board feet", "hours", "each"
+    created_date: datetime = Field(default_factory=datetime.utcnow)
+
+class BudgetSummary(BaseModel):
+    project_id: str
+    total_estimated: float
+    total_actual: float
+    total_spent: float  # Same as actual for now
+    remaining_budget: float
+    budget_items: List[BudgetItem] = []
+    over_budget: bool = False
+
 # Dashboard Stats Model
 class DashboardStats(BaseModel):
     total_projects: int
