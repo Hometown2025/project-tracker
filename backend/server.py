@@ -1091,9 +1091,10 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(get_cu
         # Super admin can create users for any store
         target_store_id = user_data.store_id
     elif current_user.role == UserRole.ADMIN:
-        # Regular admin can only create users for their own store, and cannot create other admins
-        if user_data.role == UserRole.ADMIN or user_data.role == UserRole.SUPER_ADMIN:
-            raise HTTPException(status_code=403, detail="Only super admin can create admin users")
+        # Store admin can create users and other store admins for their own store only
+        # Only super admins can be created by super admins
+        if user_data.role == UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can create super admin users")
         target_store_id = current_user.store_id  # Force their own store
     else:
         raise HTTPException(status_code=403, detail="Admin access required")
