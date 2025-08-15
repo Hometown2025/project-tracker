@@ -136,7 +136,8 @@ const AdminPanel = ({ onClose }) => {
                   </div>
                   <div>
                     <span className={`role-badge role-${u.role}`}>
-                      {u.role === 'admin' ? 'Administrator' : 'User'}
+                      {u.role === 'super_admin' ? 'Super Administrator' : 
+                       u.role === 'admin' ? 'Store Administrator' : 'User'}
                     </span>
                   </div>
                   <div>
