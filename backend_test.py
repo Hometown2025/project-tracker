@@ -2561,7 +2561,12 @@ class TaskManagerTester:
         self.log(f"Backend URL: {self.base_url}")
         
         try:
-            # Test authentication first
+            # Test multi-store authentication first
+            self.test_multi_store_authentication()
+            self.test_multi_store_data_isolation()
+            self.test_user_model_store_id_field()
+            
+            # Test authentication
             self.test_user_initialization()
             self.test_authentication_endpoints()
             self.test_admin_user_management()
