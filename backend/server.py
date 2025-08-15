@@ -1952,7 +1952,7 @@ async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
         task_filter = {"store_id": current_user.store_id}
         idea_filter = {"store_id": current_user.store_id}
     else:
-        # Regular users only see their assigned projects
+        # Customers only see their assigned projects
         project_filter = {
             "id": {"$in": current_user.assigned_projects},
             "store_id": current_user.store_id
