@@ -85,7 +85,7 @@ class ProjectStatus(str, Enum):
 class UserRole(str, Enum):
     SUPER_ADMIN = "super_admin"  # Can manage all stores and create admins
     ADMIN = "admin"              # Can manage their own store only
-    USER = "user"                # Read-only access to assigned projects
+    CUSTOMER = "customer"        # Customers who view assigned projects/quotes
 
 # User Models
 class User(BaseModel):
