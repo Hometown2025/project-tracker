@@ -1818,11 +1818,17 @@ async def update_idea(idea_id: str, updates: IdeaCreate, current_user: User = De
 
 @api_router.delete("/ideas/{idea_id}")
 async def delete_idea(idea_id: str, current_user: User = Depends(get_current_user)):
-    """Delete idea (Admin only, within same store)"""
-    if current_user.role != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Only admins can delete ideas")
+    """Delete idea (Admin and Super Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only administrators can delete ideas")
     
-    result = await db.ideas.delete_one({"id": idea_id, "store_id": current_user.store_id})
+    # For store admin, ensure idea belongs to their store
+    if current_user.role == UserRole.ADMIN:
+        result = await db.ideas.delete_one({"id": idea_id, "store_id": current_user.store_id})
+    else:
+        # Super admin can delete any idea
+        result = await db.ideas.delete_one({"id": idea_id})
+    
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Idea not found")
     
