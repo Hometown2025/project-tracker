@@ -92,7 +92,7 @@ class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
     email: Optional[str] = None
-    role: UserRole = UserRole.USER
+    role: UserRole = UserRole.CUSTOMER
     store_id: str  # Store/Lumberyard identifier
     assigned_projects: List[str] = []  # List of project IDs user can access
     created_date: datetime = Field(default_factory=datetime.utcnow)
