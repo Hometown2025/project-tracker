@@ -1160,6 +1160,7 @@ class Project(BaseModel):
     color: str = "#8B5CF6"  # Purple default
     status: ProjectStatus = ProjectStatus.ACTIVE
     owner_id: Optional[str] = None  # User who owns this project
+    store_id: str  # Store/Lumberyard identifier
     created_date: datetime = Field(default_factory=datetime.utcnow)
     task_count: Optional[int] = 0
     completed_tasks: Optional[int] = 0
@@ -1174,6 +1175,7 @@ class Task(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     project_id: Optional[str] = None
     owner_id: Optional[str] = None  # User who owns this task
+    store_id: str  # Store/Lumberyard identifier
     title: str
     description: Optional[str] = None
     priority: Priority = Priority.MEDIUM
