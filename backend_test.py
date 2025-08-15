@@ -3536,6 +3536,9 @@ class TaskManagerTester:
             self.test_multi_store_data_isolation()
             self.test_user_model_store_id_field()
             
+            # Test admin delete permissions (NEW TEST)
+            self.test_admin_delete_permissions()
+            
             # Test authentication
             self.test_user_initialization()
             self.test_authentication_endpoints()
