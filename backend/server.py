@@ -1142,7 +1142,24 @@ async def get_all_users(current_user: User = Depends(get_current_user)):
             "is_active": True
         }).to_list(1000)
     
-    return [User(**user) for user in users]
+    # Handle users without store_id (legacy users) - assign them to STORE_001 by default
+    result_users = []
+    for user in users:
+        if "_id" in user:
+            del user["_id"]  # Remove MongoDB ObjectId
+        
+        # If user doesn't have store_id, assign default store
+        if "store_id" not in user or user["store_id"] is None:
+            user["store_id"] = "STORE_001"  # Default store for legacy users
+            # Update the user in database
+            await db.users.update_one(
+                {"id": user["id"]},
+                {"$set": {"store_id": "STORE_001"}}
+            )
+        
+        result_users.append(User(**user))
+    
+    return result_users
 
 @api_router.put("/admin/users/{user_id}/assign-projects")
 async def assign_projects_to_user(
