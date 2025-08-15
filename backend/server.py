@@ -454,7 +454,7 @@ async def initialize_default_data():
     if not demo_exists:
         demo_user = User(
             username="demo",
-            role=UserRole.USER,
+            role=UserRole.CUSTOMER,
             email="demo@taskflow.com"
         )
         demo_password = hash_password("demo")
