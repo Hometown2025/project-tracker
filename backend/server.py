@@ -1705,9 +1705,18 @@ async def get_idea(idea_id: str):
     return Idea(**idea)
 
 @api_router.put("/ideas/{idea_id}", response_model=Idea)
-async def update_idea(idea_id: str, updates: IdeaCreate):
+async def update_idea(idea_id: str, updates: IdeaCreate, current_user: User = Depends(get_current_user)):
+    """Update idea (Admin only, within same store)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can update ideas")
+    
+    # Verify idea exists and belongs to the same store
+    existing_idea = await db.ideas.find_one({"id": idea_id, "store_id": current_user.store_id})
+    if not existing_idea:
+        raise HTTPException(status_code=404, detail="Idea not found")
+    
     result = await db.ideas.update_one(
-        {"id": idea_id},
+        {"id": idea_id, "store_id": current_user.store_id},
         {"$set": updates.dict()}
     )
     if result.matched_count == 0:
@@ -1717,8 +1726,12 @@ async def update_idea(idea_id: str, updates: IdeaCreate):
     return Idea(**updated_idea)
 
 @api_router.delete("/ideas/{idea_id}")
-async def delete_idea(idea_id: str):
-    result = await db.ideas.delete_one({"id": idea_id})
+async def delete_idea(idea_id: str, current_user: User = Depends(get_current_user)):
+    """Delete idea (Admin only, within same store)"""
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can delete ideas")
+    
+    result = await db.ideas.delete_one({"id": idea_id, "store_id": current_user.store_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Idea not found")
     
