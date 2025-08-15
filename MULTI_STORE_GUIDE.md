@@ -37,8 +37,9 @@ Your lumber yard task management system now provides a **customer-focused experi
 
 ### 👑 **Super Admin Powers**
 - **View All Stores**: See data from all lumber yards
-- **Create Store Admins**: Set up administrators for new locations
+- **Create Store Admins**: Set up administrators for new locations  
 - **Create Users for Any Store**: Add users to any lumber yard
+- **Delete Any User**: Can permanently delete or deactivate any user/admin across all stores
 - **Cross-Store Management**: Assign projects across different stores
 
 ### 🏪 **Store Admin Powers**  
