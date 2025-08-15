@@ -1269,18 +1269,29 @@ async def create_project(project: ProjectCreate, current_user: User = Depends(ge
 
 @api_router.get("/projects", response_model=List[Project])
 async def get_projects(current_user: User = Depends(get_current_user)):
-    """Get projects - Admin sees all, Users see assigned only"""
+    """Get projects - Admin sees all from their store, Users see assigned only from their store"""
     if current_user.role == UserRole.ADMIN:
-        projects = await db.projects.find().to_list(1000)
+        # Admin sees all projects from their store
+        projects = await db.projects.find({"store_id": current_user.store_id}).to_list(1000)
     else:
-        # Users only see projects they're assigned to
-        projects = await db.projects.find({"id": {"$in": current_user.assigned_projects}}).to_list(1000)
+        # Users only see projects they're assigned to from their store
+        projects = await db.projects.find({
+            "id": {"$in": current_user.assigned_projects},
+            "store_id": current_user.store_id
+        }).to_list(1000)
     
     # Calculate task counts and file counts for each project
     for project in projects:
         project_id = project['id']
-        total_tasks = await db.tasks.count_documents({"project_id": project_id})
-        completed_tasks = await db.tasks.count_documents({"project_id": project_id, "completed": True})
+        total_tasks = await db.tasks.count_documents({
+            "project_id": project_id, 
+            "store_id": current_user.store_id
+        })
+        completed_tasks = await db.tasks.count_documents({
+            "project_id": project_id, 
+            "completed": True,
+            "store_id": current_user.store_id
+        })
         file_count = await db.file_attachments.count_documents({"project_id": project_id})
         
         project['task_count'] = total_tasks
