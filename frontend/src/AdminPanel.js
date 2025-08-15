@@ -383,15 +383,21 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
               disabled={loading}
             >
               <option value="user">Regular User - View assigned projects only</option>
+              {(user?.role === 'admin' || user?.role === 'super_admin') && (
+                <option value="admin">Store Administrator - Manage this store</option>
+              )}
               {user?.role === 'super_admin' && (
-                <>
-                  <option value="admin">Store Administrator - Manage one store</option>
-                  <option value="super_admin">Super Administrator - Manage all stores</option>
-                </>
+                <option value="super_admin">Super Administrator - Manage all stores</option>
               )}
             </select>
-            {user?.role !== 'super_admin' && (
-              <small className="form-hint">Only regular users can be created. Contact super admin to create store administrators.</small>
+            {user?.role === 'user' && (
+              <small className="form-hint">Only regular users can be created. Contact your administrator to create store administrators.</small>
+            )}
+            {user?.role === 'admin' && (
+              <small className="form-hint">You can create regular users and store administrators for your store.</small>
+            )}
+            {user?.role === 'super_admin' && (
+              <small className="form-hint">You can create users and administrators for any store, including super administrators.</small>
             )}
           </div>
 
