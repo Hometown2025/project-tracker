@@ -1205,23 +1205,81 @@ async def assign_projects_to_user(
     return {"message": "Projects assigned successfully"}
 
 @api_router.delete("/admin/users/{user_id}")
-async def deactivate_user(user_id: str, admin_user: User = Depends(require_admin)):
-    """Admin: Deactivate user"""
-    if user_id == admin_user.id:
-        raise HTTPException(status_code=400, detail="Cannot deactivate your own account")
+async def delete_or_deactivate_user(
+    user_id: str, 
+    permanent: bool = False,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete or deactivate user - Super Admin can permanently delete, Store Admin can only deactivate users from their store"""
     
-    result = await db.users.update_one(
-        {"id": user_id},
-        {"$set": {"is_active": False}}
-    )
+    # Prevent users from deleting themselves
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
     
-    if result.matched_count == 0:
+    # Find the target user
+    target_user = await db.users.find_one({"id": user_id, "is_active": True})
+    if not target_user:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # Delete user's sessions
-    await db.sessions.delete_many({"user_id": user_id})
+    # Permission checks
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super admin can delete/deactivate any user
+        pass
+    elif current_user.role == UserRole.ADMIN:
+        # Store admin can only deactivate users from their store (not permanently delete)
+        if target_user["store_id"] != current_user.store_id:
+            raise HTTPException(status_code=403, detail="Can only manage users from your own store")
+        if permanent:
+            raise HTTPException(status_code=403, detail="Only super admin can permanently delete users")
+        # Store admin cannot delete other admins or super admins
+        if target_user["role"] in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+            raise HTTPException(status_code=403, detail="Cannot delete other administrators")
+    else:
+        raise HTTPException(status_code=403, detail="Admin access required")
     
-    return {"message": "User deactivated successfully"}
+    if permanent and current_user.role == UserRole.SUPER_ADMIN:
+        # Permanent deletion (Super Admin only)
+        
+        # Remove user from all project assignments
+        await db.users.update_many(
+            {"assigned_projects": user_id},
+            {"$pull": {"assigned_projects": user_id}}
+        )
+        
+        # Remove user from project customer assignments
+        await db.projects.update_many(
+            {"customer_id": user_id},
+            {"$unset": {"customer_id": ""}}
+        )
+        
+        # Delete user's sessions
+        await db.sessions.delete_many({"user_id": user_id})
+        
+        # Delete user's password
+        await db.user_passwords.delete_many({"user_id": user_id})
+        
+        # Delete the user record
+        result = await db.users.delete_one({"id": user_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"message": f"User '{target_user['username']}' permanently deleted successfully"}
+    
+    else:
+        # Deactivation (Store Admin and Super Admin)
+        result = await db.users.update_one(
+            {"id": user_id},
+            {"$set": {"is_active": False}}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Delete user's sessions
+        await db.sessions.delete_many({"user_id": user_id})
+        
+        return {"message": f"User '{target_user['username']}' deactivated successfully"}
 
 # Models
 class Project(BaseModel):
