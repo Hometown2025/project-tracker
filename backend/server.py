@@ -83,8 +83,9 @@ class ProjectStatus(str, Enum):
     ARCHIVED = "archived"
 
 class UserRole(str, Enum):
-    ADMIN = "admin"
-    USER = "user"
+    SUPER_ADMIN = "super_admin"  # Can manage all stores and create admins
+    ADMIN = "admin"              # Can manage their own store only
+    USER = "user"                # Read-only access to assigned projects
 
 # User Models
 class User(BaseModel):
