@@ -1747,11 +1747,20 @@ async def update_task(task_id: str, updates: TaskUpdate, current_user: User = De
 
 @api_router.delete("/tasks/{task_id}")
 async def delete_task(task_id: str, current_user: User = Depends(get_current_user)):
-    """Delete task (Admin only)"""
-    if current_user.role != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Only admins can delete tasks")
+    """Delete task (Admin and Super Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only administrators can delete tasks")
     
-    result = await db.tasks.delete_one({"id": task_id})
+    # For store admin, ensure task belongs to their store
+    if current_user.role == UserRole.ADMIN:
+        task = await db.tasks.find_one({"id": task_id, "store_id": current_user.store_id})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        result = await db.tasks.delete_one({"id": task_id, "store_id": current_user.store_id})
+    else:
+        # Super admin can delete any task
+        result = await db.tasks.delete_one({"id": task_id})
+    
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Task not found")
     
