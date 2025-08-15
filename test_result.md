@@ -105,6 +105,18 @@
 user_problem_statement: "Add store ID to the login system to enable multi-tenancy. When multiple lumberyards use the system, admins and users should be separate for each location/store. This includes updating the login form to require Store ID, Username, and Password, and ensuring complete data isolation between different stores."
 
 backend:
+  - task: "Admin Delete Permissions for Ideas, Tasks, and Projects"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Admin delete permissions working perfectly. ✅ Store Admin Delete Permissions (admin/admin/STORE_001) - can delete ideas, tasks, and projects from their own store ✅ Super Admin Delete Permissions (superadmin/superadmin123/GLOBAL) - can delete ideas, tasks, and projects from any store ✅ Cross-Store Restrictions - Store 1 admin cannot delete Store 2 items (404 not found in their store) ✅ Regular User Restrictions (demo/demo/STORE_001) - cannot delete anything (403 permission denied). All DELETE endpoints working correctly: DELETE /api/ideas/{idea_id}, DELETE /api/tasks/{task_id}, DELETE /api/projects/{project_id}. Role-based access control properly enforced. Success rate: 100% (28/28 tests passed)."
+
   - task: "Super Admin Hierarchical User Management System"
     implemented: true
     working: true
