@@ -195,6 +195,165 @@ class TaskManagerTester:
         
         self.test_request("POST", "/auth/login", incomplete_login3, 422, "Incomplete Login - Missing username")
 
+    def test_multi_store_data_isolation(self):
+        """Test data isolation between different stores"""
+        self.log("\n=== Testing Multi-Store Data Isolation ===")
+        
+        if not hasattr(self, 'store2_token') or not hasattr(self, 'store3_token'):
+            self.log("❌ Missing store tokens for data isolation testing", "ERROR")
+            return
+        
+        # Create Store-Specific Projects
+        # Store 1 Admin creates a project
+        store1_project = {
+            "name": "Store 1 Lumber Project",
+            "description": "Exclusive project for Store 1 lumber yard",
+            "color": "#FF5722"
+        }
+        
+        store1_project_response = self.test_request("POST", "/projects", store1_project, 200, 
+                                                  "Create Store 1 Project", auth_token=self.admin_token)
+        
+        if store1_project_response:
+            store1_project_id = store1_project_response['id']
+            self.log(f"✅ Store 1 project created: {store1_project_id}")
+            
+            # Store 2 Manager creates a project
+            store2_project = {
+                "name": "Store 2 Hardware Project", 
+                "description": "Exclusive project for Store 2 hardware store",
+                "color": "#2196F3"
+            }
+            
+            store2_project_response = self.test_request("POST", "/projects", store2_project, 200,
+                                                      "Create Store 2 Project", auth_token=self.store2_token)
+            
+            if store2_project_response:
+                store2_project_id = store2_project_response['id']
+                self.log(f"✅ Store 2 project created: {store2_project_id}")
+                
+                # Verify Store Isolation: Store 1 admin should not see Store 2's projects
+                store1_projects = self.test_request("GET", "/projects", auth_token=self.admin_token,
+                                                  test_name="Get Store 1 Projects")
+                
+                if store1_projects:
+                    store1_project_ids = [p['id'] for p in store1_projects]
+                    if store2_project_id not in store1_project_ids:
+                        self.log("✅ Store 1 admin cannot see Store 2 projects (proper isolation)")
+                    else:
+                        self.log("❌ Store isolation failed - Store 1 can see Store 2 projects", "ERROR")
+                        self.failed_tests += 1
+                
+                # Verify Store Isolation: Store 2 manager should not see Store 1's projects
+                store2_projects = self.test_request("GET", "/projects", auth_token=self.store2_token,
+                                                  test_name="Get Store 2 Projects")
+                
+                if store2_projects:
+                    store2_project_ids = [p['id'] for p in store2_projects]
+                    if store1_project_id not in store2_project_ids:
+                        self.log("✅ Store 2 manager cannot see Store 1 projects (proper isolation)")
+                    else:
+                        self.log("❌ Store isolation failed - Store 2 can see Store 1 projects", "ERROR")
+                        self.failed_tests += 1
+                
+                # Test Store-Specific Tasks
+                store1_task = {
+                    "project_id": store1_project_id,
+                    "title": "Store 1 Lumber Delivery",
+                    "description": "Deliver lumber materials to construction site",
+                    "priority": "high"
+                }
+                
+                store1_task_response = self.test_request("POST", "/tasks", store1_task, 200,
+                                                       "Create Store 1 Task", auth_token=self.admin_token)
+                
+                if store1_task_response:
+                    store1_task_id = store1_task_response['id']
+                    
+                    # Store 2 should not be able to access Store 1's task
+                    self.test_request("GET", f"/tasks/{store1_task_id}", expected_status=403,
+                                    auth_token=self.store2_token, test_name="Store 2 Access Store 1 Task (Should Fail)")
+                
+                # Test Store-Specific Ideas
+                store1_idea = {
+                    "project_id": store1_project_id,
+                    "title": "Lumber Storage Design",
+                    "description": "Ideas for efficient lumber storage",
+                    "tags": ["lumber", "storage", "efficiency"]
+                }
+                
+                store1_idea_response = self.test_request("POST", "/ideas", store1_idea, 200,
+                                                       "Create Store 1 Idea", auth_token=self.admin_token)
+                
+                if store1_idea_response:
+                    store1_idea_id = store1_idea_response['id']
+                    
+                    # Store 2 should not be able to access Store 1's idea
+                    self.test_request("GET", f"/ideas/{store1_idea_id}", expected_status=403,
+                                    auth_token=self.store2_token, test_name="Store 2 Access Store 1 Idea (Should Fail)")
+        
+        # Test User Isolation: Store 1 admin should not see Store 2 users
+        if hasattr(self, 'admin_token'):
+            store1_users = self.test_request("GET", "/admin/users", auth_token=self.admin_token,
+                                           test_name="Get Store 1 Users")
+            
+            if store1_users:
+                store1_user_stores = [user.get('store_id') for user in store1_users]
+                # All users should be from STORE_001
+                non_store1_users = [store for store in store1_user_stores if store != 'STORE_001']
+                if not non_store1_users:
+                    self.log("✅ Store 1 admin only sees users from STORE_001")
+                else:
+                    self.log(f"❌ Store 1 admin sees users from other stores: {non_store1_users}", "ERROR")
+                    self.failed_tests += 1
+
+    def test_user_model_store_id_field(self):
+        """Test that User model includes store_id field"""
+        self.log("\n=== Testing User Model store_id Field ===")
+        
+        if not self.admin_token:
+            self.log("❌ No admin token available for user model testing", "ERROR")
+            return
+        
+        # Get current user info to verify store_id field
+        current_user = self.test_request("GET", "/auth/me", auth_token=self.admin_token,
+                                       test_name="Get Current User with store_id")
+        
+        if current_user:
+            if 'store_id' in current_user:
+                self.log(f"✅ User model includes store_id field: {current_user['store_id']}")
+                
+                # Verify store_id is correct
+                if current_user['store_id'] == 'STORE_001':
+                    self.log("✅ store_id field has correct value")
+                else:
+                    self.log(f"❌ store_id field has incorrect value: {current_user['store_id']}", "ERROR")
+                    self.failed_tests += 1
+            else:
+                self.log("❌ User model missing store_id field", "ERROR")
+                self.failed_tests += 1
+        
+        # Test creating new user with store_id
+        import time
+        unique_suffix = str(int(time.time()))
+        new_user_data = {
+            "username": f"test_store_user_{unique_suffix}",
+            "password": "test_password_123",
+            "email": "testuser@store001.com",
+            "role": "user",
+            "store_id": "STORE_001"
+        }
+        
+        created_user = self.test_request("POST", "/admin/users", new_user_data, 200,
+                                       "Create User with store_id", auth_token=self.admin_token)
+        
+        if created_user:
+            if created_user.get('store_id') == 'STORE_001':
+                self.log("✅ New user created with correct store_id")
+            else:
+                self.log(f"❌ New user has incorrect store_id: {created_user.get('store_id')}", "ERROR")
+                self.failed_tests += 1
+
     def test_user_initialization(self):
         """Test that default admin and demo users were created"""
         self.log("\n=== Testing User Initialization ===")
