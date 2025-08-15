@@ -1,30 +1,30 @@
-# 🏗️ Multi-Store Lumber Yard System with Hierarchical Administration
+# 🏗️ Multi-Store Lumber Yard System with Customer-Focused Experience
 
 ## 🌟 Overview
-Your lumber yard task management system now supports **multiple stores with hierarchical administration**! The system has three levels of access:
+Your lumber yard task management system now provides a **customer-focused experience** with hierarchical administration! The system has three levels of access:
 - **Super Admin**: Manages all stores and creates store admins
-- **Store Admin**: Manages their own store only
-- **Regular User**: Read-only access to assigned projects
+- **Store Admin**: Manages their own store and creates customers
+- **Customer**: Views assigned projects, budgets, and communicates with lumber yard staff
 
 ## 🔐 Login Credentials
 
 ### 👑 **SUPER ADMIN** (Store ID: `GLOBAL`)
 - **Username**: `superadmin` | **Password**: `superadmin123`
-- **Capabilities**: Can manage ALL stores, create store admins, create users for any store
+- **Capabilities**: Can manage ALL stores, create store admins, create customers for any store
 
 ### 🏢 **Downtown Lumberyard** (Store ID: `STORE_001`)
 - **🏪 Store Admin**: Username: `admin` | Password: `admin`
-- **👤 User**: Username: `demo` | Password: `demo`  
-- **👤 User**: Username: `john` | Password: `john123`
+- **🛒 Customer**: Username: `demo` | Password: `demo`  
+- **🛒 Customer**: Username: `john` | Password: `john123`
 
 ### 🏢 **Northside Lumber Co** (Store ID: `STORE_002`)
 - **🏪 Store Admin**: Username: `manager` | Password: `manager123`
-- **👤 User**: Username: `sarah` | Password: `sarah123`
-- **👤 User**: Username: `mike` | Password: `mike123`
+- **🛒 Customer**: Username: `sarah` | Password: `sarah123`
+- **🛒 Customer**: Username: `mike` | Password: `mike123`
 
 ### 🏢 **Westend Building Supply** (Store ID: `STORE_003`)
 - **🏪 Store Admin**: Username: `supervisor` | Password: `super123`
-- **👤 User**: Username: `emma` | Password: `emma123`
+- **🛒 Customer**: Username: `emma` | Password: `emma123`
 
 ## 🔧 How to Login
 
