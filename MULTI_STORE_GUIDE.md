@@ -47,10 +47,19 @@ Your lumber yard task management system now provides a **customer-focused experi
 - **Create Store Admins**: Can now create other administrators for their store
 - **Store-Specific Data**: See only their store's projects, tasks, and users
 
-### 👤 **Regular User Access**
-- **Read-Only**: View assigned projects and tasks only
-- **No Edit Buttons**: Cannot create, edit, or delete anything
-- **Store-Specific**: See only data from their assigned projects
+### 🛒 **Customer Experience**
+- **View Projects & Quotes**: See assigned house building projects
+- **Budget Transparency**: View estimated costs, actual spending, and remaining budget
+- **Progress Tracking**: Monitor project progress and timelines
+- **Communication**: Message lumber yard staff and administrators
+- **Read-Only Access**: Cannot edit projects but can view all details
+
+### 👤 **Customer Dashboard Features**
+- **Budget Overview**: See total estimated costs vs actual spending
+- **Project Progress**: Track completion status of assigned projects
+- **Cost Breakdown**: Detailed view of materials, labor, equipment, and permit costs
+- **Spending Alerts**: Visual indicators if projects are over budget
+- **Clean Interface**: Simplified, customer-focused navigation and layout
 
 ## 🧪 Testing the Hierarchical System
 
