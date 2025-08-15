@@ -236,6 +236,7 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     isAdmin,
+    isSuperAdmin,
     canEdit,
     canCreate,
     canDelete,
