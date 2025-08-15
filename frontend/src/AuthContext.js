@@ -27,13 +27,14 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  // Start polling when authenticated
+  // Start polling when authenticated (DISABLED FOR NOW)
   useEffect(() => {
-    if (isAuthenticated && token) {
-      startPolling();
-    } else {
-      stopPolling();
-    }
+    // Notifications disabled - uncomment below to re-enable
+    // if (isAuthenticated && token) {
+    //   startPolling();
+    // } else {
+    //   stopPolling();
+    // }
   }, [isAuthenticated, token]);
 
   // Polling for notifications and messages
