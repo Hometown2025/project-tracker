@@ -1877,6 +1877,67 @@ async def delete_idea(idea_id: str, current_user: User = Depends(get_current_use
     
     return {"message": "Idea deleted successfully"}
 
+# Budget Management Routes
+@api_router.get("/projects/{project_id}/budget", response_model=BudgetSummary)
+async def get_project_budget(project_id: str, current_user: User = Depends(get_current_user)):
+    """Get budget summary for a project"""
+    # Check if user has access to this project
+    if current_user.role == UserRole.SUPER_ADMIN:
+        project = await db.projects.find_one({"id": project_id})
+    elif current_user.role == UserRole.ADMIN:
+        project = await db.projects.find_one({"id": project_id, "store_id": current_user.store_id})
+    else:
+        # Customer can only see projects assigned to them
+        if project_id not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
+        project = await db.projects.find_one({"id": project_id})
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Get budget items for this project
+    budget_items = await db.budget_items.find({"project_id": project_id}).to_list(1000)
+    budget_items_list = [BudgetItem(**item) for item in budget_items]
+    
+    # Calculate totals
+    total_estimated = sum(item.estimated_cost * item.quantity for item in budget_items_list)
+    total_actual = sum((item.actual_cost or 0) * item.quantity for item in budget_items_list)
+    
+    # Use project's estimated_budget if set, otherwise use sum of items
+    project_estimated = project.get('estimated_budget') or total_estimated
+    remaining_budget = project_estimated - total_actual
+    over_budget = total_actual > project_estimated
+    
+    return BudgetSummary(
+        project_id=project_id,
+        total_estimated=project_estimated,
+        total_actual=total_actual,
+        total_spent=total_actual,
+        remaining_budget=remaining_budget,
+        budget_items=budget_items_list,
+        over_budget=over_budget
+    )
+
+@api_router.post("/projects/{project_id}/budget/items", response_model=BudgetItem)
+async def add_budget_item(project_id: str, item: dict, current_user: User = Depends(get_current_user)):
+    """Add budget item to project (Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only administrators can add budget items")
+    
+    # Verify project access
+    if current_user.role == UserRole.ADMIN:
+        project = await db.projects.find_one({"id": project_id, "store_id": current_user.store_id})
+    else:
+        project = await db.projects.find_one({"id": project_id})
+    
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    budget_item = BudgetItem(project_id=project_id, **item)
+    await db.budget_items.insert_one(budget_item.dict())
+    
+    return budget_item
+
 # Dashboard Route
 @api_router.get("/dashboard", response_model=DashboardStats)
 async def get_dashboard_stats(current_user: User = Depends(get_current_user)):
