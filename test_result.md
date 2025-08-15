@@ -129,7 +129,7 @@ backend:
           agent: "testing"
           comment: "TESTED: Multi-store data isolation working correctly. ✅ Store 1 admin can create projects for STORE_001 ✅ Store isolation verified - users only see data from their own store ✅ Cross-store access properly blocked ✅ Projects, tasks, and ideas are isolated by store_id ✅ User management respects store boundaries. Minor: Store 2 manager cannot create projects (role restriction, not store issue). Data isolation functioning as designed."
 
-  - task: "Ideas Edit API Endpoint"
+  - task: "Multi-Store User Model"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -139,12 +139,9 @@ backend:
     status_history:
         - working: true
           agent: "main"
-          comment: "Backend PUT /api/ideas/{idea_id} endpoint already implemented and working correctly. Takes IdeaCreate object and updates idea in database."
-        - working: true
-          agent: "testing"
-          comment: "TESTED: PUT /api/ideas/{idea_id} endpoint working perfectly. Successfully updated idea title, description, tags, and Pinterest URL. Critical for EditIdeaModal functionality. All Ideas CRUD operations (GET, POST, PUT, DELETE) tested and working correctly with proper authentication and project filtering."
+          comment: "Updated User, Project, Task, and Idea models to include store_id field. All models now support multi-tenancy with proper store isolation."
 
-  - task: "Calendar Project-Based Filtering"
+  - task: "Multi-Store Authentication"
     implemented: true
     working: true
     file: "/app/backend/server.py"
@@ -154,13 +151,37 @@ backend:
     status_history:
         - working: true
           agent: "main"
-          comment: "Calendar endpoint /api/calendar already properly filters events by user's assigned projects for regular users. Admin users see all events, regular users only see events from their assigned projects."
+          comment: "Updated UserLogin model to require store_id. Login endpoint validates username, password, AND store_id. Authentication properly isolated by store."
         - working: true
           agent: "testing"
-          comment: "TESTED: Calendar project-based filtering working perfectly. Admin users see all calendar events from all projects (10 events tested). Demo users only see events from assigned projects (4 events from assigned project, 0 from unassigned). Authentication required for access. Multiple date types (due_date, order_date, delivery_date) create separate calendar events correctly."
+          comment: "MULTI-STORE AUTHENTICATION FULLY FUNCTIONAL: ✅ All three store logins working (STORE_001/admin/admin, STORE_002/manager/manager123, STORE_003/supervisor/super123). ✅ Cross-store authentication properly blocked. ✅ All three fields (username, password, store_id) required for login. ✅ Authentication system provides complete store isolation."
+
+  - task: "Multi-Store Data Isolation"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Updated all API endpoints to filter data by store_id. Projects, tasks, ideas are now completely isolated between stores. Users can only access data from their assigned store."
         - working: true
           agent: "testing"
-          comment: "RE-TESTED: Calendar project-based filtering confirmed working correctly. Admin user sees 4 calendar events (all events from all projects). Demo user sees 0 calendar events (properly filtered - no events in assigned projects). Role-based access control working with 'Assigned Only' and 'View Only' labels for demo user. Calendar UI renders properly for both user types."
+          comment: "MULTI-STORE DATA ISOLATION CONFIRMED: ✅ Store-specific projects working - Store 1 cannot see Store 2 data. ✅ Store-specific tasks and ideas properly isolated. ✅ Cross-store access properly blocked with 403 errors. ✅ Admin users only see data from their store. ✅ Complete data isolation between STORE_001, STORE_002, and STORE_003."
+
+  - task: "Test Store Data Creation"
+    implemented: true
+    working: true
+    file: "/app/create_test_stores.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Created test script that generates users for three different lumber yard stores: Downtown Lumberyard (STORE_001), Northside Lumber Co (STORE_002), and Westend Building Supply (STORE_003). Each store has admin and regular users for testing multi-tenancy."
 
   - task: "Authentication System"
     implemented: true
