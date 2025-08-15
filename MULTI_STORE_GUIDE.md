@@ -63,6 +63,26 @@ Your lumber yard task management system now provides a **customer-focused experi
 - **Spending Alerts**: Visual indicators if projects are over budget
 - **Clean Interface**: Simplified, customer-focused navigation and layout
 
+## 🔥 **User Management & Deletion Powers**
+
+### 👑 **Super Admin Deletion Capabilities:**
+- **Permanent Deletion**: Can completely remove any user/admin from the system (cannot be undone)
+- **Deactivation**: Can temporarily deactivate users (can be reactivated later)
+- **Cross-Store Access**: Can manage users from any lumber yard location
+- **No Restrictions**: Can delete other super admins and store admins
+
+### 🏪 **Store Admin Deletion Capabilities:**
+- **Customer Deactivation Only**: Can deactivate customers from their store only
+- **Cannot Delete Admins**: Cannot deactivate or delete other administrators
+- **Store Boundaries**: Cannot manage users from other stores
+- **No Permanent Deletion**: Only deactivation available (data preservation)
+
+### 🛡️ **Safety Measures:**
+- **Self-Protection**: No one can delete their own account
+- **Confirmation Required**: Multiple confirmations for permanent deletion
+- **Audit Trail**: All user management actions are logged
+- **Data Cleanup**: Permanent deletion removes all user data and project associations
+
 ## 🧪 Testing the Hierarchical System
 
 ### Test Super Admin Capabilities:
