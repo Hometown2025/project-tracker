@@ -236,8 +236,8 @@ const AdminPanel = ({ onClose }) => {
                     {u.id !== user.id && (
                       <button 
                         className="btn-danger btn-sm"
-                        onClick={() => deactivateUser(u.id, u.username)}
-                        title="Deactivate User"
+                        onClick={() => deactivateUser(u.id, u.username, u.role)}
+                        title={user?.role === 'super_admin' ? 'Delete/Deactivate User' : 'Deactivate User'}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
