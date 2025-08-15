@@ -134,6 +134,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "TESTED: Calendar project-based filtering working perfectly. Admin users see all calendar events from all projects (10 events tested). Demo users only see events from assigned projects (4 events from assigned project, 0 from unassigned). Authentication required for access. Multiple date types (due_date, order_date, delivery_date) create separate calendar events correctly."
+        - working: true
+          agent: "testing"
+          comment: "RE-TESTED: Calendar project-based filtering confirmed working correctly. Admin user sees 4 calendar events (all events from all projects). Demo user sees 0 calendar events (properly filtered - no events in assigned projects). Role-based access control working with 'Assigned Only' and 'View Only' labels for demo user. Calendar UI renders properly for both user types."
 
   - task: "Authentication System"
     implemented: true
