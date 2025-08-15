@@ -291,7 +291,7 @@ class TaskManagerTester:
                 self.test_request("GET", "/auth/me", auth_token=self.admin_token, expected_status=401, test_name="Verify Token Invalidated After Logout")
                 
                 # Re-login admin for further tests
-                admin_login = {"username": "admin", "password": "admin"}
+                admin_login = {"username": "admin", "password": "admin", "store_id": "STORE_001"}  # Updated to include store_id
                 admin_response = self.test_request("POST", "/auth/login", admin_login, 200, "Re-login Admin")
                 if admin_response:
                     self.admin_token = admin_response.get('session_token')
