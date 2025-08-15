@@ -36,7 +36,8 @@ const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject,
               <div className="user-details">
                 <div className="username">{user?.username}</div>
                 <div className={`user-role role-${user?.role}`}>
-                  {user?.role === 'admin' ? 'Administrator' : 'User'}
+                  {(user?.role === 'admin' || user?.role === 'super_admin') ? 
+                    (user?.role === 'super_admin' ? 'Super Admin' : 'Administrator') : 'User'}
                 </div>
               </div>
             </div>
