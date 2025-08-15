@@ -1415,15 +1415,29 @@ async def update_project(project_id: str, updates: ProjectCreate, current_user: 
 
 @api_router.delete("/projects/{project_id}")
 async def delete_project(project_id: str, current_user: User = Depends(get_current_user)):
-    """Delete project (Admin only)"""
-    if current_user.role != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Only admins can delete projects")
+    """Delete project (Admin and Super Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only administrators can delete projects")
     
-    # Delete all tasks and ideas associated with the project
-    await db.tasks.delete_many({"project_id": project_id})
-    await db.ideas.delete_many({"project_id": project_id})
+    # For store admin, ensure project belongs to their store
+    if current_user.role == UserRole.ADMIN:
+        project = await db.projects.find_one({"id": project_id, "store_id": current_user.store_id})
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        
+        # Delete all tasks and ideas associated with the project (from same store)
+        await db.tasks.delete_many({"project_id": project_id, "store_id": current_user.store_id})
+        await db.ideas.delete_many({"project_id": project_id, "store_id": current_user.store_id})
+        
+        result = await db.projects.delete_one({"id": project_id, "store_id": current_user.store_id})
+    else:
+        # Super admin can delete any project
+        # Delete all tasks and ideas associated with the project
+        await db.tasks.delete_many({"project_id": project_id})
+        await db.ideas.delete_many({"project_id": project_id})
+        
+        result = await db.projects.delete_one({"id": project_id})
     
-    result = await db.projects.delete_one({"id": project_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     
@@ -1432,6 +1446,8 @@ async def delete_project(project_id: str, current_user: User = Depends(get_curre
         {"assigned_projects": project_id},
         {"$pull": {"assigned_projects": project_id}}
     )
+    
+    return {"message": "Project deleted successfully"}
     
     return {"message": "Project deleted successfully"}
 
