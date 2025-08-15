@@ -1,72 +1,98 @@
-# 🏗️ Multi-Store Lumber Yard System
+# 🏗️ Multi-Store Lumber Yard System with Hierarchical Administration
 
 ## 🌟 Overview
-Your lumber yard task management system now supports **multiple stores** with complete data isolation! Each lumber yard location operates independently with their own admins, users, projects, and data.
+Your lumber yard task management system now supports **multiple stores with hierarchical administration**! The system has three levels of access:
+- **Super Admin**: Manages all stores and creates store admins
+- **Store Admin**: Manages their own store only
+- **Regular User**: Read-only access to assigned projects
 
 ## 🔐 Login Credentials
 
+### 👑 **SUPER ADMIN** (Store ID: `GLOBAL`)
+- **Username**: `superadmin` | **Password**: `superadmin123`
+- **Capabilities**: Can manage ALL stores, create store admins, create users for any store
+
 ### 🏢 **Downtown Lumberyard** (Store ID: `STORE_001`)
-- **👑 Admin**: Username: `admin` | Password: `admin`
+- **🏪 Store Admin**: Username: `admin` | Password: `admin`
 - **👤 User**: Username: `demo` | Password: `demo`  
 - **👤 User**: Username: `john` | Password: `john123`
 
 ### 🏢 **Northside Lumber Co** (Store ID: `STORE_002`)
-- **👑 Admin**: Username: `manager` | Password: `manager123`
+- **🏪 Store Admin**: Username: `manager` | Password: `manager123`
 - **👤 User**: Username: `sarah` | Password: `sarah123`
 - **👤 User**: Username: `mike` | Password: `mike123`
 
 ### 🏢 **Westend Building Supply** (Store ID: `STORE_003`)
-- **👑 Admin**: Username: `supervisor` | Password: `super123`
+- **🏪 Store Admin**: Username: `supervisor` | Password: `super123`
 - **👤 User**: Username: `emma` | Password: `emma123`
 
 ## 🔧 How to Login
 
-1. **Store ID**: Enter your lumber yard's store ID (e.g., `STORE_001`)
-2. **Username**: Enter your username (e.g., `admin`)
-3. **Password**: Enter your password (e.g., `admin`)
+1. **Store ID**: Enter store ID (e.g., `GLOBAL` for super admin, `STORE_001` for store users)
+2. **Username**: Enter your username
+3. **Password**: Enter your password
 4. **Click Sign In**
 
-## ✨ Key Features
+## ✨ Hierarchical User Management
 
-### 🔒 **Complete Data Isolation**
-- Each store can only see their own projects, tasks, and ideas
-- Store 1 admins cannot access Store 2 data
-- Users are completely separated by store
+### 👑 **Super Admin Powers**
+- **View All Stores**: See data from all lumber yards
+- **Create Store Admins**: Set up administrators for new locations
+- **Create Users for Any Store**: Add users to any lumber yard
+- **Cross-Store Management**: Assign projects across different stores
 
-### 👥 **Role-Based Access**
-- **Admins**: Full control within their store (create/edit/delete projects, manage users)
-- **Users**: View-only access to assigned projects within their store
+### 🏪 **Store Admin Powers**  
+- **Manage Their Store Only**: Full control within their lumber yard
+- **Create Regular Users**: Add employees to their store only
+- **Cannot Create Admins**: Only super admin can create other administrators
+- **Store-Specific Data**: See only their store's projects, tasks, and users
 
-### 🚀 **Multi-Tenancy Benefits**
-- Multiple lumber yards can use the same system
-- Each location maintains independent operations
-- Secure data separation between locations
-- Individual user management per store
+### 👤 **Regular User Access**
+- **Read-Only**: View assigned projects and tasks only
+- **No Edit Buttons**: Cannot create, edit, or delete anything
+- **Store-Specific**: See only data from their assigned projects
 
-## 🧪 Testing Multi-Store Functionality
+## 🧪 Testing the Hierarchical System
 
-### Test Data Isolation:
-1. **Login as Store 1 Admin** (`STORE_001` / `admin` / `admin`)
-2. **Create a project** called "Store 1 Project"
-3. **Logout and login as Store 2 Admin** (`STORE_002` / `manager` / `manager123`)
-4. **Verify you don't see** "Store 1 Project" 
-5. **Create a different project** for Store 2
-6. **Switch back to Store 1** - confirm you only see Store 1 data
+### Test Super Admin Capabilities:
+1. **Login as Super Admin** (`GLOBAL` / `superadmin` / `superadmin123`)
+2. **Go to Admin Panel** and click "Add User"
+3. **Create Store Admin**: Choose role "Store Administrator" and set Store ID to `STORE_004`
+4. **Create Regular User**: Choose role "Regular User" for any store
+5. **View All Users**: See users from all stores in the user list
 
-### Test Ideas Board:
-- Each store has separate Ideas Boards
-- Edit/Delete functionality works within each store
-- Ideas are completely isolated between stores
+### Test Store Admin Limitations:
+1. **Login as Store Admin** (`STORE_001` / `admin` / `admin`)
+2. **Go to Admin Panel** - notice you can only create "Regular User" role
+3. **Store ID is Fixed**: Cannot change store ID (locked to your store)
+4. **User List**: See only users from your store (STORE_001)
 
-### Test Calendar:
-- Regular users see only events from their assigned projects
-- Admin users see all events within their store only
-- No cross-store calendar visibility
+### Test Regular User Restrictions:
+1. **Login as Regular User** (`STORE_001` / `demo` / `demo`)
+2. **No Admin Panel**: Admin panel not accessible
+3. **No Edit Buttons**: Cannot edit house rooms or projects
+4. **Limited Dashboard**: See only assigned project statistics
 
 ## 🎯 Perfect For:
-- **Multi-location lumber yards**
-- **Franchise operations**
-- **Regional building supply chains**
-- **Independent stores using shared infrastructure**
+- **Multi-location lumber yard chains**
+- **Franchise operations with central management**
+- **Regional building supply networks**
+- **Corporate structures with store-level management**
 
-Your system now scales to support unlimited lumber yard locations while maintaining complete security and data isolation! 🏗️✨
+## 🚀 User Creation Workflow
+
+### For New Lumber Yard Locations:
+1. **Super Admin** creates a Store Admin for the new location
+2. **Store Admin** logs in and creates Regular Users for their employees
+3. **Store Admin** creates projects and assigns users to them
+4. **Regular Users** log in and see only their assigned work
+
+### Role Hierarchy:
+```
+Super Admin (GLOBAL)
+    ├── Store Admin (STORE_001) → Regular Users (STORE_001)
+    ├── Store Admin (STORE_002) → Regular Users (STORE_002)  
+    └── Store Admin (STORE_003) → Regular Users (STORE_003)
+```
+
+Your system now provides enterprise-level user management with complete security and proper delegation of authority! 🏗️✨
