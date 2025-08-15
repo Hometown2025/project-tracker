@@ -1074,20 +1074,44 @@ async def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Get current user information"""
     return current_user
 
+# Helper function to check if user is super admin
+async def require_super_admin(current_user: User = Depends(get_current_user)):
+    """Require super admin role"""
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    return current_user
+
 # Admin User Management Routes
 @api_router.post("/admin/users", response_model=User)
-async def create_user(user_data: UserCreate, admin_user: User = Depends(require_admin)):
-    """Admin: Create new user"""
-    # Check if username already exists
-    existing = await db.users.find_one({"username": user_data.username})
+async def create_user(user_data: UserCreate, current_user: User = Depends(get_current_user)):
+    """Create new user - Super Admin can create for any store, Admin only for their store"""
+    
+    # Only super admin can create users for different stores
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super admin can create users for any store
+        target_store_id = user_data.store_id
+    elif current_user.role == UserRole.ADMIN:
+        # Regular admin can only create users for their own store, and cannot create other admins
+        if user_data.role == UserRole.ADMIN or user_data.role == UserRole.SUPER_ADMIN:
+            raise HTTPException(status_code=403, detail="Only super admin can create admin users")
+        target_store_id = current_user.store_id  # Force their own store
+    else:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Check if username already exists in the target store
+    existing = await db.users.find_one({
+        "username": user_data.username,
+        "store_id": target_store_id
+    })
     if existing:
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(status_code=400, detail="Username already exists in this store")
     
     # Create user
     user = User(
         username=user_data.username,
         email=user_data.email,
-        role=user_data.role
+        role=user_data.role,
+        store_id=target_store_id
     )
     
     # Hash password
