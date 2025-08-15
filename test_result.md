@@ -198,6 +198,18 @@ backend:
           agent: "testing"
           comment: "RE-TESTED: Authentication system continues to work flawlessly. Admin login successful with proper dashboard access. Demo user login successful with role-based UI restrictions (shows 'Assigned Only' and 'View Only' labels). Logout functionality working. Session management stable across multiple login/logout cycles."
 
+  - task: "Dashboard Role-Based Project Filtering"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Dashboard role-based project filtering working perfectly. ✅ Store 1 Admin (admin/admin/STORE_001) sees all 5 projects in their store ✅ Store 1 Regular User (demo/demo/STORE_001) sees 0 assigned projects (proper role-based filtering) ✅ Store 2 Admin (manager/manager123/STORE_002) sees 0 projects (complete store isolation) ✅ Dashboard count increases correctly when admin creates new project ✅ All dashboard fields respect role and store filtering: total_projects, active_projects, total_tasks, completed_tasks, overdue_tasks, today_tasks, ideas_count ✅ CRITICAL FOCUS VERIFIED: Regular users only see dashboard statistics for projects they have access to, not all projects in their store ✅ Multi-store dashboard isolation confirmed. Dashboard endpoint working correctly with proper authentication and authorization."
+
   - task: "Frontend Authentication Integration"
     implemented: true
     working: true
