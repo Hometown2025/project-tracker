@@ -1254,7 +1254,7 @@ async def create_project(project: ProjectCreate, current_user: User = Depends(ge
         raise HTTPException(status_code=403, detail="Only admins can create projects")
     
     project_dict = project.dict()
-    project_obj = Project(**project_dict, owner_id=current_user.id)
+    project_obj = Project(**project_dict, owner_id=current_user.id, store_id=current_user.store_id)
     await db.projects.insert_one(project_obj.dict())
     
     # Send notification to project members and admins
