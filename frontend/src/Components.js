@@ -395,15 +395,17 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
           </h1>
           <p className="page-subtitle">{filteredTasks.length} house rooms found across all projects</p>
         </div>
-        <button 
-          className="btn-primary"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add House Room
-        </button>
+        {user?.role === 'admin' && (
+          <button 
+            className="btn-primary"
+            onClick={() => setShowCreateModal(true)}
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add House Room
+          </button>
+        )}
       </div>
 
       <div className="filters">
