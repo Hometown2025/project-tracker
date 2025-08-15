@@ -203,6 +203,14 @@ const AppContent = () => {
           />
         )}
         
+        {currentView === 'budget' && (
+          <Components.BudgetView 
+            selectedProject={selectedProject}
+            refreshData={refreshData}
+            user={user}
+          />
+        )}
+        
         {currentView === 'ideas' && (
           <Components.IdeasBoard 
             ideas={ideas}
