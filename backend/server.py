@@ -1127,9 +1127,21 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(get_cu
     return user
 
 @api_router.get("/admin/users", response_model=List[User])
-async def get_all_users(admin_user: User = Depends(require_admin)):
-    """Admin: Get all users"""
-    users = await db.users.find({"is_active": True}).to_list(1000)
+async def get_all_users(current_user: User = Depends(get_current_user)):
+    """Get users - Super Admin sees all, Admin sees only their store"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super admin sees all users from all stores
+        users = await db.users.find({"is_active": True}).to_list(1000)
+    else:
+        # Regular admin sees only users from their store
+        users = await db.users.find({
+            "store_id": current_user.store_id,
+            "is_active": True
+        }).to_list(1000)
+    
     return [User(**user) for user in users]
 
 @api_router.put("/admin/users/{user_id}/assign-projects")
