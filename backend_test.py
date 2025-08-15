@@ -2719,7 +2719,10 @@ class TaskManagerTester:
         self.log(f"Backend URL: {self.base_url}")
         
         try:
-            # Test multi-store authentication first
+            # Test Super Admin hierarchical user management system first
+            self.test_super_admin_hierarchical_user_management()
+            
+            # Test multi-store authentication
             self.test_multi_store_authentication()
             self.test_multi_store_data_isolation()
             self.test_user_model_store_id_field()
