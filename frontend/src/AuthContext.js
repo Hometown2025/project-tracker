@@ -133,11 +133,12 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   };
 
-  const login = async (username, password) => {
+  const login = async (username, password, store_id) => {
     try {
       const response = await axios.post(`${API}/auth/login`, {
         username,
-        password
+        password,
+        store_id
       });
 
       const { session_token, user: userData } = response.data;
