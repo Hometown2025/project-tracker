@@ -1532,22 +1532,38 @@ async def create_task(task: TaskCreate, current_user: User = Depends(get_current
 
 @api_router.get("/tasks", response_model=List[Task])
 async def get_tasks(project_id: Optional[str] = None, status: Optional[TaskStatus] = None, current_user: User = Depends(get_current_user)):
-    """Get tasks and subtasks - Admin sees all, Users see tasks from assigned projects only"""
+    """Get tasks and subtasks - Super Admin sees all, Admin sees all from their store, Users see tasks from assigned projects only"""
     query = {}
     if project_id:
         # Check if user has access to this project
-        if current_user.role != UserRole.ADMIN and project_id not in current_user.assigned_projects:
-            raise HTTPException(status_code=403, detail="Access denied")
+        if current_user.role == UserRole.SUPER_ADMIN:
+            # Super admin can access any project
+            pass
+        elif current_user.role == UserRole.ADMIN:
+            # Admin can access projects from their store
+            project = await db.projects.find_one({"id": project_id, "store_id": current_user.store_id})
+            if not project:
+                raise HTTPException(status_code=403, detail="Access denied")
+        else:
+            # Regular user can only access assigned projects
+            if project_id not in current_user.assigned_projects:
+                raise HTTPException(status_code=403, detail="Access denied")
         query["project_id"] = project_id
     if status:
         query["status"] = status
     
     # Apply user-specific filtering
-    if current_user.role != UserRole.ADMIN:
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super admin sees all tasks from all stores
+        pass
+    elif current_user.role == UserRole.ADMIN:
+        # Admin sees all tasks from their store
+        query["store_id"] = current_user.store_id
+    else:
         # Users only see tasks from projects they're assigned to or unassigned tasks they own
         query["$or"] = [
-            {"project_id": {"$in": current_user.assigned_projects}},
-            {"project_id": None, "owner_id": current_user.id}
+            {"project_id": {"$in": current_user.assigned_projects}, "store_id": current_user.store_id},
+            {"project_id": None, "owner_id": current_user.id, "store_id": current_user.store_id}
         ]
     
     tasks = await db.tasks.find(query).to_list(1000)
