@@ -421,7 +421,7 @@ const CreateUserModal = ({ onClose, onSuccess }) => {
                 </svg>
                 <div>
                   <strong>Store Administrator</strong>
-                  <p>Can manage their store only: create, edit, and delete projects and tasks. Can create regular users for their store.</p>
+                  <p>Can manage their store only: create, edit, and delete projects and tasks. Can create regular users and other store administrators for their store.</p>
                 </div>
               </div>
             ) : (
