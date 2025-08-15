@@ -3229,6 +3229,9 @@ class TaskManagerTester:
             # Test Super Admin hierarchical user management system first
             self.test_super_admin_hierarchical_user_management()
             
+            # Test updated store admin user creation capabilities
+            self.test_store_admin_user_creation_capabilities()
+            
             # Test multi-store authentication
             self.test_multi_store_authentication()
             self.test_multi_store_data_isolation()
