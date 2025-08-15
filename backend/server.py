@@ -1220,6 +1220,10 @@ class Project(BaseModel):
     task_count: Optional[int] = 0
     completed_tasks: Optional[int] = 0
     file_count: int = 0  # Computed field
+    # Budget fields
+    estimated_budget: Optional[float] = None
+    actual_cost: Optional[float] = 0.0
+    customer_id: Optional[str] = None  # Customer this project is for
 
 class ProjectCreate(BaseModel):
     name: str
