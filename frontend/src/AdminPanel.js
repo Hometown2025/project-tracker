@@ -60,20 +60,77 @@ const AdminPanel = ({ onClose }) => {
     }
   };
 
-  const deactivateUser = async (userId, username) => {
+  const deactivateUser = async (userId, username, targetUserRole) => {
     if (userId === user.id) {
-      alert('Cannot deactivate your own account');
+      alert('Cannot delete your own account');
       return;
     }
     
-    if (window.confirm(`Are you sure you want to deactivate user "${username}"?`)) {
-      try {
-        await axios.delete(`${API}/admin/users/${userId}`);
-        setUsers(users.filter(u => u.id !== userId));
-        alert('User deactivated successfully');
-      } catch (error) {
-        console.error('Error deactivating user:', error);
-        alert('Failed to deactivate user');
+    // Different options for Super Admin vs Store Admin
+    if (user?.role === 'super_admin') {
+      // Super Admin gets choice of deactivate or permanent delete
+      const action = window.confirm(
+        `What would you like to do with user "${username}"?\n\n` +
+        `Click OK for PERMANENT DELETION (cannot be undone)\n` +
+        `Click Cancel for DEACTIVATION (can be reactivated later)`
+      );
+      
+      if (action !== null) { // User didn't press X to close
+        const permanent = action; // OK = true (permanent), Cancel = false (deactivate)
+        const actionText = permanent ? 'permanently delete' : 'deactivate';
+        const confirmText = permanent ? 
+          `⚠️ PERMANENT DELETION CONFIRMATION ⚠️\n\nAre you absolutely sure you want to PERMANENTLY DELETE user "${username}"?\n\nThis action:\n• Cannot be undone\n• Will remove all user data\n• Will unassign them from all projects\n\nType "DELETE" to confirm:` :
+          `Are you sure you want to deactivate user "${username}"? They will be logged out and unable to login until reactivated.`;
+        
+        let confirmed = false;
+        if (permanent) {
+          const userInput = prompt(confirmText);
+          confirmed = userInput === 'DELETE';
+          if (!confirmed && userInput !== null) {
+            alert('Deletion cancelled. You must type "DELETE" exactly to confirm permanent deletion.');
+            return;
+          }
+        } else {
+          confirmed = window.confirm(confirmText);
+        }
+        
+        if (confirmed) {
+          try {
+            const url = permanent ? 
+              `${API}/admin/users/${userId}?permanent=true` : 
+              `${API}/admin/users/${userId}`;
+              
+            await axios.delete(url);
+            setUsers(users.filter(u => u.id !== userId));
+            
+            const successMessage = permanent ? 
+              `User "${username}" permanently deleted successfully` : 
+              `User "${username}" deactivated successfully`;
+            alert(successMessage);
+          } catch (error) {
+            console.error('Error managing user:', error);
+            const errorMessage = error.response?.data?.detail || 'Failed to manage user';
+            alert(errorMessage);
+          }
+        }
+      }
+    } else {
+      // Store Admin gets only deactivate option (and only for customers)
+      if (targetUserRole === 'admin' || targetUserRole === 'super_admin') {
+        alert('You cannot deactivate other administrators. Only super admin can manage administrators.');
+        return;
+      }
+      
+      if (window.confirm(`Are you sure you want to deactivate customer "${username}"? They will be logged out and unable to login until reactivated by an administrator.`)) {
+        try {
+          await axios.delete(`${API}/admin/users/${userId}`);
+          setUsers(users.filter(u => u.id !== userId));
+          alert(`Customer "${username}" deactivated successfully`);
+        } catch (error) {
+          console.error('Error deactivating user:', error);
+          const errorMessage = error.response?.data?.detail || 'Failed to deactivate user';
+          alert(errorMessage);
+        }
       }
     }
   };
