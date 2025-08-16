@@ -55,7 +55,7 @@ async def create_test_stores():
             "store_name": "Westend Building Supply", 
             "users": [
                 {"username": "supervisor", "password": "super123", "role": "admin", "email": "supervisor@westend.lumber"},
-                {"username": "emma", "password": "emma123", "role": "user", "email": "emma@westend.lumber"},
+                {"username": "emma", "password": "emma123", "role": "customer", "email": "emma@westend.lumber"},
             ]
         }
     ]
