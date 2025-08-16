@@ -1327,6 +1327,10 @@ class Task(BaseModel):
     subtask_order: int = 0  # Order within the parent task
     subtask_count: int = 0  # Computed field - number of subtasks
     completed_subtasks: int = 0  # Computed field - number of completed subtasks
+    
+    # Budget fields for rooms/tasks
+    estimated_budget: Optional[float] = None
+    actual_cost: Optional[float] = 0.0
 
 class TaskCreate(BaseModel):
     project_id: Optional[str] = None
