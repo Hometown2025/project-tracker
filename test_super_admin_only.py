@@ -8,7 +8,7 @@ import json
 import time
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://housebuild.preview.emergentagent.com/api"
+BACKEND_URL = "https://lumbertracker.preview.emergentagent.com/api"
 
 class SuperAdminTester:
     def __init__(self):

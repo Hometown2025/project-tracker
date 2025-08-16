@@ -1,115 +1,125 @@
 <analysis>
-The previous AI engineer successfully developed a Notion-style task manager, iteratively enhancing its functionality based on user feedback. Key phases included establishing core CRUD operations for tasks and projects, implementing a robust role-based authentication system, and adding advanced features like custom date tracking, flexible task creation, and admin user management. When a WebSocket real-time update approach failed due to infrastructure limitations, the engineer seamlessly pivoted to a polling-based system. Subsequently, comprehensive file attachment with inline viewing, a detailed subtask system with two-level nesting, and significant terminology refactoring to suit a lumberyard house building context were added. The engineer consistently delivered features, debugged issues, and performed testing, always adapting to explicit user requirements. The current focus is on refining the Ideas section.
+The previous AI engineer successfully evolved a Notion-style task manager into a multi-tenant lumberyard house building tracker. Initial efforts focused on core CRUD, role-based authentication, and real-time updates via polling (after WebSocket failure). Key feature additions included file attachments, a two-level subtask system, and terminology refactoring. Significant recent work involved implementing edit/delete functionality for Ideas, which led to comprehensive multi-store support by adding  to models, API endpoints, and frontend forms. A hierarchical super admin role was introduced, granting global control and delegated admin creation. Debugging efforts primarily resolved frontend-backend URL mismatches and database inconsistencies related to role changes. The system now robustly handles multi-tenancy and granular permissions, including a customer role for regular users with a new budget view.
 </analysis>
 
 <product_requirements>
-The initial user request was for a Notion-style task manager, enabling CRUD operations on tasks, categories/priorities, and due dates, with a dashboard. This evolved significantly:
-*   **Project-specific organization**: All tasks (later rooms) and ideas are nested under projects (later house building projects).
-*   **Priority Levels**: High, Medium, Low with color coding.
-*   **Views**: Calendar (with custom order/delivery dates, filtered by user's assigned projects for regular users), Task/Room list (with filtering/sorting), Ideas board.
-*   **Editing**: Full edit capabilities for tasks/rooms, projects, and ideas.
-*   **Flexible Creation**: Tasks/rooms can be created with minimal fields, with others filled later.
-*   **User Authentication & Roles**: Secure login, Admin (full access, user management, create/assign users) and Regular User (view-only on assigned projects). Demo buttons removed.
-*   **Real-time Updates**: Initially requested WebSockets, pivoted to polling for notifications on task/project creation, updates, and completion.
-*   **Team Communication**: Messaging system for users to send messages to admins. Notifications can be turned off.
-*   **File Attachments**: Upload photos/PDFs/other files to projects and tasks/rooms, with support for inline viewing of many file types.
-*   **Subtasks**: Collapsible/expandable, 2-level nesting limit, auto-completion of parent task, optional order/delivery dates (no due date), file attachment support. Subtasks are color-coded based on their parent room.
-*   **Lumberyard Context**: Projects renamed to House Building Projects and tasks to House Rooms, with associated UI and placeholder text changes to fit a construction workflow, ensuring rooms are specific to projects.
+The application, initially a Notion-style task manager, has evolved into a Lumberyard House Building Tracker with multi-tenancy. Key requirements include:
+*   **Core Management**: CRUD operations for House Building Projects and House Rooms (tasks), with rooms specific to projects.
+*   **Custom Dates**: Rooms and subtasks track  and .
+*   **User Management & Roles**: Secure login with  (global control, can create store admins),  (store-specific management, can create other store admins and customers), and  (read-only access to assigned projects, formerly Regular User).
+*   **Real-time Updates**: Polling-based notifications and messaging system.
+*   **File Attachments**: Upload, view, and manage files for projects and rooms/subtasks.
+*   **Subtasks**: 2-level nesting, auto-completion of parent, optional dates, and color-coding.
+*   **Ideas Board**: Creation, editing, and deletion (admin/super admin only).
+*   **Multi-Tenancy**: Support for multiple lumber yard locations ( based data isolation).
+*   **Customer-Focused Dashboard**: Regular users (now customers) should only see dashboard stats for assigned projects.
+*   **Budget Tab**: Customers can view overall budget, spending, and cost estimates for their assigned projects, with read-only access.
+*   **Customer Communication**: Customers can communicate with admins within the system.
+*   **Hierarchical User Deletion**: Super admin can delete any user/admin across stores; store admins can deactivate/delete users only within their store.
 </product_requirements>
 
 <key_technical_concepts>
--   **Full-stack Architecture**: React frontend, FastAPI backend, MongoDB database.
--   **RESTful APIs**: Backend provides CRUD and specialized endpoints.
--   **Environment Variables**: Strict usage of  and .
--   **Role-Based Access Control (RBAC)**: Admin vs. Regular User roles for permissions.
--   **Frontend State Management**: React Context () for authentication and global state.
--   **Tailwind CSS**: For UI styling and responsive design.
--   **Supervisor**: Manages backend and frontend services.
--   **Kubernetes Ingress**: Routes backend API calls via  prefix.
--   **Polling**: Alternative to WebSockets for real-time updates.
--   **File Storage**: Local file system storage for attachments.
+-   **Full-stack Architecture**: React (frontend), FastAPI (backend), MongoDB (database).
+-   **Role-Based Access Control (RBAC)**: , ,  roles for granular permissions.
+-   **Multi-Tenancy**:  for data isolation.
+-   **RESTful APIs**: Backend endpoints for data and user management.
+-   **Frontend State Management**: React Context ().
+-   **Polling**: For real-time updates.
+-   **Environment Variables**: , .
+-   **Pydantic**: Data validation and serialization in FastAPI.
 </key_technical_concepts>
 
 <code_architecture>
 The application uses a standard full-stack structure:
 
-**Detailed Directory Structure:**
 
 
 -   :
-    -   **Importance**: Central FastAPI application. Defines API routes, handles database interactions (MongoDB), and implements core business logic, including authentication, authorization, notifications, file management, and subtask logic.
+    -   **Importance**: Core FastAPI application for API routes, MongoDB interaction, and business logic.
     -   **Changes**:
-        -   Initial CRUD for projects, tasks (now rooms), ideas.
-        -   Task/Room model updated with , ,  (list of nested tasks/rooms), .
-        -   Project model updated with .
-        -   Authentication routes (, , ).
-        -   Role-based access control (, , ) implemented across routes.
-        -   User management endpoints for admins.
-        -   Initially added WebSocket integration for real-time notifications, then **replaced with polling-based endpoints** (, , ) due to Kubernetes ingress limitations.
-        -   Added file upload/download endpoints (, , , ).
-        -   Implemented  logic for files and modified file retrieval to include this flag.
-        -   Subtask creation, update (including auto-completion), and retrieval logic.
-        -   Calendar endpoint () modified to filter events based on user's assigned projects for regular users.
-        -   Ideas endpoints (, ) now support edit and delete operations.
+        -   User, Project, Task, Idea models updated with .
+        -   New  and  enums added.
+        -   Authentication/Authorization logic updated to enforce  filtering and hierarchical role permissions (e.g.,  can create  for any store;  can create / for their own store).
+        -   CRUD endpoints for Projects, Tasks, Ideas, and Users updated to filter/set  and respect new role hierarchy.
+        -   Dashboard statistics and Calendar endpoints updated to filter data based on user role and .
+        -   , ,  models and associated API endpoints (, ) added.
+        -   User deactivation endpoint () enhanced to support permanent deletion by .
+        -   Fixed Pydantic validation errors by implementing automatic role migration for old 'user' role records to 'customer'.
 
 -   :
-    -   **Importance**: Main React component, handles routing and global layout.
-    -   **Changes**: Wrapped with . Implements conditional rendering for  vs. main app. Added  component for displaying pop-up notifications.
+    -   **Importance**: Main React component managing routing and global layout.
+    -   **Changes**: Integrated  component.
 
 -   :
-    -   **Importance**: Manages user authentication state, token storage, and user roles.
-    -   **Changes**: New file. Initially included WebSocket connection logic, then **refactored to implement polling** for notifications. Manages the ,  states and provides , ,  functions. Debugging focused on ensuring polling starts correctly post-authentication.
-
--    and :
-    -   **Importance**: Define global and component-specific styles.
-    -   **Changes**: Styles added for date badges, edit buttons, login page, admin panel, notification/message components, file upload areas, and subtask components (including color coding for subtasks).
+    -   **Importance**: Manages user authentication, session, and roles.
+    -   **Changes**:  logic updated to include  role.  function added. Login function updated to pass .
 
 -   :
-    -   **Importance**: A monolithic file that centralizes many reusable UI components and views, including ,  (formerly ), , and various modals (, , , , , ).
+    -   **Importance**: Centralizes reusable UI components and main views.
     -   **Changes**:
-        -   Integrated , , , , , and  components.
-        -    component updated to include notification and message buttons (later hidden), and reorganized to place Project Rooms under Projects.
-        -    and  (now RoomCard) updated to include edit buttons, display date badges, and integrate  and .
-        -   Terminology changes ( to ,  to  etc.) implemented throughout titles, buttons, and form labels.
-        -    updated to include edit and delete buttons for ideas, and  was being implemented.
-        -   Subtask color coding implemented (left border, dot, progress bar) based on parent room's color. Date labels for subtasks were clarified.
-
--   , , :
-    -   **Importance**: Handle the display and management of real-time notifications and messages.
-    -   **Changes**: New files. Part of the polling-based real-time communication system.
-
--   , , :
-    -   **Importance**: Provide functionality for uploading, listing, and managing files associated with projects and tasks/rooms.
-    -   **Changes**: New files. Implement drag-and-drop upload, file listing, and (most recently) inline viewing capabilities with specific modals.
+        -    component implemented.
+        -   Navigation updated to include Budget tab.
+        -   User role terminology  to  etc.
+        -    and  updated to conditionally render edit/delete buttons based on user role ( check). Add House Room button hidden for customers.
 
 -   :
-    -   **Importance**: Manages the creation, display, and interaction with subtasks within a task/room card.
-    -   **Changes**: New file. Implements collapsible UI, displays subtasks with their status, and supports file attachments for subtasks.
+    -   **Importance**: User login interface.
+    -   **Changes**: Added  input field to the login form.
 
+-   :
+    -   **Importance**: Admin user management interface.
+    -   **Changes**:
+        -    updated to include  field and restrict role options based on the current logged-in user's permissions.
+        -   User list () updated to conditionally show deactivate/delete options for users based on  and  roles.
+        -   Logic for displaying system stats (e.g., total admins) updated to correctly count  and  roles.
+        -   Fixed  references to .
+
+-   :
+    -   **Importance**: Displays budget information for projects.
+    -   **Changes**: New file, created to show cost estimates, actual spending, and budget items.
+
+-   :
+    -   **Importance**: Script to create sample users and projects for multi-store testing.
+    -   **Changes**: Updated to use new roles (, ).
+
+-   :
+    -   **Importance**: Script to create a  user.
+    -   **Changes**: New file, defines the  store  user.
+
+-   :
+    -   **Importance**: Script to create sample budget data.
+    -   **Changes**: New file, helps populate budget items for projects.
+
+-   :
+    -   **Importance**: User documentation for multi-store setup and login.
+    -   **Changes**: Updated with  credentials, details on hierarchical user management, and budget feature.
 </code_architecture>
 
 <pending_tasks>
--   **Ideas Board Functionality**: The  component is in the process of being integrated to allow editing of ideas.
--   **Pinterest Integration**: Deferred by user, requires API credentials and integration with .
--   **Stripe Integration**: Mentioned in initial prompt, but not yet requested.
--   **Slack Integration**: Mentioned in initial prompt, but not yet requested.
+-   **Pinterest Integration**: Deferred by user, requires API credentials.
+-   **Stripe Integration**: Mentioned in initial prompt, not yet requested.
+-   **Slack Integration**: Mentioned in initial prompt, not yet requested.
+-   **Project list scroll bar**: User requested adding a scroll bar to the project list for better visibility.
 </pending_tasks>
 
 <current_work>
-The application, now conceptually structured as a lumberyard house building tracker, is highly functional.
-**Key Features Implemented:**
-*   **Core Project & Room Management**: Users can create, view, edit, and delete House Building Projects and House Rooms. Rooms are specific to Projects with no overlap.
-*   **Custom Dates**: Rooms and Subtasks support , , and . Subtasks only use  and , which are optional and can be filled later.
-*   **Role-Based Authentication**: Secure login with distinct Admin and Regular User roles. Admins have full control, including comprehensive user management (create, assign projects, deactivate users). Regular users have view-only access to assigned projects/rooms.
-*   **Polling-Based Real-time System**: Backend and frontend are configured for polling to deliver real-time notifications (e.g., New Task Created) and messages. The notification UI elements (bell, message icons, and toast notifications) are active, though notifications were recently requested to be turned off.
-*   **Comprehensive File Attachment**: Users can drag-and-drop multiple file types (images, documents, archives, etc.) onto both projects and rooms. Files are stored and can be downloaded or viewed inline (PDFs, images, text, code files) directly within the browser using a modal viewer. Subtasks also support file attachments.
-*   **Granular Subtask System**: Each House Room can have subtasks with a 2-level nesting limit. Subtasks are collapsible/expandable, display their progress (completed/total), and can auto-complete the parent room when all subtasks are done.
-*   **Visual Enhancements**: Subtasks are now color-coded, inheriting the color of their parent House Room, with visual indicators like colored left borders, dot indicators, and matching checkbox borders. Date labels for subtasks (Order Date, Delivery Date) are explicitly shown and are optional.
-*   **Ideas Board**: Initial ideas functionality exists, but the ability to edit and delete ideas is currently being implemented.
+The application has been transformed into a customer-focused lumber yard platform with robust multi-tenancy and a hierarchical user management system.
 
-The current immediate work involves adding edit and delete functionality to the Ideas section, with the  component being the focus.
+**Key features implemented in the last few turns:**
+*   **Multi-Store System**: All data (projects, rooms, ideas, users) is isolated by . The login form now requires a .
+*   **Hierarchical User Roles**:
+    *   **SUPER_ADMIN** ( store ID, /): Can view and manage all data across all stores, and can create  users for any store. Can delete any user.
+    *   **ADMIN** (e.g., //): Manages users and data within their assigned store. Can now create other  users and  users within their own store. Can delete ideas, tasks, projects from their store.
+    *   **CUSTOMER** (e.g., //): Replaces the Regular User role. Has read-only access to assigned projects and can communicate with admins. Cannot create/edit/delete content.
+*   **Ideas Board**: Edit and delete functionality for ideas is fully implemented and accessible to  and  roles.
+*   **Dashboard Filtering**:  users' dashboards now correctly display statistics only for projects they are assigned to.
+*   **Budget Tab**: A new Budget tab is added for  users to view overall project budgets, spending, and cost estimates. The backend API for budget data is implemented.
+*   **Enhanced User Deletion**:  can permanently delete any user (including other admins).  users can deactivate users or delete non-admin users within their own store, but cannot delete other s.
+*   **Robustness**: Addressed backend Pydantic validation issues and frontend URL hardcoding.
+
+The current immediate work involves adding a scroll bar to the project list to ensure all project labels are visible, following the user's latest explicit request.
 </current_work>
 
 <optional_next_step>
-The next step is to complete the implementation of the  component in the frontend.
+Add a scroll bar to the project list in the frontend to display all project labels.
 </optional_next_step>

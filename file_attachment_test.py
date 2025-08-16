@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://housebuild.preview.emergentagent.com/api"
+BACKEND_URL = "https://lumbertracker.preview.emergentagent.com/api"
 
 class FileAttachmentTester:
     def __init__(self):
