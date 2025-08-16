@@ -4196,6 +4196,9 @@ class TaskManagerTester:
             # Test budget functionality (NEW TEST)
             self.test_budget_functionality()
             
+            # Test password reset functionality (NEW TEST)
+            self.test_password_reset_functionality()
+            
             # Test authentication
             self.test_user_initialization()
             self.test_authentication_endpoints()
