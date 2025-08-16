@@ -149,6 +149,24 @@ const AdminPanel = ({ onClose }) => {
     }
   };
 
+  const handleReactivateUser = async (userId) => {
+    if (window.confirm('Are you sure you want to reactivate this user?')) {
+      try {
+        await axios.post(`${API}/admin/users/${userId}/reactivate`);
+        fetchUsers(); // Refresh active users
+        fetchDeactivatedUsers(); // Refresh deactivated users
+        alert('User reactivated successfully');
+      } catch (error) {
+        console.error('Error reactivating user:', error);
+        if (error.response?.status === 409) {
+          alert('Cannot reactivate: Username is already taken by an active user. Please rename the active user first or choose a different username.');
+        } else {
+          alert('Failed to reactivate user');
+        }
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="modal-overlay">
