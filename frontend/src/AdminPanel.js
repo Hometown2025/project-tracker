@@ -829,4 +829,163 @@ const AssignProjectsModal = ({ user, projects, onClose, onAssign }) => {
   );
 };
 
+const ResetPasswordModal = ({ user, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+
+  const generateRandomPassword = async () => {
+    try {
+      const response = await axios.post(`${API}/admin/generate-password`);
+      const generatedPassword = response.data.generated_password;
+      setFormData({
+        newPassword: generatedPassword,
+        confirmPassword: generatedPassword
+      });
+    } catch (error) {
+      console.error('Error generating password:', error);
+      setError('Failed to generate password');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (formData.newPassword !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.newPassword.length < 3) {
+      setError('Password must be at least 3 characters long');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await axios.post(`${API}/admin/users/${user.id}/reset-password`, {
+        new_password: formData.newPassword
+      });
+
+      setSuccess(`Password reset successfully for ${user.username}. New password: ${response.data.new_password}`);
+      
+      // Close modal after 3 seconds
+      setTimeout(() => {
+        onSuccess();
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      setError(error.response?.data?.detail || 'Failed to reset password');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Reset Password</h3>
+          <button className="modal-close" onClick={onClose}>&times;</button>
+        </div>
+
+        <div className="modal-body">
+          <div className="user-info-card">
+            <h4>Resetting password for:</h4>
+            <div className="user-info">
+              <div><strong>Username:</strong> {user.username}</div>
+              <div><strong>Role:</strong> {user.role}</div>
+              <div><strong>Store:</strong> {user.store_id}</div>
+              <div><strong>Status:</strong> {user.is_active ? 'Active' : 'Deactivated'}</div>
+            </div>
+          </div>
+
+          {success ? (
+            <div className="success-message">
+              <div className="success-text">{success}</div>
+              <div className="success-note">
+                Please copy and securely share this password with the user. 
+                This modal will close automatically in a few seconds.
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="modal-form">
+              {error && <div className="error-message">{error}</div>}
+
+              <div className="form-group">
+                <label className="form-label">New Password</label>
+                <div className="password-input-group">
+                  <input 
+                    type={showPassword ? "text" : "password"}
+                    className="form-input"
+                    value={formData.newPassword}
+                    onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
+                    placeholder="Enter new password"
+                    required
+                  />
+                  <button 
+                    type="button"
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? '👁️' : '🙈'}
+                  </button>
+                </div>
+                <button 
+                  type="button"
+                  className="btn-secondary btn-sm"
+                  onClick={generateRandomPassword}
+                  style={{ marginTop: '0.5rem' }}
+                >
+                  🎲 Generate Secure Password
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Confirm Password</label>
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  className="form-input"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                  placeholder="Confirm new password"
+                  required
+                />
+              </div>
+
+              <div className="warning-box">
+                <strong>⚠️ Important:</strong>
+                <ul>
+                  <li>This will immediately invalidate all existing sessions for this user</li>
+                  <li>The user will need to log in again with the new password</li>
+                  <li>Make sure to securely share the new password with the user</li>
+                </ul>
+              </div>
+
+              <div className="modal-actions">
+                <button type="button" className="btn-secondary" onClick={onClose} disabled={loading}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-warning" disabled={loading}>
+                  {loading ? 'Resetting...' : 'Reset Password'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default AdminPanel;
