@@ -46,8 +46,8 @@ async def create_test_stores():
             "store_name": "Northside Lumber Co",
             "users": [
                 {"username": "manager", "password": "manager123", "role": "admin", "email": "manager@northside.lumber"},
-                {"username": "sarah", "password": "sarah123", "role": "user", "email": "sarah@northside.lumber"},
-                {"username": "mike", "password": "mike123", "role": "user", "email": "mike@northside.lumber"},
+                {"username": "sarah", "password": "sarah123", "role": "customer", "email": "sarah@northside.lumber"},
+                {"username": "mike", "password": "mike123", "role": "customer", "email": "mike@northside.lumber"},
             ]
         },
         {
