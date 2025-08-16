@@ -1341,6 +1341,8 @@ class TaskCreate(BaseModel):
     order_date: Optional[date] = None
     delivery_date: Optional[date] = None
     parent_task_id: Optional[str] = None  # For creating subtasks
+    estimated_budget: Optional[float] = None
+    actual_cost: Optional[float] = None
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
