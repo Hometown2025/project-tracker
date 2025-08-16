@@ -1281,6 +1281,119 @@ async def delete_or_deactivate_user(
         
         return {"message": f"User '{target_user['username']}' deactivated successfully"}
 
+@api_router.get("/admin/users/deactivated", response_model=List[User])
+async def get_deactivated_users(current_user: User = Depends(get_current_user)):
+    """Get deactivated users - Super Admin sees all, Admin sees only their store"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super admin sees all deactivated users from all stores
+        users = await db.users.find({"is_active": False}).to_list(1000)
+    else:
+        # Regular admin sees only deactivated users from their store
+        users = await db.users.find({
+            "store_id": current_user.store_id,
+            "is_active": False
+        }).to_list(1000)
+    
+    # Clean up MongoDB ObjectIds
+    result_users = []
+    for user in users:
+        if "_id" in user:
+            del user["_id"]
+        result_users.append(User(**user))
+    
+    return result_users
+
+@api_router.post("/admin/users/{user_id}/reactivate")
+async def reactivate_user(user_id: str, current_user: User = Depends(get_current_user)):
+    """Reactivate a deactivated user"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Find the deactivated user
+    target_user = await db.users.find_one({"id": user_id, "is_active": False})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="Deactivated user not found")
+    
+    # Permission checks
+    if current_user.role == UserRole.ADMIN:
+        # Store admin can only reactivate users from their store
+        if target_user["store_id"] != current_user.store_id:
+            raise HTTPException(status_code=403, detail="Can only manage users from your own store")
+    
+    # Check if username is already taken by an active user
+    existing_active_user = await db.users.find_one({
+        "username": target_user["username"],
+        "store_id": target_user["store_id"],
+        "is_active": True
+    })
+    
+    if existing_active_user:
+        raise HTTPException(
+            status_code=409, 
+            detail=f"Username '{target_user['username']}' is already taken by an active user. Please rename the active user first or use a different username."
+        )
+    
+    # Reactivate the user
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"is_active": True}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": f"User '{target_user['username']}' reactivated successfully"}
+
+@api_router.post("/admin/users/check-username")
+async def check_username_availability(
+    username_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Check if a username is available in the current store"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    username = username_data.get("username")
+    store_id = username_data.get("store_id", current_user.store_id)
+    
+    if not username:
+        raise HTTPException(status_code=400, detail="Username is required")
+    
+    # For regular admins, restrict to their store
+    if current_user.role == UserRole.ADMIN and store_id != current_user.store_id:
+        store_id = current_user.store_id
+    
+    # Check if username exists (both active and inactive users)
+    existing_user = await db.users.find_one({
+        "username": username,
+        "store_id": store_id
+    })
+    
+    if existing_user:
+        if existing_user.get("is_active", True):
+            return {
+                "available": False,
+                "reason": "Username is currently in use by an active user",
+                "user_status": "active",
+                "user_id": existing_user["id"]
+            }
+        else:
+            return {
+                "available": False,
+                "reason": "Username exists but is deactivated. You can reactivate this user instead.",
+                "user_status": "deactivated",
+                "user_id": existing_user["id"],
+                "can_reactivate": True
+            }
+    
+    return {
+        "available": True,
+        "reason": "Username is available"
+    }
+
 # Models
 class Project(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
