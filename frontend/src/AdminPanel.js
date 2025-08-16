@@ -8,11 +8,13 @@ const API = `${BACKEND_URL}/api`;
 const AdminPanel = ({ onClose }) => {
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
+  const [deactivatedUsers, setDeactivatedUsers] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateUser, setShowCreateUser] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserDetails, setShowUserDetails] = useState(null);
+  const [activeTab, setActiveTab] = useState('active'); // 'active' or 'deactivated'
 
   useEffect(() => {
     fetchUsers();
