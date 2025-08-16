@@ -1882,6 +1882,13 @@ class Task(BaseModel):
     # Budget fields for rooms/tasks
     estimated_budget: Optional[float] = None
     actual_cost: Optional[float] = 0.0
+    
+    # Calculated budget fields (computed from subtasks)
+    subtask_estimated_total: Optional[float] = 0.0
+    subtask_actual_total: Optional[float] = 0.0
+    total_estimated: Optional[float] = 0.0  # Own estimated + subtask estimated
+    total_actual: Optional[float] = 0.0     # Own actual + subtask actual
+    budget_variance: Optional[float] = 0.0  # Actual - Estimated
 
 class TaskCreate(BaseModel):
     project_id: Optional[str] = None
