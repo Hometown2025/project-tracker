@@ -2264,6 +2264,17 @@ async def get_tasks(project_id: Optional[str] = None, status: Optional[TaskStatu
             total_subtasks, completed_subtasks = await calculate_subtask_counts(task["id"])
             task['subtask_count'] = total_subtasks
             task['completed_subtasks'] = completed_subtasks
+            
+            # Add budget totals for main rooms
+            budget_totals = await calculate_task_budget_totals(task["id"])
+            task_estimated = float(task.get("estimated_budget", 0) or 0)
+            task_actual = float(task.get("actual_cost", 0) or 0)
+            
+            task['subtask_estimated_total'] = budget_totals["subtask_estimated_total"]
+            task['subtask_actual_total'] = budget_totals["subtask_actual_total"]
+            task['total_estimated'] = task_estimated + budget_totals["subtask_estimated_total"]
+            task['total_actual'] = task_actual + budget_totals["subtask_actual_total"]
+            task['budget_variance'] = (task_actual + budget_totals["subtask_actual_total"]) - (task_estimated + budget_totals["subtask_estimated_total"])
     
     return [Task(**task) for task in tasks]
 
