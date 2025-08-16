@@ -1848,6 +1848,12 @@ class Project(BaseModel):
     estimated_budget: Optional[float] = None
     actual_cost: Optional[float] = 0.0
     customer_id: Optional[str] = None  # Customer this project is for
+    
+    # Calculated budget fields (computed from rooms and subtasks)
+    calculated_estimated_total: Optional[float] = 0.0  # Sum of all room/subtask estimated
+    calculated_actual_total: Optional[float] = 0.0     # Sum of all room/subtask actual
+    total_estimated_with_project: Optional[float] = 0.0 # Project estimated + calculated total
+    budget_variance: Optional[float] = 0.0              # Actual - Estimated
 
 class ProjectCreate(BaseModel):
     name: str
