@@ -1105,7 +1105,13 @@ async def create_user(user_data: UserCreate, current_user: User = Depends(get_cu
         "store_id": target_store_id
     })
     if existing:
-        raise HTTPException(status_code=400, detail="Username already exists in this store")
+        if existing.get("is_active", True):
+            raise HTTPException(status_code=400, detail="Username already exists in this store and is currently active")
+        else:
+            raise HTTPException(
+                status_code=409, 
+                detail=f"Username '{user_data.username}' exists but is deactivated. You can reactivate the existing user instead of creating a new one."
+            )
     
     # Create user
     user = User(
