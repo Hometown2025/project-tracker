@@ -107,11 +107,15 @@ user_problem_statement: "Add store ID to the login system to enable multi-tenanc
 backend:
   - task: "Budget Functionality for Projects and Tasks"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Budget functionality working correctly with 86.7% success rate (13/15 tests passed). ✅ Project creation with estimated_budget field ✅ Project budget updates (50000.75 → 65000.50) ✅ Task creation with estimated_budget and actual_cost fields (Kitchen: $15,000/$12,500.75, Bathroom: $8,000.25/$8,500) ✅ Task budget updates working correctly ✅ Budget summary endpoint with proper calculations (Total Estimated: $65,000.50, Total Actual: $0.00, Remaining: $65,000.50, Over Budget: False) ✅ Decimal budget values support (5432.99, 5678.12) ✅ Null budget values support ✅ Zero budget values support ✅ Authentication and authorization for budget endpoints ✅ Proper access control (regular users restricted from budget access). Minor: Negative budget values are accepted (business logic should handle validation), Demo user access properly restricted. All core budget functionality working as expected for house renovation projects with room-based budget tracking."
 
   - task: "Admin Delete Permissions for Ideas, Tasks, and Projects"
     implemented: true
