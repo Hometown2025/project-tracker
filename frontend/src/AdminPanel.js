@@ -373,6 +373,7 @@ const AdminPanel = ({ onClose }) => {
             onSuccess={() => {
               setShowCreateUser(false);
               fetchUsers();
+              fetchDeactivatedUsers();
             }}
           />
         )}
