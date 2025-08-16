@@ -980,6 +980,32 @@ const ProjectView = ({ projects, refreshData, setSelectedProject, setCurrentView
                 {project.file_count > 0 && ` • ${project.file_count} files`}
               </span>
             </div>
+
+            {/* Budget Summary */}
+            {(project.total_estimated_with_project > 0 || project.calculated_actual_total > 0) && (
+              <div className="project-budget-summary">
+                <div className="budget-row">
+                  <span className="budget-label">Total Estimated:</span>
+                  <span className="budget-value estimated">
+                    ${project.total_estimated_with_project?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
+                  </span>
+                </div>
+                <div className="budget-row">
+                  <span className="budget-label">Total Actual:</span>
+                  <span className="budget-value actual">
+                    ${project.calculated_actual_total?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
+                  </span>
+                </div>
+                {project.budget_variance !== 0 && (
+                  <div className="budget-row">
+                    <span className="budget-label">Variance:</span>
+                    <span className={`budget-value variance ${project.budget_variance > 0 ? 'over' : 'under'}`}>
+                      {project.budget_variance > 0 ? '+' : ''}${project.budget_variance?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
             
             {/* File Manager for Projects */}
             <FileManager 
