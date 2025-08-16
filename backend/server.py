@@ -2020,9 +2020,16 @@ async def get_projects(current_user: User = Depends(get_current_user)):
             })
         file_count = await db.file_attachments.count_documents({"project_id": project_id})
         
+        # Calculate budget totals
+        budget_totals = await calculate_project_budget_totals(project_id)
+        
         project['task_count'] = total_tasks
         project['completed_tasks'] = completed_tasks
         project['file_count'] = file_count
+        project['calculated_estimated_total'] = budget_totals["project_estimated_total"]
+        project['calculated_actual_total'] = budget_totals["project_actual_total"]
+        project['total_estimated_with_project'] = budget_totals["total_estimated_with_project"]
+        project['budget_variance'] = budget_totals["budget_variance"]
     
     return [Project(**project) for project in projects]
 
