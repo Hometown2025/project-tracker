@@ -1465,7 +1465,8 @@ const EditProjectModal = ({ project, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: project.name || '',
     description: project.description || '',
-    color: project.color || '#8B5CF6'
+    color: project.color || '#8B5CF6',
+    estimated_budget: project.estimated_budget || ''
   });
 
   const colors = [
