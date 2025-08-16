@@ -1480,7 +1480,12 @@ const EditProjectModal = ({ project, onClose, onSuccess }) => {
       // Only send fields that have values
       const updateData = {};
       Object.keys(formData).forEach(key => {
-        if (formData[key] && formData[key].trim() !== '') {
+        if (key === 'estimated_budget') {
+          // Handle budget field specially - allow 0 as valid value
+          if (formData[key] !== '' && formData[key] !== null && formData[key] !== undefined) {
+            updateData[key] = parseFloat(formData[key]) || null;
+          }
+        } else if (formData[key] && formData[key].toString().trim() !== '') {
           updateData[key] = formData[key];
         }
       });
