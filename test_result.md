@@ -342,7 +342,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Password Reset Functionality for Super Admins"
+    - "Auto-Populate Subtasks Based on Room Labels Backend"
+    - "Auto-Populate Subtasks Based on Room Labels Frontend"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
