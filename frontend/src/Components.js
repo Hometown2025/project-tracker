@@ -1121,6 +1121,34 @@ const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
             </select>
           </div>
 
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Room Budget</label>
+              <input 
+                type="number"
+                className="form-input"
+                value={formData.estimated_budget}
+                onChange={(e) => setFormData({...formData, estimated_budget: e.target.value})}
+                placeholder="Estimated cost for this room"
+                min="0"
+                step="0.01"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Actual Cost</label>
+              <input 
+                type="number"
+                className="form-input"
+                value={formData.actual_cost}
+                onChange={(e) => setFormData({...formData, actual_cost: e.target.value})}
+                placeholder="Actual cost spent so far"
+                min="0"
+                step="0.01"
+              />
+            </div>
+          </div>
+
           <div className="task-status-section">
             <div className="form-group">
               <label className="form-label">Status</label>
