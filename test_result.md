@@ -342,7 +342,7 @@ test_plan:
 
 agent_communication:
     - agent: "main"
-      message: "Budget functionality implementation complete for backend (86.7% success rate). All core backend features working: project estimated_budget field, task estimated_budget/actual_cost fields, budget API endpoints, calculations and summaries. Frontend forms updated with budget input fields in all project/task modals. Ready for frontend testing to verify end-to-end budget functionality in UI."
+      message: "Implemented password reset functionality for super admins. Backend: Added /api/admin/users/{user_id}/reset-password endpoint (super admin only), /api/admin/generate-password endpoint for secure password generation, session invalidation on reset. Frontend: Added ResetPasswordModal with password generation, confirmation, and security warnings. Reset password button added to Admin Panel for both active and deactivated users (super admin only). Ready for testing."
     - agent: "testing"
       message: "BACKEND TESTING COMPLETE: All critical backend functionality tested and working. Authentication (admin/admin, demo/demo) ✅, Ideas API endpoints (GET, POST, PUT, DELETE) ✅, Calendar project-based filtering ✅. PUT /api/ideas/{idea_id} endpoint is working perfectly for EditIdeaModal. Project access control working correctly - regular users only see calendar events from assigned projects. Backend APIs ready for frontend integration. Success rate: 96.8% (140 passed, 4 failed - minor calendar auth issues in comprehensive test, but focused test shows 96.8% success)."
     - agent: "testing"
