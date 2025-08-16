@@ -1400,6 +1400,73 @@ async def check_username_availability(
         "reason": "Username is available"
     }
 
+@api_router.post("/admin/users/{user_id}/reset-password")
+async def reset_user_password(
+    user_id: str,
+    password_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Reset user password - Super Admin only"""
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    
+    # Prevent super admin from resetting their own password this way
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot reset your own password through this endpoint")
+    
+    new_password = password_data.get("new_password")
+    if not new_password:
+        raise HTTPException(status_code=400, detail="New password is required")
+    
+    if len(new_password) < 3:
+        raise HTTPException(status_code=400, detail="Password must be at least 3 characters long")
+    
+    # Find the target user (active or inactive)
+    target_user = await db.users.find_one({"id": user_id})
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Hash the new password
+    new_password_hash = hash_password(new_password)
+    
+    # Update the password in database
+    result = await db.user_passwords.update_one(
+        {"user_id": user_id},
+        {"$set": {"password_hash": new_password_hash}}
+    )
+    
+    # If no password record exists, create one
+    if result.matched_count == 0:
+        await db.user_passwords.insert_one({
+            "user_id": user_id,
+            "password_hash": new_password_hash
+        })
+    
+    # Invalidate all existing sessions for this user
+    await db.sessions.delete_many({"user_id": user_id})
+    
+    return {
+        "message": f"Password reset successfully for user '{target_user['username']}'",
+        "username": target_user["username"],
+        "new_password": new_password,  # Return the password so admin can share it
+        "sessions_invalidated": True
+    }
+
+@api_router.post("/admin/generate-password")
+async def generate_temporary_password(current_user: User = Depends(get_current_user)):
+    """Generate a secure temporary password - Super Admin only"""
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    
+    import random
+    import string
+    
+    # Generate a secure 12-character password with mixed case, numbers, and symbols
+    characters = string.ascii_letters + string.digits + "!@#$%&*"
+    temp_password = ''.join(random.choice(characters) for _ in range(12))
+    
+    return {"generated_password": temp_password}
+
 # Models
 class Project(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
