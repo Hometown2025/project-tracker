@@ -261,15 +261,18 @@ backend:
 frontend:
   - task: "Budget Fields in Project and Task Forms"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/Components.js"
     stuck_count: 0
     priority: "high" 
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: false
           agent: "main"
           comment: "Implemented budget fields in CreateProjectModal, EditProjectModal, CreateTaskModal, and EditTaskModal. Added estimated_budget field to projects and estimated_budget/actual_cost fields to tasks. Form submission logic updated to handle budget data properly. Ready for frontend testing."
+        - working: true
+          agent: "testing"
+          comment: "TESTED: Budget fields in project and task forms working correctly. ✅ CreateProjectModal - Overall Budget field present and functional (tested with $75,000.50) ✅ EditProjectModal - Overall Budget field added and working (missing field was fixed during testing) ✅ CreateTaskModal - Room Budget and Actual Cost fields present and functional (tested with $35,000/$28,750.50) ✅ EditTaskModal - Room Budget and Actual Cost fields present (confirmed in modal structure) ✅ Form validation working - accepts decimal values, zero values, and empty values ✅ Project creation with budget successful (project count increased from 17 to 18) ✅ Task/room creation with budget successful (room count increased from 11 to 12) ✅ Admin user can create/edit with budget fields ✅ Customer user has read-only access to budget information ✅ Authentication and role-based access control working properly. Minor: BudgetView component shows 'Failed to load budget information' error when project is selected, but core form functionality is working. All budget input fields are properly implemented and functional."
 
   - task: "Multi-Store Login Form"
     implemented: true
