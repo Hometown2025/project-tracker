@@ -266,6 +266,10 @@ frontend:
     stuck_count: 0
     priority: "high" 
     needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Implemented budget fields in CreateProjectModal, EditProjectModal, CreateTaskModal, and EditTaskModal. Added estimated_budget field to projects and estimated_budget/actual_cost fields to tasks. Form submission logic updated to handle budget data properly. Ready for frontend testing."
 
   - task: "Multi-Store Login Form"
     implemented: true
