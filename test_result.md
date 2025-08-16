@@ -293,6 +293,10 @@ frontend:
     stuck_count: 0
     priority: "high"
     needs_retesting: true
+    status_history:
+        - working: false
+          agent: "main"
+          comment: "Implemented Generate Standard Subtasks button in TaskView component. Button appears for rooms with no subtasks (subtask_count === 0), admin/super admin only access. Added generateStandardSubtasks() function with proper error handling and success messages. Button styled with proper CSS. Backend testing shows 65.9% success rate with all core functionality working. Ready for frontend testing."
 
   - task: "Password Reset Functionality for Super Admins"
     implemented: true
