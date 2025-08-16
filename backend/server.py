@@ -1303,6 +1303,7 @@ class ProjectCreate(BaseModel):
     name: str
     description: Optional[str] = None
     color: str = "#8B5CF6"
+    estimated_budget: Optional[float] = None
 
 class Task(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
