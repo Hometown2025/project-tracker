@@ -286,6 +286,14 @@ backend:
           comment: "TESTED: Frontend authentication integration working perfectly. Login page renders correctly. Admin/admin and demo/demo credentials both authenticate successfully. Proper navigation to dashboard after login. Role-based UI elements display correctly (admin vs user roles). AuthContext and session management working properly."
 
 frontend:
+  - task: "Budget Rollup Functionality Frontend"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/Components.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
   - task: "Auto-Populate Subtasks Based on Room Labels Frontend"
     implemented: true
     working: true
