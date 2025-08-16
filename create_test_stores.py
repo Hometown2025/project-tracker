@@ -37,8 +37,8 @@ async def create_test_stores():
             "store_name": "Downtown Lumberyard",
             "users": [
                 {"username": "admin", "password": "admin", "role": "admin", "email": "admin@downtown.lumber"},
-                {"username": "demo", "password": "demo", "role": "user", "email": "demo@downtown.lumber"},
-                {"username": "john", "password": "john123", "role": "user", "email": "john@downtown.lumber"},
+                {"username": "demo", "password": "demo", "role": "customer", "email": "demo@downtown.lumber"},
+                {"username": "john", "password": "john123", "role": "customer", "email": "john@downtown.lumber"},
             ]
         },
         {
