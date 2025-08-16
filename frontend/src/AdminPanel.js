@@ -31,6 +31,15 @@ const AdminPanel = ({ onClose }) => {
     }
   };
 
+  const fetchDeactivatedUsers = async () => {
+    try {
+      const response = await axios.get(`${API}/admin/users/deactivated`);
+      setDeactivatedUsers(response.data);
+    } catch (error) {
+      console.error('Error fetching deactivated users:', error);
+    }
+  };
+
   const fetchProjects = async () => {
     try {
       const response = await axios.get(`${API}/projects`);
