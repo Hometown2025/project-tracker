@@ -429,6 +429,16 @@ const AdminPanel = ({ onClose }) => {
             onClose={() => setShowUserDetails(null)}
           />
         )}
+
+        {showResetPassword && (
+          <ResetPasswordModal 
+            user={showResetPassword}
+            onClose={() => setShowResetPassword(null)}
+            onSuccess={() => {
+              setShowResetPassword(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );
