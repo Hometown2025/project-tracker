@@ -1577,6 +1577,193 @@ async def get_available_room_types():
     
     return room_types
 
+# Budget Calculation Functions
+async def calculate_task_budget_totals(task_id: str):
+    """Calculate budget totals for a task from its subtasks"""
+    subtasks = await db.tasks.find({
+        "parent_task_id": task_id,
+        "subtask_level": {"$gt": 0}
+    }).to_list(1000)
+    
+    estimated_total = 0.0
+    actual_total = 0.0
+    
+    for subtask in subtasks:
+        if subtask.get("estimated_budget"):
+            estimated_total += float(subtask["estimated_budget"])
+        if subtask.get("actual_cost"):
+            actual_total += float(subtask["actual_cost"])
+    
+    return {
+        "subtask_estimated_total": estimated_total,
+        "subtask_actual_total": actual_total,
+        "subtask_count": len(subtasks)
+    }
+
+async def calculate_project_budget_totals(project_id: str):
+    """Calculate budget totals for a project from all its rooms and subtasks"""
+    # Get all main rooms for this project
+    rooms = await db.tasks.find({
+        "project_id": project_id,
+        "subtask_level": 0
+    }).to_list(1000)
+    
+    project_estimated_total = 0.0
+    project_actual_total = 0.0
+    room_count = len(rooms)
+    total_subtasks = 0
+    
+    for room in rooms:
+        # Add room's own budget if it exists
+        if room.get("estimated_budget"):
+            project_estimated_total += float(room["estimated_budget"])
+        if room.get("actual_cost"):
+            project_actual_total += float(room["actual_cost"])
+        
+        # Add subtask totals for this room
+        room_totals = await calculate_task_budget_totals(room["id"])
+        project_estimated_total += room_totals["subtask_estimated_total"]
+        project_actual_total += room_totals["subtask_actual_total"]
+        total_subtasks += room_totals["subtask_count"]
+    
+    # Get project's own estimated budget if it exists
+    project = await db.projects.find_one({"id": project_id})
+    project_own_estimated = 0.0
+    if project and project.get("estimated_budget"):
+        project_own_estimated = float(project["estimated_budget"])
+    
+    return {
+        "project_estimated_total": project_estimated_total,
+        "project_actual_total": project_actual_total,
+        "project_own_estimated": project_own_estimated,
+        "total_estimated_with_project": project_estimated_total + project_own_estimated,
+        "room_count": room_count,
+        "total_subtasks": total_subtasks,
+        "budget_variance": project_actual_total - (project_estimated_total + project_own_estimated)
+    }
+
+@api_router.get("/projects/{project_id}/budget-summary")
+async def get_project_budget_summary(
+    project_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get comprehensive budget summary for a project"""
+    # Get the project
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Check access permissions
+    if current_user.role == UserRole.CUSTOMER:
+        if project_id not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user.role == UserRole.ADMIN:
+        if project.get("store_id") != current_user.store_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Calculate totals
+    project_totals = await calculate_project_budget_totals(project_id)
+    
+    # Get room breakdown
+    rooms = await db.tasks.find({
+        "project_id": project_id,
+        "subtask_level": 0
+    }).to_list(1000)
+    
+    room_breakdown = []
+    for room in rooms:
+        room_totals = await calculate_task_budget_totals(room["id"])
+        
+        room_estimated = float(room.get("estimated_budget", 0) or 0)
+        room_actual = float(room.get("actual_cost", 0) or 0)
+        
+        room_breakdown.append({
+            "room_id": room["id"],
+            "room_name": room["title"],
+            "room_estimated_budget": room_estimated,
+            "room_actual_cost": room_actual,
+            "subtask_estimated_total": room_totals["subtask_estimated_total"],
+            "subtask_actual_total": room_totals["subtask_actual_total"],
+            "room_total_estimated": room_estimated + room_totals["subtask_estimated_total"],
+            "room_total_actual": room_actual + room_totals["subtask_actual_total"],
+            "room_budget_variance": (room_actual + room_totals["subtask_actual_total"]) - (room_estimated + room_totals["subtask_estimated_total"]),
+            "subtask_count": room_totals["subtask_count"]
+        })
+    
+    return {
+        "project_id": project_id,
+        "project_name": project["name"],
+        "project_own_estimated_budget": project_totals["project_own_estimated"],
+        "project_estimated_total": project_totals["project_estimated_total"],
+        "project_actual_total": project_totals["project_actual_total"],
+        "total_estimated_with_project": project_totals["total_estimated_with_project"],
+        "budget_variance": project_totals["budget_variance"],
+        "room_count": project_totals["room_count"],
+        "total_subtasks": project_totals["total_subtasks"],
+        "room_breakdown": room_breakdown
+    }
+
+@api_router.get("/tasks/{task_id}/budget-summary")
+async def get_task_budget_summary(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get budget summary for a specific task/room"""
+    # Get the task
+    task = await db.tasks.find_one({"id": task_id})
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    
+    # Check access permissions
+    if current_user.role == UserRole.CUSTOMER:
+        if task.get("project_id") not in current_user.assigned_projects:
+            raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user.role == UserRole.ADMIN:
+        if task.get("store_id") != current_user.store_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Calculate subtask totals
+    totals = await calculate_task_budget_totals(task_id)
+    
+    # Get task's own budget
+    task_estimated = float(task.get("estimated_budget", 0) or 0)
+    task_actual = float(task.get("actual_cost", 0) or 0)
+    
+    # Get subtask breakdown
+    subtasks = await db.tasks.find({
+        "parent_task_id": task_id,
+        "subtask_level": {"$gt": 0}
+    }).to_list(1000)
+    
+    subtask_breakdown = []
+    for subtask in subtasks:
+        subtask_estimated = float(subtask.get("estimated_budget", 0) or 0)
+        subtask_actual = float(subtask.get("actual_cost", 0) or 0)
+        
+        subtask_breakdown.append({
+            "subtask_id": subtask["id"],
+            "subtask_name": subtask["title"],
+            "estimated_budget": subtask_estimated,
+            "actual_cost": subtask_actual,
+            "budget_variance": subtask_actual - subtask_estimated,
+            "status": subtask.get("status", "todo"),
+            "completed": subtask.get("completed", False)
+        })
+    
+    return {
+        "task_id": task_id,
+        "task_name": task["title"],
+        "task_estimated_budget": task_estimated,
+        "task_actual_cost": task_actual,
+        "subtask_estimated_total": totals["subtask_estimated_total"],
+        "subtask_actual_total": totals["subtask_actual_total"],
+        "total_estimated": task_estimated + totals["subtask_estimated_total"],
+        "total_actual": task_actual + totals["subtask_actual_total"],
+        "budget_variance": (task_actual + totals["subtask_actual_total"]) - (task_estimated + totals["subtask_estimated_total"]),
+        "subtask_count": totals["subtask_count"],
+        "subtask_breakdown": subtask_breakdown
+    }
+
 @api_router.post("/admin/users/{user_id}/reset-password")
 async def reset_user_password(
     user_id: str,
