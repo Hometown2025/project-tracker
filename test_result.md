@@ -338,7 +338,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Password Reset API Endpoints"
     - "Password Reset Functionality for Super Admins"
   stuck_tasks: []
   test_all: false
