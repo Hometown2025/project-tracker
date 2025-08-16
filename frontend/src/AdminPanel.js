@@ -168,6 +168,16 @@ const AdminPanel = ({ onClose }) => {
     }
   };
 
+  const generatePassword = async () => {
+    try {
+      const response = await axios.post(`${API}/admin/generate-password`);
+      return response.data.generated_password;
+    } catch (error) {
+      console.error('Error generating password:', error);
+      return null;
+    }
+  };
+
   if (loading) {
     return (
       <div className="modal-overlay">
