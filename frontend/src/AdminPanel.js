@@ -15,6 +15,7 @@ const AdminPanel = ({ onClose }) => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [showUserDetails, setShowUserDetails] = useState(null);
   const [activeTab, setActiveTab] = useState('active'); // 'active' or 'deactivated'
+  const [showResetPassword, setShowResetPassword] = useState(null); // user to reset password for
 
   useEffect(() => {
     fetchUsers();
