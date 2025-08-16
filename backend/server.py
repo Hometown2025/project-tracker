@@ -1354,6 +1354,8 @@ class TaskUpdate(BaseModel):
     status: Optional[TaskStatus] = None
     completed: Optional[bool] = None
     subtask_order: Optional[int] = None  # For reordering subtasks
+    estimated_budget: Optional[float] = None
+    actual_cost: Optional[float] = None
 
 class Idea(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
