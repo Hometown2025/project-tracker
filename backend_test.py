@@ -3837,6 +3837,342 @@ class TaskManagerTester:
         self.log("✅ Store admins cannot delete items from other stores (404 not found)")
         self.log("✅ Regular users cannot delete anything (403 permission denied)")
 
+    def test_password_reset_functionality(self):
+        """Test password reset functionality for super admins as per review request"""
+        self.log("\n=== Testing Password Reset Functionality for Super Admins ===")
+        
+        # 1. Authentication Tests
+        self.log("\n--- 1. Authentication Tests ---")
+        
+        # Super Admin Login
+        super_admin_login = {
+            "username": "superadmin",
+            "password": "superadmin123",
+            "store_id": "GLOBAL"
+        }
+        
+        super_admin_response = self.test_request("POST", "/auth/login", super_admin_login, 200, 
+                                               "Super Admin Login (superadmin/superadmin123/GLOBAL)")
+        
+        super_admin_token = None
+        if super_admin_response:
+            super_admin_token = super_admin_response.get('session_token')
+            super_admin_user = super_admin_response.get('user')
+            
+            if super_admin_user and super_admin_user.get('role') == 'super_admin':
+                self.log("✅ Super Admin authentication successful")
+            else:
+                self.log("❌ Super Admin role verification failed", "ERROR")
+                self.failed_tests += 1
+        
+        # Regular Admin Login
+        regular_admin_login = {
+            "username": "admin",
+            "password": "admin",
+            "store_id": "STORE_001"
+        }
+        
+        regular_admin_response = self.test_request("POST", "/auth/login", regular_admin_login, 200,
+                                                 "Regular Admin Login (admin/admin/STORE_001)")
+        
+        regular_admin_token = None
+        if regular_admin_response:
+            regular_admin_token = regular_admin_response.get('session_token')
+            regular_admin_user = regular_admin_response.get('user')
+            
+            if regular_admin_user and regular_admin_user.get('role') == 'admin':
+                self.log("✅ Regular Admin authentication successful")
+            else:
+                self.log("❌ Regular Admin role verification failed", "ERROR")
+                self.failed_tests += 1
+        
+        # Customer Login
+        customer_login = {
+            "username": "demo",
+            "password": "demo",
+            "store_id": "STORE_001"
+        }
+        
+        customer_response = self.test_request("POST", "/auth/login", customer_login, 200,
+                                            "Customer Login (demo/demo/STORE_001)")
+        
+        customer_token = None
+        if customer_response:
+            customer_token = customer_response.get('session_token')
+            customer_user = customer_response.get('user')
+            
+            if customer_user and customer_user.get('role') == 'customer':
+                self.log("✅ Customer authentication successful")
+            else:
+                self.log("❌ Customer role verification failed", "ERROR")
+                self.failed_tests += 1
+        
+        # 2. Access Control Tests
+        self.log("\n--- 2. Access Control Tests ---")
+        
+        if not super_admin_token or not regular_admin_token or not customer_token:
+            self.log("❌ Missing authentication tokens for access control tests", "ERROR")
+            return
+        
+        # Get user IDs for testing
+        regular_admin_id = regular_admin_user.get('id') if regular_admin_response else None
+        customer_id = customer_user.get('id') if customer_response else None
+        
+        if not regular_admin_id or not customer_id:
+            self.log("❌ Missing user IDs for password reset tests", "ERROR")
+            return
+        
+        # Test Super Admin can access password reset endpoints
+        self.test_request("POST", "/admin/generate-password", {}, 200,
+                         "Super Admin Access Generate Password Endpoint", auth_token=super_admin_token)
+        
+        # Test Regular Admin CANNOT access password reset endpoints
+        self.test_request("POST", "/admin/generate-password", {}, 403,
+                         "Regular Admin Access Generate Password Endpoint (Should Fail)", auth_token=regular_admin_token)
+        
+        # Test Customer CANNOT access password reset endpoints
+        self.test_request("POST", "/admin/generate-password", {}, 403,
+                         "Customer Access Generate Password Endpoint (Should Fail)", auth_token=customer_token)
+        
+        # 3. Generate Password Tests
+        self.log("\n--- 3. Generate Password Tests ---")
+        
+        # Test secure password generation
+        generated_passwords = []
+        for i in range(3):  # Test multiple generations for randomness
+            generated_response = self.test_request("POST", "/admin/generate-password", {}, 200,
+                                                 f"Generate Secure Password (Test {i+1})", auth_token=super_admin_token)
+            
+            if generated_response:
+                generated_password = generated_response.get('generated_password')
+                if generated_password:
+                    generated_passwords.append(generated_password)
+                    self.log(f"✅ Generated password {i+1}: {generated_password}")
+                    
+                    # Verify password meets security requirements
+                    if len(generated_password) >= 12:
+                        self.log("✅ Password meets minimum length requirement (12+ characters)")
+                    else:
+                        self.log(f"❌ Password too short: {len(generated_password)} characters", "ERROR")
+                        self.failed_tests += 1
+                    
+                    # Check for mixed case, numbers, and symbols
+                    has_upper = any(c.isupper() for c in generated_password)
+                    has_lower = any(c.islower() for c in generated_password)
+                    has_digit = any(c.isdigit() for c in generated_password)
+                    has_symbol = any(c in "!@#$%&*" for c in generated_password)
+                    
+                    if has_upper and has_lower and has_digit and has_symbol:
+                        self.log("✅ Password contains mixed case, numbers, and symbols")
+                    else:
+                        self.log(f"❌ Password missing required character types: upper={has_upper}, lower={has_lower}, digit={has_digit}, symbol={has_symbol}", "ERROR")
+                        self.failed_tests += 1
+        
+        # Verify randomness (all generated passwords should be different)
+        if len(set(generated_passwords)) == len(generated_passwords):
+            self.log("✅ Generated passwords are unique (randomness verified)")
+        else:
+            self.log("❌ Generated passwords are not unique", "ERROR")
+            self.failed_tests += 1
+        
+        # 4. Password Reset Tests
+        self.log("\n--- 4. Password Reset Tests ---")
+        
+        # Test reset password for regular admin user
+        reset_admin_data = {
+            "new_password": "new_admin_password_123"
+        }
+        
+        reset_admin_response = self.test_request("POST", f"/admin/users/{regular_admin_id}/reset-password", 
+                                               reset_admin_data, 200,
+                                               "Reset Regular Admin Password", auth_token=super_admin_token)
+        
+        if reset_admin_response:
+            self.log("✅ Regular admin password reset successful")
+            
+            # Verify new password is returned
+            if reset_admin_response.get('new_password') == reset_admin_data['new_password']:
+                self.log("✅ New password returned correctly")
+            
+            # Verify sessions are invalidated
+            if reset_admin_response.get('sessions_invalidated'):
+                self.log("✅ User sessions invalidated after password reset")
+            
+            # Test login with new password
+            new_admin_login = {
+                "username": "admin",
+                "password": "new_admin_password_123",
+                "store_id": "STORE_001"
+            }
+            
+            new_login_response = self.test_request("POST", "/auth/login", new_admin_login, 200,
+                                                 "Login with New Admin Password")
+            
+            if new_login_response:
+                self.log("✅ Login successful with new password")
+                
+                # Reset password back to original for other tests
+                reset_back_data = {"new_password": "admin"}
+                self.test_request("POST", f"/admin/users/{regular_admin_id}/reset-password", 
+                                reset_back_data, 200,
+                                "Reset Admin Password Back to Original", auth_token=super_admin_token)
+        
+        # Test reset password for customer user
+        reset_customer_data = {
+            "new_password": "new_demo_password_456"
+        }
+        
+        reset_customer_response = self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                                                  reset_customer_data, 200,
+                                                  "Reset Customer Password", auth_token=super_admin_token)
+        
+        if reset_customer_response:
+            self.log("✅ Customer password reset successful")
+            
+            # Test login with new password
+            new_customer_login = {
+                "username": "demo",
+                "password": "new_demo_password_456",
+                "store_id": "STORE_001"
+            }
+            
+            new_customer_login_response = self.test_request("POST", "/auth/login", new_customer_login, 200,
+                                                          "Login with New Customer Password")
+            
+            if new_customer_login_response:
+                self.log("✅ Customer login successful with new password")
+                
+                # Reset password back to original for other tests
+                reset_back_data = {"new_password": "demo"}
+                self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                                reset_back_data, 200,
+                                "Reset Customer Password Back to Original", auth_token=super_admin_token)
+        
+        # Test password reset with custom password
+        custom_password_data = {
+            "new_password": "CustomPassword789!"
+        }
+        
+        custom_reset_response = self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                                                custom_password_data, 200,
+                                                "Reset Password with Custom Password", auth_token=super_admin_token)
+        
+        if custom_reset_response:
+            self.log("✅ Custom password reset successful")
+            
+            # Reset back to original
+            reset_back_data = {"new_password": "demo"}
+            self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                            reset_back_data, 200,
+                            "Reset Back to Original Password", auth_token=super_admin_token)
+        
+        # 5. Security Tests
+        self.log("\n--- 5. Security Tests ---")
+        
+        # Test that super admin cannot reset their own password through this endpoint
+        super_admin_id = super_admin_user.get('id') if super_admin_response else None
+        if super_admin_id:
+            self_reset_data = {"new_password": "new_super_password"}
+            self.test_request("POST", f"/admin/users/{super_admin_id}/reset-password", 
+                            self_reset_data, 400,
+                            "Super Admin Cannot Reset Own Password (Should Fail)", auth_token=super_admin_token)
+        
+        # Test minimum password length validation
+        short_password_data = {"new_password": "ab"}  # Too short
+        self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                        short_password_data, 400,
+                        "Password Too Short Validation (Should Fail)", auth_token=super_admin_token)
+        
+        # Test empty password validation
+        empty_password_data = {"new_password": ""}
+        self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                        empty_password_data, 400,
+                        "Empty Password Validation (Should Fail)", auth_token=super_admin_token)
+        
+        # Test missing password field
+        missing_password_data = {}
+        self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                        missing_password_data, 400,
+                        "Missing Password Field Validation (Should Fail)", auth_token=super_admin_token)
+        
+        # Test only super admin role can access these endpoints
+        if regular_admin_token:
+            unauthorized_reset_data = {"new_password": "unauthorized_password"}
+            self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                            unauthorized_reset_data, 403,
+                            "Regular Admin Cannot Reset Passwords (Should Fail)", auth_token=regular_admin_token)
+        
+        if customer_token:
+            self.test_request("POST", f"/admin/users/{regular_admin_id}/reset-password", 
+                            unauthorized_reset_data, 403,
+                            "Customer Cannot Reset Passwords (Should Fail)", auth_token=customer_token)
+        
+        # 6. Error Handling Tests
+        self.log("\n--- 6. Error Handling Tests ---")
+        
+        # Test with invalid user ID
+        invalid_user_data = {"new_password": "valid_password_123"}
+        self.test_request("POST", "/admin/users/invalid_user_id/reset-password", 
+                        invalid_user_data, 404,
+                        "Invalid User ID (Should Fail)", auth_token=super_admin_token)
+        
+        # Test with non-existent user ID
+        fake_uuid = "00000000-0000-0000-0000-000000000000"
+        self.test_request("POST", f"/admin/users/{fake_uuid}/reset-password", 
+                        invalid_user_data, 404,
+                        "Non-existent User ID (Should Fail)", auth_token=super_admin_token)
+        
+        # Test unauthorized access attempts
+        self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                        invalid_user_data, 401,
+                        "No Authentication Token (Should Fail)")
+        
+        # 7. Session Management Tests
+        self.log("\n--- 7. Session Management Tests ---")
+        
+        # Create a new session for testing session invalidation
+        test_login_response = self.test_request("POST", "/auth/login", customer_login, 200,
+                                              "Create Test Session for Invalidation")
+        
+        if test_login_response:
+            test_session_token = test_login_response.get('session_token')
+            
+            # Verify session is active
+            self.test_request("GET", "/auth/me", auth_token=test_session_token, 
+                            test_name="Verify Test Session Active")
+            
+            # Reset password (should invalidate session)
+            session_test_data = {"new_password": "session_test_password"}
+            reset_response = self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                                             session_test_data, 200,
+                                             "Reset Password to Test Session Invalidation", auth_token=super_admin_token)
+            
+            if reset_response:
+                # Verify old session is invalidated
+                self.test_request("GET", "/auth/me", auth_token=test_session_token, expected_status=401,
+                                test_name="Verify Session Invalidated After Password Reset")
+                
+                # Verify user must login with new password
+                new_session_login = {
+                    "username": "demo",
+                    "password": "session_test_password",
+                    "store_id": "STORE_001"
+                }
+                
+                new_session_response = self.test_request("POST", "/auth/login", new_session_login, 200,
+                                                       "Login with New Password After Session Invalidation")
+                
+                if new_session_response:
+                    self.log("✅ User successfully logged in with new password after session invalidation")
+                    
+                    # Reset password back to original
+                    reset_back_data = {"new_password": "demo"}
+                    self.test_request("POST", f"/admin/users/{customer_id}/reset-password", 
+                                    reset_back_data, 200,
+                                    "Reset Password Back to Original After Session Test", auth_token=super_admin_token)
+        
+        self.log("\n--- Password Reset Functionality Testing Complete ---")
+
     def run_all_tests(self):
         """Run all backend tests including authentication and real-time messaging"""
         self.log("🚀 Starting Comprehensive Backend API Testing with Authentication and Real-time Features")
