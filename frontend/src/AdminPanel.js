@@ -295,6 +295,18 @@ const AdminPanel = ({ onClose }) => {
                             </svg>
                           </button>
                         )}
+                        {user?.role === 'super_admin' && u.id !== user.id && (
+                          <button 
+                            className="btn-warning btn-sm"
+                            onClick={() => setShowResetPassword(u)}
+                            title="Reset Password"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                    d="M15 7a2 2 0 012 2m0 0a2 2 0 012 2m-2-2v6m0 0a2 2 0 01-2 2m2-2a2 2 0 002 2m-6 0h6m-6 0a2 2 0 01-2-2m2 2v-6a2 2 0 012-2m0 0V7a2 2 0 012-2m-2 2a2 2 0 00-2-2" />
+                            </svg>
+                          </button>
+                        )}
                         {u.id !== user.id && (
                           <button 
                             className="btn-danger btn-sm"
