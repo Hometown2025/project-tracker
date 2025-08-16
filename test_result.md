@@ -105,6 +105,18 @@
 user_problem_statement: "Add store ID to the login system to enable multi-tenancy. When multiple lumberyards use the system, admins and users should be separate for each location/store. This includes updating the login form to require Store ID, Username, and Password, and ensuring complete data isolation between different stores."
 
 backend:
+  - task: "Budget Rollup Functionality Backend"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "IMPLEMENTED AND TESTED: Budget rollup functionality working correctly. ✅ CALCULATION FUNCTIONS: Added calculate_task_budget_totals() and calculate_project_budget_totals() functions. ✅ API ENDPOINTS: GET /projects/{project_id}/budget-summary and GET /tasks/{task_id}/budget-summary providing comprehensive budget breakdowns. ✅ AUTOMATIC ROLLUP: Projects and tasks endpoints now include calculated budget totals (subtask_estimated_total, subtask_actual_total, total_estimated, total_actual, budget_variance). ✅ HIERARCHY: Subtask costs → Room totals → Project totals working correctly. ✅ MODEL UPDATES: Project and Task models include calculated budget fields. ✅ VERIFIED: curl test shows project with $18,000 total estimated ($10,000 project + $8,000 rooms), $4,500.75 actual, -$13,499.25 variance."
+
   - task: "Auto-Populate Subtasks Based on Room Labels Backend"
     implemented: true
     working: true
