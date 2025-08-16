@@ -114,6 +114,7 @@ const AdminPanel = ({ onClose }) => {
               
             await axios.delete(url);
             setUsers(users.filter(u => u.id !== userId));
+            fetchDeactivatedUsers(); // Refresh deactivated list
             
             const successMessage = permanent ? 
               `User "${username}" permanently deleted successfully` : 
