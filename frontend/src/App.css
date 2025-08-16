@@ -1733,6 +1733,37 @@ body {
   border-color: #d97706;
 }
 
+/* Generate Subtasks Styling */
+.generate-subtasks-section {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.generate-subtasks-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.5rem;
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.generate-subtasks-btn:hover {
+  background: #2563eb;
+  border-color: #2563eb;
+}
+
+.generate-subtasks-hint {
+  color: #0369a1;
+  font-size: 0.75rem;
+  display: block;
+  margin-top: 0.25rem;
+}
+
 .admin-section {
   margin-bottom: 2rem;
 }
