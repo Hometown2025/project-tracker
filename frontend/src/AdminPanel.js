@@ -839,7 +839,7 @@ const ResetPasswordModal = ({ user, onClose, onSuccess }) => {
   const [success, setSuccess] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
-  const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
+  const API = `${process.env.REACT_APP_BACKEND_URL}/api` || 'http://localhost:8001/api';
 
   const generateRandomPassword = async () => {
     try {
