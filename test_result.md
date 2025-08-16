@@ -259,6 +259,14 @@ backend:
           comment: "TESTED: Frontend authentication integration working perfectly. Login page renders correctly. Admin/admin and demo/demo credentials both authenticate successfully. Proper navigation to dashboard after login. Role-based UI elements display correctly (admin vs user roles). AuthContext and session management working properly."
 
 frontend:
+  - task: "Password Reset Functionality for Super Admins"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/AdminPanel.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
   - task: "Budget Fields in Project and Task Forms"
     implemented: true
     working: true
