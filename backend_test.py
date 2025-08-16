@@ -4585,6 +4585,9 @@ class TaskManagerTester:
             # Test password reset functionality (NEW TEST)
             self.test_password_reset_functionality()
             
+            # Test auto-populate subtasks functionality (NEW TEST)
+            self.test_auto_populate_subtasks_functionality()
+            
             # Test authentication
             self.test_user_initialization()
             self.test_authentication_endpoints()
