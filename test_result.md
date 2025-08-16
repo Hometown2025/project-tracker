@@ -334,8 +334,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Budget Functionality for Projects and Tasks"
-    - "Budget Fields in Project and Task Forms"
+    - "Password Reset API Endpoints"
+    - "Password Reset Functionality for Super Admins"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
