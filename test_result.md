@@ -105,6 +105,14 @@
 user_problem_statement: "Add store ID to the login system to enable multi-tenancy. When multiple lumberyards use the system, admins and users should be separate for each location/store. This includes updating the login form to require Store ID, Username, and Password, and ensuring complete data isolation between different stores."
 
 backend:
+  - task: "Password Reset API Endpoints"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+
   - task: "Budget Functionality for Projects and Tasks"
     implemented: true
     working: true
