@@ -138,6 +138,7 @@ const AdminPanel = ({ onClose }) => {
         try {
           await axios.delete(`${API}/admin/users/${userId}`);
           setUsers(users.filter(u => u.id !== userId));
+          fetchDeactivatedUsers(); // Refresh deactivated list
           alert(`Customer "${username}" deactivated successfully`);
         } catch (error) {
           console.error('Error deactivating user:', error);
