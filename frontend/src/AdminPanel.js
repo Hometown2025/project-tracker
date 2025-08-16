@@ -186,9 +186,25 @@ const AdminPanel = ({ onClose }) => {
         </div>
         
         <div className="admin-content">
+          {/* Tab Navigation */}
+          <div className="admin-tabs">
+            <button 
+              className={`tab-button ${activeTab === 'active' ? 'active' : ''}`}
+              onClick={() => setActiveTab('active')}
+            >
+              Active Users ({users.length})
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'deactivated' ? 'active' : ''}`}
+              onClick={() => setActiveTab('deactivated')}
+            >
+              Deactivated Users ({deactivatedUsers.length})
+            </button>
+          </div>
+
           <div className="admin-section">
             <div className="admin-section-header">
-              <h3>System Users</h3>
+              <h3>{activeTab === 'active' ? 'Active Users' : 'Deactivated Users'}</h3>
               {(user?.role === 'admin' || user?.role === 'super_admin') && (
                 <button 
                   className="btn-primary btn-sm"
