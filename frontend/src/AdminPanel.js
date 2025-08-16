@@ -227,7 +227,7 @@ const AdminPanel = ({ onClose }) => {
                 <div>Actions</div>
               </div>
               
-              {users.map(u => (
+              {(activeTab === 'active' ? users : deactivatedUsers).map(u => (
                 <div key={u.id} className="table-row">
                   <div className="user-info">
                     <div className="username-large">{u.username}</div>
