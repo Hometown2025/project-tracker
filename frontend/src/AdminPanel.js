@@ -18,6 +18,7 @@ const AdminPanel = ({ onClose }) => {
 
   useEffect(() => {
     fetchUsers();
+    fetchDeactivatedUsers();
     fetchProjects();
   }, []);
 
