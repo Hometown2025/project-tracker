@@ -399,6 +399,26 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
     }
   };
 
+  const generateStandardSubtasks = async (taskId, taskTitle) => {
+    try {
+      const response = await axios.post(`${API}/tasks/${taskId}/generate-subtasks`);
+      const data = response.data;
+      
+      alert(`✅ ${data.message}\n\nRoom Type: ${data.room_type.charAt(0).toUpperCase() + data.room_type.slice(1)}\nSubtasks Created: ${data.total_created}\n\n${data.created_subtasks.map(st => '• ' + st.title).join('\n')}`);
+      
+      refreshData(); // Refresh to show new subtasks
+    } catch (error) {
+      console.error('Error generating subtasks:', error);
+      if (error.response?.status === 400) {
+        alert(`❌ ${error.response.data.detail}\n\nTip: Make sure the room name includes a recognizable room type like "Kitchen", "Bathroom", "Bedroom", etc.`);
+      } else if (error.response?.data?.detail) {
+        alert(`❌ ${error.response.data.detail}`);
+      } else {
+        alert('❌ Failed to generate standard subtasks. Please try again.');
+      }
+    }
+  };
+
   return (
     <div className="task-view">
       <div className="view-header">
