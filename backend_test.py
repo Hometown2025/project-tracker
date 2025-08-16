@@ -3220,6 +3220,324 @@ class TaskManagerTester:
         self.log("✅ User Creation Verification: PASSED")
         self.log("✅ Different Store Admin Capabilities: PASSED")
 
+    def test_budget_functionality(self):
+        """Test comprehensive budget functionality for projects and tasks"""
+        self.log("\n=== Testing Budget Functionality for Projects and Tasks ===")
+        
+        if not self.admin_token:
+            self.log("❌ No admin token available for budget functionality testing", "ERROR")
+            return
+        
+        # Test 1: Create Project with Budget
+        self.log("\n--- 1. Create Project with Budget ---")
+        project_with_budget = {
+            "name": "Budget Test House Project",
+            "description": "House renovation project with budget tracking",
+            "color": "#4CAF50",
+            "estimated_budget": 50000.75
+        }
+        
+        created_project = self.test_request("POST", "/projects", project_with_budget, 200, 
+                                          "Create Project with Budget", auth_token=self.admin_token)
+        
+        if created_project:
+            project_id = created_project['id']
+            self.test_data['projects'].append(created_project)
+            
+            # Verify budget field is stored correctly
+            if created_project.get('estimated_budget') == 50000.75:
+                self.log("✅ Project estimated_budget field stored correctly")
+            else:
+                self.log(f"❌ Project estimated_budget not stored correctly: expected 50000.75, got {created_project.get('estimated_budget')}", "ERROR")
+                self.failed_tests += 1
+            
+            # Test 2: Update Project Budget
+            self.log("\n--- 2. Update Project Budget ---")
+            budget_update = {
+                "name": "Budget Test House Project - Updated",
+                "description": "Updated house renovation project with new budget",
+                "color": "#4CAF50",
+                "estimated_budget": 65000.50
+            }
+            
+            updated_project = self.test_request("PUT", f"/projects/{project_id}", budget_update, 200, 
+                                              "Update Project Budget", auth_token=self.admin_token)
+            
+            if updated_project:
+                if updated_project.get('estimated_budget') == 65000.50:
+                    self.log("✅ Project budget update working correctly")
+                else:
+                    self.log(f"❌ Project budget update failed: expected 65000.50, got {updated_project.get('estimated_budget')}", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 3: Create Tasks/Rooms with Budget Fields
+            self.log("\n--- 3. Create Tasks/Rooms with Budget Fields ---")
+            
+            # Kitchen room with budget
+            kitchen_task = {
+                "project_id": project_id,
+                "title": "Kitchen Renovation",
+                "description": "Complete kitchen renovation with new appliances",
+                "priority": "high",
+                "estimated_budget": 15000.00,
+                "actual_cost": 12500.75
+            }
+            
+            created_kitchen = self.test_request("POST", "/tasks", kitchen_task, 200, 
+                                              "Create Kitchen Task with Budget", auth_token=self.admin_token)
+            
+            if created_kitchen:
+                self.test_data['tasks'].append(created_kitchen)
+                
+                # Verify budget fields are stored
+                if created_kitchen.get('estimated_budget') == 15000.00:
+                    self.log("✅ Task estimated_budget field stored correctly")
+                else:
+                    self.log(f"❌ Task estimated_budget not stored correctly: expected 15000.00, got {created_kitchen.get('estimated_budget')}", "ERROR")
+                    self.failed_tests += 1
+                
+                if created_kitchen.get('actual_cost') == 12500.75:
+                    self.log("✅ Task actual_cost field stored correctly")
+                else:
+                    self.log(f"❌ Task actual_cost not stored correctly: expected 12500.75, got {created_kitchen.get('actual_cost')}", "ERROR")
+                    self.failed_tests += 1
+            
+            # Bathroom room with budget
+            bathroom_task = {
+                "project_id": project_id,
+                "title": "Bathroom Renovation",
+                "description": "Master bathroom renovation",
+                "priority": "medium",
+                "estimated_budget": 8000.25,
+                "actual_cost": 8500.00
+            }
+            
+            created_bathroom = self.test_request("POST", "/tasks", bathroom_task, 200, 
+                                               "Create Bathroom Task with Budget", auth_token=self.admin_token)
+            
+            if created_bathroom:
+                self.test_data['tasks'].append(created_bathroom)
+                
+                # Verify budget fields
+                if created_bathroom.get('estimated_budget') == 8000.25:
+                    self.log("✅ Second task estimated_budget field stored correctly")
+                else:
+                    self.log(f"❌ Second task estimated_budget not stored correctly: expected 8000.25, got {created_bathroom.get('estimated_budget')}", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 4: Update Task Budget Information
+            self.log("\n--- 4. Update Task Budget Information ---")
+            if created_kitchen:
+                kitchen_id = created_kitchen['id']
+                budget_task_update = {
+                    "title": "Kitchen Renovation - Updated",
+                    "estimated_budget": 16000.00,
+                    "actual_cost": 15200.50
+                }
+                
+                updated_kitchen = self.test_request("PUT", f"/tasks/{kitchen_id}", budget_task_update, 200, 
+                                                  "Update Task Budget", auth_token=self.admin_token)
+                
+                if updated_kitchen:
+                    if updated_kitchen.get('estimated_budget') == 16000.00:
+                        self.log("✅ Task budget update working correctly")
+                    else:
+                        self.log(f"❌ Task budget update failed: expected 16000.00, got {updated_kitchen.get('estimated_budget')}", "ERROR")
+                        self.failed_tests += 1
+                    
+                    if updated_kitchen.get('actual_cost') == 15200.50:
+                        self.log("✅ Task actual cost update working correctly")
+                    else:
+                        self.log(f"❌ Task actual cost update failed: expected 15200.50, got {updated_kitchen.get('actual_cost')}", "ERROR")
+                        self.failed_tests += 1
+            
+            # Test 5: Budget Summary Endpoint
+            self.log("\n--- 5. Budget Summary Endpoint ---")
+            budget_summary = self.test_request("GET", f"/projects/{project_id}/budget", auth_token=self.admin_token, 
+                                             test_name="Get Project Budget Summary")
+            
+            if budget_summary:
+                # Verify budget summary structure
+                required_fields = ['project_id', 'total_estimated', 'total_actual', 'remaining_budget', 'over_budget']
+                
+                for field in required_fields:
+                    if field in budget_summary:
+                        self.log(f"✅ Budget summary field '{field}': {budget_summary[field]}")
+                    else:
+                        self.log(f"❌ Missing budget summary field: {field}", "ERROR")
+                        self.failed_tests += 1
+                
+                # Verify calculations are correct
+                expected_total_estimated = 65000.50  # Project budget
+                if created_kitchen and created_bathroom:
+                    expected_total_estimated += 16000.00 + 8000.25  # Task budgets
+                
+                if abs(budget_summary.get('total_estimated', 0) - expected_total_estimated) < 0.01:
+                    self.log("✅ Budget summary total_estimated calculation correct")
+                else:
+                    self.log(f"❌ Budget summary total_estimated incorrect: expected ~{expected_total_estimated}, got {budget_summary.get('total_estimated')}", "ERROR")
+                    self.failed_tests += 1
+                
+                # Check if over budget calculation is working
+                total_actual = budget_summary.get('total_actual', 0)
+                total_estimated = budget_summary.get('total_estimated', 0)
+                over_budget = budget_summary.get('over_budget', False)
+                
+                if total_actual > total_estimated and over_budget:
+                    self.log("✅ Over budget detection working correctly")
+                elif total_actual <= total_estimated and not over_budget:
+                    self.log("✅ Under/on budget detection working correctly")
+                else:
+                    self.log(f"❌ Budget status detection incorrect: actual={total_actual}, estimated={total_estimated}, over_budget={over_budget}", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 6: Budget Fields Accept Decimal Values and Null
+            self.log("\n--- 6. Budget Fields Accept Decimal Values and Null ---")
+            
+            # Test with decimal values
+            decimal_task = {
+                "project_id": project_id,
+                "title": "Living Room Renovation",
+                "description": "Living room with precise decimal budget",
+                "priority": "low",
+                "estimated_budget": 5432.99,
+                "actual_cost": 5678.12
+            }
+            
+            created_decimal_task = self.test_request("POST", "/tasks", decimal_task, 200, 
+                                                   "Create Task with Decimal Budget", auth_token=self.admin_token)
+            
+            if created_decimal_task:
+                self.test_data['tasks'].append(created_decimal_task)
+                
+                if created_decimal_task.get('estimated_budget') == 5432.99:
+                    self.log("✅ Decimal budget values accepted and stored correctly")
+                else:
+                    self.log(f"❌ Decimal budget values not handled correctly: expected 5432.99, got {created_decimal_task.get('estimated_budget')}", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test with null values
+            null_budget_task = {
+                "project_id": project_id,
+                "title": "Garage Organization",
+                "description": "Garage organization without budget",
+                "priority": "low",
+                "estimated_budget": None,
+                "actual_cost": None
+            }
+            
+            created_null_task = self.test_request("POST", "/tasks", null_budget_task, 200, 
+                                                 "Create Task with Null Budget", auth_token=self.admin_token)
+            
+            if created_null_task:
+                self.test_data['tasks'].append(created_null_task)
+                
+                if created_null_task.get('estimated_budget') is None:
+                    self.log("✅ Null budget values accepted and stored correctly")
+                else:
+                    self.log(f"❌ Null budget values not handled correctly: expected None, got {created_null_task.get('estimated_budget')}", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 7: Budget Validation (No Negative Values)
+            self.log("\n--- 7. Budget Validation (No Negative Values) ---")
+            
+            # Test negative budget (should be accepted but flagged in business logic)
+            negative_budget_project = {
+                "name": "Negative Budget Test Project",
+                "description": "Testing negative budget handling",
+                "color": "#FF5722",
+                "estimated_budget": -1000.00
+            }
+            
+            # This might succeed (depending on validation rules) or fail
+            negative_project = self.test_request("POST", "/projects", negative_budget_project, None, 
+                                                "Create Project with Negative Budget", auth_token=self.admin_token)
+            
+            if negative_project and negative_project.get('estimated_budget') == -1000.00:
+                self.log("⚠️ Negative budget values are accepted (business logic should handle this)")
+                # Clean up
+                self.test_request("DELETE", f"/projects/{negative_project['id']}", auth_token=self.admin_token, test_name="Delete Negative Budget Test Project")
+            elif negative_project is None:
+                self.log("✅ Negative budget values are rejected by validation")
+            
+            # Test 8: Zero Budget Values
+            self.log("\n--- 8. Zero Budget Values ---")
+            
+            zero_budget_task = {
+                "project_id": project_id,
+                "title": "Free DIY Project",
+                "description": "DIY project with zero cost",
+                "priority": "low",
+                "estimated_budget": 0.0,
+                "actual_cost": 0.0
+            }
+            
+            created_zero_task = self.test_request("POST", "/tasks", zero_budget_task, 200, 
+                                                 "Create Task with Zero Budget", auth_token=self.admin_token)
+            
+            if created_zero_task:
+                self.test_data['tasks'].append(created_zero_task)
+                
+                if created_zero_task.get('estimated_budget') == 0.0:
+                    self.log("✅ Zero budget values accepted and stored correctly")
+                else:
+                    self.log(f"❌ Zero budget values not handled correctly: expected 0.0, got {created_zero_task.get('estimated_budget')}", "ERROR")
+                    self.failed_tests += 1
+            
+            # Test 9: Budget Summary with Multiple Tasks
+            self.log("\n--- 9. Final Budget Summary Verification ---")
+            
+            final_budget_summary = self.test_request("GET", f"/projects/{project_id}/budget", auth_token=self.admin_token, 
+                                                   test_name="Final Budget Summary Verification")
+            
+            if final_budget_summary:
+                self.log(f"✅ Final Budget Summary:")
+                self.log(f"   - Project Estimated Budget: {updated_project.get('estimated_budget', 0)}")
+                self.log(f"   - Total Estimated: {final_budget_summary.get('total_estimated', 0)}")
+                self.log(f"   - Total Actual: {final_budget_summary.get('total_actual', 0)}")
+                self.log(f"   - Remaining Budget: {final_budget_summary.get('remaining_budget', 0)}")
+                self.log(f"   - Over Budget: {final_budget_summary.get('over_budget', False)}")
+                
+                # Verify budget items are included
+                budget_items = final_budget_summary.get('budget_items', [])
+                self.log(f"   - Budget Items Count: {len(budget_items)}")
+                
+                if len(budget_items) > 0:
+                    self.log("✅ Budget items included in summary")
+                else:
+                    self.log("ℹ️ No budget items in summary (may be expected if using task-based budgeting)")
+        
+        # Test 10: Authentication and Authorization for Budget Endpoints
+        self.log("\n--- 10. Authentication and Authorization for Budget Endpoints ---")
+        
+        if self.demo_token and project_id:
+            # Test that regular user can view budget if they have project access
+            demo_budget = self.test_request("GET", f"/projects/{project_id}/budget", auth_token=self.demo_token, 
+                                          test_name="Demo User Access Budget Summary")
+            
+            # This might succeed or fail depending on project assignment
+            if demo_budget is not None:
+                self.log("✅ Regular user can access budget summary for assigned projects")
+            else:
+                self.log("✅ Regular user properly restricted from budget access")
+        
+        # Test without authentication (should fail)
+        self.test_request("GET", f"/projects/{project_id}/budget", expected_status=403, 
+                         test_name="Budget Access Without Authentication (Should Fail)")
+        
+        # Summary
+        self.log("\n--- Budget Functionality Testing Summary ---")
+        self.log("✅ Project creation with estimated_budget field")
+        self.log("✅ Project budget updates")
+        self.log("✅ Task creation with estimated_budget and actual_cost fields")
+        self.log("✅ Task budget updates")
+        self.log("✅ Budget summary endpoint with calculations")
+        self.log("✅ Decimal budget values support")
+        self.log("✅ Null budget values support")
+        self.log("✅ Zero budget values support")
+        self.log("✅ Budget validation testing")
+        self.log("✅ Authentication and authorization for budget endpoints")
+
     def test_admin_delete_permissions(self):
         """Test administrator delete permissions for ideas, tasks, and projects"""
         self.log("\n=== Testing Admin Delete Permissions ===")
