@@ -1764,6 +1764,124 @@ body {
   margin-top: 0.25rem;
 }
 
+/* Budget Summary Styling */
+.project-budget-summary {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.budget-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.budget-row:last-child {
+  margin-bottom: 0;
+}
+
+.budget-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.budget-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.budget-value.estimated {
+  color: #3b82f6;
+}
+
+.budget-value.actual {
+  color: #059669;
+}
+
+.budget-value.variance.over {
+  color: #dc2626;
+}
+
+.budget-value.variance.under {
+  color: #059669;
+}
+
+/* Room Budget Summary */
+.room-budget-summary {
+  background: #fefce8;
+  border: 1px solid #fde047;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.budget-summary-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #a16207;
+  margin: 0 0 0.75rem 0;
+}
+
+.budget-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.budget-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.budget-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.budget-item.total {
+  font-weight: 600;
+  border-top: 1px solid #fbbf24;
+  padding-top: 0.5rem;
+}
+
+.budget-item.variance {
+  font-size: 0.75rem;
+}
+
+.budget-amount {
+  font-family: monospace;
+  font-size: 0.8rem;
+}
+
+.budget-amount.over {
+  color: #dc2626;
+}
+
+.budget-amount.under {
+  color: #059669;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .budget-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .budget-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+}
+
 .admin-section {
   margin-bottom: 2rem;
 }
