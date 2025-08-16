@@ -205,7 +205,7 @@ const AdminPanel = ({ onClose }) => {
           <div className="admin-section">
             <div className="admin-section-header">
               <h3>{activeTab === 'active' ? 'Active Users' : 'Deactivated Users'}</h3>
-              {(user?.role === 'admin' || user?.role === 'super_admin') && (
+              {(user?.role === 'admin' || user?.role === 'super_admin') && activeTab === 'active' && (
                 <button 
                   className="btn-primary btn-sm"
                   onClick={() => setShowCreateUser(true)}
