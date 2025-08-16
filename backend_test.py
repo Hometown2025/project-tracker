@@ -3857,6 +3857,9 @@ class TaskManagerTester:
             # Test admin delete permissions (NEW TEST)
             self.test_admin_delete_permissions()
             
+            # Test budget functionality (NEW TEST)
+            self.test_budget_functionality()
+            
             # Test authentication
             self.test_user_initialization()
             self.test_authentication_endpoints()
