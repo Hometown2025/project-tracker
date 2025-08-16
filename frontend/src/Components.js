@@ -508,6 +508,29 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
               <h3 className="task-card-title">{task.title}</h3>
               {task.description && <p className="task-card-description">{task.description}</p>}
               
+              {/* Generate Standard Subtasks Button (only for main rooms with no subtasks) */}
+              {task.subtask_level === 0 && task.subtask_count === 0 && user && (user.role === 'admin' || user.role === 'super_admin') && (
+                <div className="generate-subtasks-section">
+                  <button 
+                    className="btn-primary btn-sm generate-subtasks-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      generateStandardSubtasks(task.id, task.title);
+                    }}
+                    title="Auto-generate standard subtasks based on room type"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Generate Standard Subtasks
+                  </button>
+                  <small className="generate-subtasks-hint">
+                    Create standard subtasks for this room type automatically
+                  </small>
+                </div>
+              )}
+
               {/* Subtask Manager */}
               {task.subtask_level === 0 && (
                 <SubtaskManager 
