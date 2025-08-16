@@ -1400,6 +1400,183 @@ async def check_username_availability(
         "reason": "Username is available"
     }
 
+# Room Type Subtask Templates
+ROOM_SUBTASK_TEMPLATES = {
+    "kitchen": [
+        {"title": "Electrical Work", "description": "Install outlets, lighting, and electrical connections"},
+        {"title": "Plumbing", "description": "Install sink, dishwasher, and water connections"},
+        {"title": "Cabinets", "description": "Install kitchen cabinets and hardware"},
+        {"title": "Countertops", "description": "Install countertops and backsplash"},
+        {"title": "Appliances", "description": "Install and connect kitchen appliances"},
+        {"title": "Flooring", "description": "Install kitchen flooring"},
+        {"title": "Painting", "description": "Paint walls and trim"}
+    ],
+    "bathroom": [
+        {"title": "Plumbing", "description": "Install toilet, sink, shower/tub plumbing"},
+        {"title": "Electrical Work", "description": "Install lighting, outlets, and ventilation fan"},
+        {"title": "Tile Work", "description": "Install wall and floor tiles"},
+        {"title": "Fixtures", "description": "Install toilet, sink, shower/tub fixtures"},
+        {"title": "Vanity", "description": "Install bathroom vanity and mirror"},
+        {"title": "Flooring", "description": "Install bathroom flooring"},
+        {"title": "Painting", "description": "Paint walls and trim"}
+    ],
+    "bedroom": [
+        {"title": "Electrical Work", "description": "Install outlets, switches, and lighting"},
+        {"title": "Flooring", "description": "Install bedroom flooring"},
+        {"title": "Painting", "description": "Paint walls and trim"},
+        {"title": "Closet", "description": "Install closet systems and doors"},
+        {"title": "Windows", "description": "Install or finish window trim"}
+    ],
+    "living room": [
+        {"title": "Electrical Work", "description": "Install outlets, switches, and lighting"},
+        {"title": "Flooring", "description": "Install living room flooring"},
+        {"title": "Painting", "description": "Paint walls and trim"},
+        {"title": "Lighting", "description": "Install ceiling fans, chandeliers, or special lighting"},
+        {"title": "Windows", "description": "Install or finish window trim"}
+    ],
+    "garage": [
+        {"title": "Electrical Work", "description": "Install garage electrical and lighting"},
+        {"title": "Flooring", "description": "Install garage flooring or sealing"},
+        {"title": "Doors", "description": "Install garage doors and entry doors"},
+        {"title": "Storage", "description": "Install storage systems and shelving"},
+        {"title": "Insulation", "description": "Install garage insulation if needed"}
+    ],
+    "laundry room": [
+        {"title": "Plumbing", "description": "Install washer/dryer connections and utility sink"},
+        {"title": "Electrical Work", "description": "Install electrical outlets and lighting"},
+        {"title": "Flooring", "description": "Install laundry room flooring"},
+        {"title": "Appliances", "description": "Install washer, dryer, and connections"},
+        {"title": "Ventilation", "description": "Install proper ventilation for dryer"}
+    ]
+}
+
+def detect_room_type(room_title: str) -> str:
+    """Detect room type from room title"""
+    room_title_lower = room_title.lower().strip()
+    
+    # Direct matches
+    for room_type in ROOM_SUBTASK_TEMPLATES.keys():
+        if room_type in room_title_lower:
+            return room_type
+    
+    # Partial matches and variations
+    if any(word in room_title_lower for word in ["bath", "powder"]):
+        return "bathroom"
+    elif any(word in room_title_lower for word in ["bed", "master", "guest"]):
+        return "bedroom"
+    elif any(word in room_title_lower for word in ["living", "family", "great room"]):
+        return "living room"
+    elif any(word in room_title_lower for word in ["kitchen", "cook"]):
+        return "kitchen"
+    elif any(word in room_title_lower for word in ["garage", "car"]):
+        return "garage"
+    elif any(word in room_title_lower for word in ["laundry", "utility", "wash"]):
+        return "laundry room"
+    
+    return None
+
+@api_router.post("/tasks/{task_id}/generate-subtasks")
+async def generate_room_subtasks(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Generate standard subtasks for a room based on room type"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Get the parent task (room)
+    parent_task = await db.tasks.find_one({"id": task_id})
+    if not parent_task:
+        raise HTTPException(status_code=404, detail="Room/task not found")
+    
+    # Check if user has access to this room's project
+    if current_user.role == UserRole.ADMIN and parent_task.get("store_id") != current_user.store_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Detect room type from title
+    room_type = detect_room_type(parent_task["title"])
+    if not room_type:
+        available_types = list(ROOM_SUBTASK_TEMPLATES.keys())
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Could not detect room type from '{parent_task['title']}'. Available types: {', '.join(available_types)}"
+        )
+    
+    # Check if subtasks already exist
+    existing_subtasks = await db.tasks.find({
+        "parent_task_id": task_id,
+        "subtask_level": 1
+    }).to_list(1000)
+    
+    if existing_subtasks:
+        return {
+            "message": f"Room already has {len(existing_subtasks)} subtasks. Use manual creation to add more.",
+            "existing_subtasks": len(existing_subtasks),
+            "room_type": room_type
+        }
+    
+    # Generate subtasks based on room type
+    subtask_templates = ROOM_SUBTASK_TEMPLATES[room_type]
+    created_subtasks = []
+    
+    for i, template in enumerate(subtask_templates):
+        subtask_data = {
+            "id": str(uuid.uuid4()),
+            "title": template["title"],
+            "description": template["description"],
+            "project_id": parent_task["project_id"],
+            "parent_task_id": task_id,
+            "subtask_level": 1,
+            "subtask_order": i + 1,
+            "priority": Priority.MEDIUM,
+            "status": TaskStatus.TODO,
+            "completed": False,
+            "store_id": parent_task["store_id"],
+            "assigned_to": [],
+            "estimated_budget": None,  # Can be filled in later
+            "actual_cost": None,
+            "order_date": None,      # Optional dates
+            "delivery_date": None,
+            "created_date": datetime.utcnow(),
+            "due_date": None,
+            "subtask_count": 0,
+            "completed_subtasks": 0
+        }
+        
+        result = await db.tasks.insert_one(subtask_data)
+        if result.inserted_id:
+            created_subtasks.append({
+                "id": subtask_data["id"],
+                "title": subtask_data["title"],
+                "description": subtask_data["description"]
+            })
+    
+    # Update parent task subtask count
+    await db.tasks.update_one(
+        {"id": task_id},
+        {"$set": {"subtask_count": len(created_subtasks)}}
+    )
+    
+    return {
+        "message": f"Successfully generated {len(created_subtasks)} standard subtasks for {room_type}",
+        "room_type": room_type,
+        "created_subtasks": created_subtasks,
+        "total_created": len(created_subtasks)
+    }
+
+@api_router.get("/room-types")
+async def get_available_room_types():
+    """Get list of available room types and their subtask templates"""
+    room_types = {}
+    for room_type, templates in ROOM_SUBTASK_TEMPLATES.items():
+        room_types[room_type] = {
+            "name": room_type.title(),
+            "subtask_count": len(templates),
+            "subtasks": [template["title"] for template in templates]
+        }
+    
+    return room_types
+
 @api_router.post("/admin/users/{user_id}/reset-password")
 async def reset_user_password(
     user_id: str,
