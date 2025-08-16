@@ -105,6 +105,18 @@
 user_problem_statement: "Add store ID to the login system to enable multi-tenancy. When multiple lumberyards use the system, admins and users should be separate for each location/store. This includes updating the login form to require Store ID, Username, and Password, and ensuring complete data isolation between different stores."
 
 backend:
+  - task: "Auto-Populate Subtasks Based on Room Labels Backend"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "IMPLEMENTED AND TESTED: Auto-populate subtasks functionality working correctly. ✅ ROOM TYPE TEMPLATES: Added comprehensive templates for 6 room types (kitchen-7 subtasks, bathroom-7 subtasks, bedroom-5 subtasks, living room-5 subtasks, garage-5 subtasks, laundry room-5 subtasks). ✅ ROOM DETECTION: Intelligent detection from room titles using direct matches and variations. ✅ API ENDPOINTS: POST /tasks/{task_id}/generate-subtasks working (tested with Kitchen - generated 7 subtasks successfully), GET /room-types endpoint returning all room types. ✅ SUBTASK STRUCTURE: All generated subtasks include budget fields (estimated_budget, actual_cost) and optional dates (order_date, delivery_date) as requested. ✅ VALIDATION: Prevents duplicate generation, proper error handling for unrecognized room types."
+
   - task: "Password Reset API Endpoints"
     implemented: true
     working: true
