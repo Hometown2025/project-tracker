@@ -1215,7 +1215,12 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
       // Only send non-empty fields to backend
       const submitData = {};
       Object.keys(formData).forEach(key => {
-        if (formData[key] && formData[key].toString().trim() !== '') {
+        if (key === 'estimated_budget' || key === 'actual_cost') {
+          // Handle budget fields - allow 0 as valid value
+          if (formData[key] !== '' && formData[key] !== null && formData[key] !== undefined) {
+            submitData[key] = parseFloat(formData[key]) || null;
+          }
+        } else if (formData[key] && formData[key].toString().trim() !== '') {
           submitData[key] = formData[key];
         }
       });
