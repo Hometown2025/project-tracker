@@ -232,6 +232,13 @@ const AppContent = () => {
             user={user}
           />
         )}
+
+        {currentView === 'trusses' && (
+          <Components.TrussView 
+            refreshData={refreshData}
+            user={user}
+          />
+        )}
       </main>
 
       {showAdminPanel && (
