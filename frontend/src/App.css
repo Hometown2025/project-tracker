@@ -3727,13 +3727,19 @@ body {
 }
 
 /* Responsive Truss View */
-@media (max-width: 1200px) {
+@media (max-width: 1400px) {
   .truss-table-container {
     overflow-x: auto;
   }
   
   .truss-table {
-    min-width: 1000px;
+    min-width: 1400px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .truss-table {
+    min-width: 1200px;
   }
 }
 
@@ -3758,5 +3764,15 @@ body {
   
   .action-buttons {
     flex-direction: column;
+  }
+  
+  .truss-table {
+    min-width: 1000px;
+  }
+  
+  .truss-table th,
+  .truss-table td {
+    padding: 0.5rem 0.25rem;
+    font-size: 0.75rem;
   }
 }
