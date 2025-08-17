@@ -2330,7 +2330,12 @@ const TrussView = ({ refreshData, user }) => {
           </select>
         </div>
         <div className="results-count">
-          Showing {filteredAndSortedTrusses.length} of {trusses.length} truss projects
+          <span>Showing {filteredAndSortedTrusses.length} of {trusses.length} truss projects</span>
+          <span className="production-total">
+            • Total Production Days: {filteredAndSortedTrusses.reduce((total, truss) => {
+              return total + (parseFloat(truss.estimated_production_days) || 0);
+            }, 0).toFixed(1)}
+          </span>
         </div>
       </div>
 
