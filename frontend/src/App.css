@@ -2113,11 +2113,11 @@ body {
   border-radius: 4px;
 }
 
-.bar-legend .legend-color.estimated {
+.bar-legend .legend-color.allocated {
   background: rgba(59, 130, 246, 0.7);
 }
 
-.bar-legend .legend-color.actual {
+.bar-legend .legend-color.spent {
   background: #3b82f6;
 }
 
