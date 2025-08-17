@@ -2524,6 +2524,9 @@ const CreateTrussModal = ({ onClose, onSuccess }) => {
         if (formData[key] !== '') {
           if (key.includes('lumber_') || key === 'estimated_production_days') {
             submitData[key] = parseFloat(formData[key]) || null;
+          } else if (key === 'date_ordered' || key === 'estimated_delivery') {
+            // Convert date string to ISO datetime string for backend
+            submitData[key] = new Date(formData[key] + 'T00:00:00').toISOString();
           } else {
             submitData[key] = formData[key];
           }
