@@ -2066,6 +2066,73 @@ class DashboardStats(BaseModel):
     today_tasks: int
     ideas_count: int
 
+# Truss Models
+class TrussStatus(str, Enum):
+    AWAITING_MEASUREMENTS = "awaiting_measurements"
+    READY_FOR_SHOP = "ready_for_shop"
+    IN_THE_SHOP = "in_the_shop"
+    OPTIMIZING = "optimizing" 
+    AWAITING_FINAL_MEASUREMENTS = "awaiting_final_measurements"
+    COMPLETED = "completed"
+    DELIVERED = "delivered"
+    ON_HOLD = "on_hold"
+
+class Truss(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_name: str
+    project_number: Optional[str] = None
+    designer: Optional[str] = None
+    salesman: Optional[str] = None
+    project_status: TrussStatus = TrussStatus.AWAITING_MEASUREMENTS
+    date_ordered: Optional[date] = None
+    estimated_delivery: Optional[date] = None
+    lumber_2x4_bd_ft: Optional[float] = None  # Board feet of 2x4 lumber
+    lumber_2x6_bd_ft: Optional[float] = None  # Board feet of 2x6 lumber
+    lumber_2x8_12ft: Optional[int] = None     # Count of 2x8 12' lumber
+    lumber_2x8_16ft: Optional[int] = None     # Count of 2x8 16' lumber
+    lumber_2x8_18ft: Optional[int] = None     # Count of 2x8 18' lumber
+    lumber_2x8_20ft: Optional[int] = None     # Count of 2x8 20' lumber
+    estimated_production_days: Optional[float] = None
+    notes: Optional[str] = None
+    store_id: str  # Store/Lumberyard identifier
+    created_by: str
+    created_date: datetime = Field(default_factory=datetime.utcnow)
+    updated_date: datetime = Field(default_factory=datetime.utcnow)
+
+class TrussCreate(BaseModel):
+    project_name: str
+    project_number: Optional[str] = None
+    designer: Optional[str] = None
+    salesman: Optional[str] = None
+    project_status: TrussStatus = TrussStatus.AWAITING_MEASUREMENTS
+    date_ordered: Optional[date] = None
+    estimated_delivery: Optional[date] = None
+    lumber_2x4_bd_ft: Optional[float] = None
+    lumber_2x6_bd_ft: Optional[float] = None
+    lumber_2x8_12ft: Optional[int] = None
+    lumber_2x8_16ft: Optional[int] = None
+    lumber_2x8_18ft: Optional[int] = None
+    lumber_2x8_20ft: Optional[int] = None
+    estimated_production_days: Optional[float] = None
+    notes: Optional[str] = None
+
+class TrussUpdate(BaseModel):
+    project_name: Optional[str] = None
+    project_number: Optional[str] = None
+    designer: Optional[str] = None
+    salesman: Optional[str] = None
+    project_status: Optional[TrussStatus] = None
+    date_ordered: Optional[date] = None
+    estimated_delivery: Optional[date] = None
+    lumber_2x4_bd_ft: Optional[float] = None
+    lumber_2x6_bd_ft: Optional[float] = None
+    lumber_2x8_12ft: Optional[int] = None
+    lumber_2x8_16ft: Optional[int] = None
+    lumber_2x8_18ft: Optional[int] = None
+    lumber_2x8_20ft: Optional[int] = None
+    estimated_production_days: Optional[float] = None
+    notes: Optional[str] = None
+
 # Project Routes
 @api_router.post("/projects", response_model=Project)
 async def create_project(project: ProjectCreate, current_user: User = Depends(get_current_user)):
