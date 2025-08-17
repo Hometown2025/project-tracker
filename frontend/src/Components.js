@@ -2363,9 +2363,25 @@ const TrussView = ({ refreshData, user }) => {
               <th onClick={() => handleSort('lumber_2x4_bd_ft')} className="sortable">
                 2x4 BD FT {getSortIcon('lumber_2x4_bd_ft')}
               </th>
+              <th onClick={() => handleSort('lumber_2x6_bd_ft')} className="sortable">
+                2x6 BD FT {getSortIcon('lumber_2x6_bd_ft')}
+              </th>
+              <th onClick={() => handleSort('lumber_2x8_12ft')} className="sortable">
+                2x8 12' {getSortIcon('lumber_2x8_12ft')}
+              </th>
+              <th onClick={() => handleSort('lumber_2x8_16ft')} className="sortable">
+                2x8 16' {getSortIcon('lumber_2x8_16ft')}
+              </th>
+              <th onClick={() => handleSort('lumber_2x8_18ft')} className="sortable">
+                2x8 18' {getSortIcon('lumber_2x8_18ft')}
+              </th>
+              <th onClick={() => handleSort('lumber_2x8_20ft')} className="sortable">
+                2x8 20' {getSortIcon('lumber_2x8_20ft')}
+              </th>
               <th onClick={() => handleSort('estimated_production_days')} className="sortable">
                 Est. Days {getSortIcon('estimated_production_days')}
               </th>
+              <th>Notes</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -2374,9 +2390,6 @@ const TrussView = ({ refreshData, user }) => {
               <tr key={truss.id}>
                 <td className="project-name-cell">
                   <div className="project-name">{truss.project_name}</div>
-                  {truss.notes && (
-                    <div className="project-notes">{truss.notes}</div>
-                  )}
                 </td>
                 <td>{truss.project_number || '-'}</td>
                 <td>{truss.designer || '-'}</td>
@@ -2391,8 +2404,20 @@ const TrussView = ({ refreshData, user }) => {
                 </td>
                 <td>{truss.date_ordered ? new Date(truss.date_ordered).toLocaleDateString() : '-'}</td>
                 <td>{truss.estimated_delivery ? new Date(truss.estimated_delivery).toLocaleDateString() : '-'}</td>
-                <td>{truss.lumber_2x4_bd_ft || '-'}</td>
-                <td>{truss.estimated_production_days || '-'}</td>
+                <td className="number-cell">{truss.lumber_2x4_bd_ft || '-'}</td>
+                <td className="number-cell">{truss.lumber_2x6_bd_ft || '-'}</td>
+                <td className="number-cell">{truss.lumber_2x8_12ft || '-'}</td>
+                <td className="number-cell">{truss.lumber_2x8_16ft || '-'}</td>
+                <td className="number-cell">{truss.lumber_2x8_18ft || '-'}</td>
+                <td className="number-cell">{truss.lumber_2x8_20ft || '-'}</td>
+                <td className="number-cell">{truss.estimated_production_days || '-'}</td>
+                <td className="notes-cell">
+                  {truss.notes && (
+                    <div className="table-notes" title={truss.notes}>
+                      {truss.notes.length > 30 ? `${truss.notes.substring(0, 30)}...` : truss.notes}
+                    </div>
+                  )}
+                </td>
                 <td>
                   <div className="action-buttons">
                     <button 
