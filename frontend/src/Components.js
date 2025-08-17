@@ -2433,7 +2433,7 @@ const TrussView = ({ refreshData, user }) => {
             className="btn-primary"
             onClick={() => setShowCreateModal(true)}
           >
-            Add First Truss Project
+            Quick Add First Project
           </button>
         </div>
       )}
