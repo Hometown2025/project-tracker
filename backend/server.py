@@ -1682,45 +1682,52 @@ async def calculate_task_budget_totals(task_id: str):
     }
 
 async def calculate_project_budget_totals(project_id: str):
-    """Calculate budget totals for a project from all its rooms and subtasks"""
+    """Calculate budget totals for a project - Project budget is total, rooms subtract from it"""
+    # Get project's total budget
+    project = await db.projects.find_one({"id": project_id})
+    project_total_budget = 0.0
+    if project and project.get("estimated_budget"):
+        project_total_budget = float(project["estimated_budget"])
+    
     # Get all main rooms for this project
     rooms = await db.tasks.find({
         "project_id": project_id,
         "subtask_level": 0
     }).to_list(1000)
     
-    project_estimated_total = 0.0
-    project_actual_total = 0.0
+    rooms_allocated_estimated = 0.0
+    rooms_actual_spent = 0.0
     room_count = len(rooms)
     total_subtasks = 0
     
     for room in rooms:
-        # Add room's own budget if it exists
+        # Sum room allocated budgets (estimated budgets allocated to rooms)
         if room.get("estimated_budget"):
-            project_estimated_total += float(room["estimated_budget"])
+            rooms_allocated_estimated += float(room["estimated_budget"])
         if room.get("actual_cost"):
-            project_actual_total += float(room["actual_cost"])
+            rooms_actual_spent += float(room["actual_cost"])
         
         # Add subtask totals for this room
         room_totals = await calculate_task_budget_totals(room["id"])
-        project_estimated_total += room_totals["subtask_estimated_total"]
-        project_actual_total += room_totals["subtask_actual_total"]
+        rooms_allocated_estimated += room_totals["subtask_estimated_total"]
+        rooms_actual_spent += room_totals["subtask_actual_total"]
         total_subtasks += room_totals["subtask_count"]
     
-    # Get project's own estimated budget if it exists
-    project = await db.projects.find_one({"id": project_id})
-    project_own_estimated = 0.0
-    if project and project.get("estimated_budget"):
-        project_own_estimated = float(project["estimated_budget"])
+    # Calculate remaining budget and variances
+    remaining_budget = project_total_budget - rooms_allocated_estimated
+    spending_variance = rooms_actual_spent - rooms_allocated_estimated  # How much over/under allocated amounts
+    total_variance = project_total_budget - rooms_actual_spent  # How much left of total budget
     
     return {
-        "project_estimated_total": project_estimated_total,
-        "project_actual_total": project_actual_total,
-        "project_own_estimated": project_own_estimated,
-        "total_estimated_with_project": project_estimated_total + project_own_estimated,
+        "project_total_budget": project_total_budget,
+        "rooms_allocated_estimated": rooms_allocated_estimated,
+        "rooms_actual_spent": rooms_actual_spent,
+        "remaining_budget": remaining_budget,
+        "spending_variance": spending_variance,
+        "total_variance": total_variance,
         "room_count": room_count,
         "total_subtasks": total_subtasks,
-        "budget_variance": project_actual_total - (project_estimated_total + project_own_estimated)
+        "allocation_percentage": (rooms_allocated_estimated / project_total_budget * 100) if project_total_budget > 0 else 0
     }
 
 @api_router.get("/projects/{project_id}/budget-summary")
