@@ -2534,7 +2534,8 @@ const CreateTrussModal = ({ onClose, onSuccess }) => {
       onSuccess();
     } catch (error) {
       console.error('Error creating truss:', error);
-      alert('Failed to create truss project');
+      console.error('Error response:', error.response?.data);
+      alert(`Failed to create truss project: ${error.response?.data?.detail || error.message}`);
     }
   };
 
