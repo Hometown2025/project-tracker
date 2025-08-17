@@ -1965,11 +1965,18 @@ body {
   font-family: monospace;
 }
 
-.summary-card.project-estimated .amount { color: #3b82f6; }
-.summary-card.total-estimated .amount { color: #059669; }
-.summary-card.actual .amount { color: #dc2626; }
-.summary-card.variance.under .amount { color: #059669; }
-.summary-card.variance.over .amount { color: #dc2626; }
+.summary-card.project-total .amount { color: #3b82f6; }
+.summary-card.allocated .amount { color: #8b5cf6; }
+.summary-card.spent .amount { color: #dc2626; }
+.summary-card.remaining.positive .amount { color: #059669; }
+.summary-card.remaining.negative .amount { color: #dc2626; }
+
+.summary-card .card-content small {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  display: block;
+}
 
 /* Charts Section */
 .budget-charts {
