@@ -92,9 +92,9 @@ const PieChart = ({ data, title }) => {
 
 // BarChart Component
 const BarChart = ({ data, title }) => {
-  if (!data || data.length === 0) return null;
+  if (!data || !Array.isArray(data) || data.length === 0) return null;
 
-  const maxValue = Math.max(...data.map(item => Math.max(item.estimated || 0, item.actual || 0)));
+  const maxValue = Math.max(...data.map(item => Math.max(item?.estimated || 0, item?.actual || 0)));
   if (maxValue === 0) return null;
 
   return (
