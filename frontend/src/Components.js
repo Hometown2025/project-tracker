@@ -2971,13 +2971,16 @@ export default {
   IdeasBoard,
   ProjectView,
   BudgetView,
+  TrussView,
   CreateTaskModal,
   EditTaskModal,
   CreateIdeaModal,
   EditIdeaModal,
   CreateProjectModal,
   EditProjectModal,
+  CreateTrussModal,
+  EditTrussModal,
   StoreLogo
 };
 
-export { Dashboard, TaskView, ProjectView, CreateTaskModal, EditTaskModal, EditProjectModal, CreateProjectModal, CreateIdeaModal, EditIdeaModal, IdeasBoard as IdeasView, BudgetView, StoreLogo };
+export { Dashboard, TaskView, ProjectView, CreateTaskModal, EditTaskModal, EditProjectModal, CreateProjectModal, CreateIdeaModal, EditIdeaModal, IdeasBoard as IdeasView, BudgetView, TrussView, CreateTrussModal, EditTrussModal, StoreLogo };
