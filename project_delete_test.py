@@ -247,14 +247,16 @@ class ProjectDeleteTester:
             for idea in created_ideas:
                 idea_check = self.test_request("GET", f"/ideas/{idea['id']}", expected_status=404,
                                              auth_token=self.admin_token, test_name=f"Verify Idea {idea['id']} Deleted")
+                # If we get None (which means the test passed with 404), the idea was deleted successfully
+                # If we get any response data, the idea still exists
                 if idea_check is not None:
                     ideas_deleted_successfully = False
+                    self.log(f"❌ Idea {idea['id']} still exists after project deletion", "ERROR")
                     break
             
             if ideas_deleted_successfully:
                 self.log("✅ All associated ideas deleted successfully")
             else:
-                self.log("❌ Some ideas were not properly deleted", "ERROR")
                 self.failed_tests += 1
 
     def test_authentication_and_authorization(self):
