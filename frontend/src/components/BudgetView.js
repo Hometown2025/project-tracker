@@ -181,20 +181,24 @@ const BudgetView = ({ projects, selectedProject, onProjectSelect }) => {
 
   // Prepare chart data
   const prepareChartData = () => {
-    if (!budgetData || !budgetData.room_breakdown) return { pieData: [], barData: [] };
+    if (!budgetData || !budgetData.room_breakdown || !Array.isArray(budgetData.room_breakdown)) {
+      return { pieData: [], barData: [] };
+    }
 
     const pieData = budgetData.room_breakdown
-      .filter(room => room.room_total_estimated > 0)
+      .filter(room => room && room.room_total_estimated > 0)
       .map(room => ({
-        label: room.room_name,
-        value: room.room_total_estimated
+        label: room.room_name || 'Unnamed Room',
+        value: room.room_total_estimated || 0
       }));
 
-    const barData = budgetData.room_breakdown.map(room => ({
-      label: room.room_name,
-      estimated: room.room_total_estimated,
-      actual: room.room_total_actual
-    }));
+    const barData = budgetData.room_breakdown
+      .filter(room => room && (room.room_total_estimated > 0 || room.room_total_actual > 0))
+      .map(room => ({
+        label: room.room_name || 'Unnamed Room',
+        estimated: room.room_total_estimated || 0,
+        actual: room.room_total_actual || 0
+      }));
 
     return { pieData, barData };
   };
