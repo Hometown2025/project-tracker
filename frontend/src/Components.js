@@ -2162,6 +2162,312 @@ const StoreLogo = ({ storeId, className = "store-logo" }) => {
   );
 };
 
+// Truss View Component
+const TrussView = ({ refreshData, user }) => {
+  const [trusses, setTrusses] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingTruss, setEditingTruss] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterDesigner, setFilterDesigner] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortColumn, setSortColumn] = useState('project_name');
+  const [sortDirection, setSortDirection] = useState('asc');
+
+  const fetchTrusses = async () => {
+    try {
+      const response = await axios.get(`${API}/trusses`);
+      setTrusses(response.data);
+    } catch (error) {
+      console.error('Error fetching trusses:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTrusses();
+  }, []);
+
+  // Get unique designers for filter
+  const uniqueDesigners = [...new Set(trusses.map(t => t.designer).filter(Boolean))];
+
+  // Filter and sort trusses
+  const filteredAndSortedTrusses = trusses
+    .filter(truss => {
+      const matchesStatus = filterStatus === 'all' || truss.project_status === filterStatus;
+      const matchesDesigner = filterDesigner === 'all' || truss.designer === filterDesigner;
+      const matchesSearch = !searchTerm || 
+        truss.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (truss.project_number && truss.project_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (truss.salesman && truss.salesman.toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchesStatus && matchesDesigner && matchesSearch;
+    })
+    .sort((a, b) => {
+      let aVal = a[sortColumn] || '';
+      let bVal = b[sortColumn] || '';
+      
+      if (typeof aVal === 'string') {
+        aVal = aVal.toLowerCase();
+        bVal = bVal.toLowerCase();
+      }
+      
+      if (sortDirection === 'asc') {
+        return aVal > bVal ? 1 : -1;
+      } else {
+        return aVal < bVal ? 1 : -1;
+      }
+    });
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const handleDelete = async (trussId, projectName) => {
+    if (window.confirm(`Are you sure you want to delete the truss "${projectName}"?`)) {
+      try {
+        await axios.delete(`${API}/trusses/${trussId}`);
+        fetchTrusses();
+      } catch (error) {
+        console.error('Error deleting truss:', error);
+        alert('Failed to delete truss');
+      }
+    }
+  };
+
+  const getSortIcon = (column) => {
+    if (sortColumn !== column) return '↕️';
+    return sortDirection === 'asc' ? '↑' : '↓';
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      'awaiting_measurements': '#f59e0b',
+      'ready_for_shop': '#3b82f6',
+      'in_the_shop': '#8b5cf6',
+      'optimizing': '#06b6d4',
+      'awaiting_final_measurements': '#f59e0b',
+      'completed': '#10b981',
+      'delivered': '#22c55e',
+      'on_hold': '#ef4444'
+    };
+    return colors[status] || '#6b7280';
+  };
+
+  const formatStatus = (status) => {
+    return status.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
+  if (loading) {
+    return (
+      <div className="truss-view">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Loading trusses...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="truss-view">
+      <div className="view-header">
+        <div>
+          <h1 className="page-title">Truss Tracker</h1>
+          <p className="page-subtitle">Manage truss projects and production</p>
+        </div>
+        <button 
+          className="btn-primary"
+          onClick={() => setShowCreateModal(true)}
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Truss Project
+        </button>
+      </div>
+
+      {/* Filters and Search */}
+      <div className="truss-filters">
+        <div className="filters-row">
+          <input
+            type="text"
+            placeholder="Search projects, numbers, or salesman..."
+            className="search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <select 
+            className="filter-select"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">All Status</option>
+            <option value="awaiting_measurements">Awaiting Measurements</option>
+            <option value="ready_for_shop">Ready for Shop</option>
+            <option value="in_the_shop">In the Shop</option>
+            <option value="optimizing">Optimizing</option>
+            <option value="awaiting_final_measurements">Awaiting Final Measurements</option>
+            <option value="completed">Completed</option>
+            <option value="delivered">Delivered</option>
+            <option value="on_hold">On Hold</option>
+          </select>
+          <select 
+            className="filter-select"
+            value={filterDesigner}
+            onChange={(e) => setFilterDesigner(e.target.value)}
+          >
+            <option value="all">All Designers</option>
+            {uniqueDesigners.map(designer => (
+              <option key={designer} value={designer}>{designer}</option>
+            ))}
+          </select>
+        </div>
+        <div className="results-count">
+          Showing {filteredAndSortedTrusses.length} of {trusses.length} truss projects
+        </div>
+      </div>
+
+      {/* Truss Table */}
+      <div className="truss-table-container">
+        <table className="truss-table">
+          <thead>
+            <tr>
+              <th onClick={() => handleSort('project_name')} className="sortable">
+                Project Name {getSortIcon('project_name')}
+              </th>
+              <th onClick={() => handleSort('project_number')} className="sortable">
+                Project # {getSortIcon('project_number')}
+              </th>
+              <th onClick={() => handleSort('designer')} className="sortable">
+                Designer {getSortIcon('designer')}
+              </th>
+              <th onClick={() => handleSort('salesman')} className="sortable">
+                Salesman {getSortIcon('salesman')}
+              </th>
+              <th onClick={() => handleSort('project_status')} className="sortable">
+                Status {getSortIcon('project_status')}
+              </th>
+              <th onClick={() => handleSort('date_ordered')} className="sortable">
+                Date Ordered {getSortIcon('date_ordered')}
+              </th>
+              <th onClick={() => handleSort('estimated_delivery')} className="sortable">
+                Est. Delivery {getSortIcon('estimated_delivery')}
+              </th>
+              <th onClick={() => handleSort('lumber_2x4_bd_ft')} className="sortable">
+                2x4 BD FT {getSortIcon('lumber_2x4_bd_ft')}
+              </th>
+              <th onClick={() => handleSort('estimated_production_days')} className="sortable">
+                Est. Days {getSortIcon('estimated_production_days')}
+              </th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredAndSortedTrusses.map(truss => (
+              <tr key={truss.id}>
+                <td className="project-name-cell">
+                  <div className="project-name">{truss.project_name}</div>
+                  {truss.notes && (
+                    <div className="project-notes">{truss.notes}</div>
+                  )}
+                </td>
+                <td>{truss.project_number || '-'}</td>
+                <td>{truss.designer || '-'}</td>
+                <td>{truss.salesman || '-'}</td>
+                <td>
+                  <span 
+                    className="status-badge" 
+                    style={{ backgroundColor: getStatusColor(truss.project_status) }}
+                  >
+                    {formatStatus(truss.project_status)}
+                  </span>
+                </td>
+                <td>{truss.date_ordered ? new Date(truss.date_ordered).toLocaleDateString() : '-'}</td>
+                <td>{truss.estimated_delivery ? new Date(truss.estimated_delivery).toLocaleDateString() : '-'}</td>
+                <td>{truss.lumber_2x4_bd_ft || '-'}</td>
+                <td>{truss.estimated_production_days || '-'}</td>
+                <td>
+                  <div className="action-buttons">
+                    <button 
+                      className="btn-icon edit"
+                      onClick={() => {
+                        setEditingTruss(truss);
+                        setShowEditModal(true);
+                      }}
+                      title="Edit truss"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button 
+                      className="btn-icon delete"
+                      onClick={() => handleDelete(truss.id, truss.project_name)}
+                      title="Delete truss"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {filteredAndSortedTrusses.length === 0 && !loading && (
+        <div className="empty-state">
+          <p>No truss projects found matching your criteria.</p>
+          <button 
+            className="btn-primary"
+            onClick={() => setShowCreateModal(true)}
+          >
+            Add First Truss Project
+          </button>
+        </div>
+      )}
+
+      {/* Create Modal */}
+      {showCreateModal && (
+        <CreateTrussModal 
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            fetchTrusses();
+            setShowCreateModal(false);
+          }}
+        />
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingTruss && (
+        <EditTrussModal 
+          truss={editingTruss}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingTruss(null);
+          }}
+          onSuccess={() => {
+            fetchTrusses();
+            setShowEditModal(false);
+            setEditingTruss(null);
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
 // Export all components
 export default {
   Navigation,
