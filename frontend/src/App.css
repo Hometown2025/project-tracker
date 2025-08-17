@@ -3581,8 +3581,18 @@ body {
 .number-cell {
   text-align: right;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  min-width: 60px;
+  min-width: 50px;
+  max-width: 70px;
   font-size: 0.675rem;
+  padding: 0.75rem 0.25rem;
+}
+
+.date-cell {
+  min-width: 80px;
+  max-width: 100px;
+  font-size: 0.75rem;
+  padding: 0.75rem 0.25rem;
+  white-space: nowrap;
 }
 
 .notes-cell {
