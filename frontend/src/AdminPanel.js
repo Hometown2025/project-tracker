@@ -1009,4 +1009,191 @@ const ResetPasswordModal = ({ user, onClose, onSuccess }) => {
   );
 };
 
+const LogoManagementModal = ({ onClose }) => {
+  const [storeLogos, setStoreLogos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploadForm, setUploadForm] = useState({
+    storeId: '',
+    logoUrl: ''
+  });
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+
+  useEffect(() => {
+    fetchStoreLogos();
+  }, []);
+
+  const fetchStoreLogos = async () => {
+    try {
+      const response = await axios.get(`${API}/admin/stores/logos`);
+      setStoreLogos(response.data);
+    } catch (error) {
+      console.error('Error fetching store logos:', error);
+      setError('Failed to load store logos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLogoUpload = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!uploadForm.storeId || !uploadForm.logoUrl) {
+      setError('Store ID and Logo URL are required');
+      return;
+    }
+
+    try {
+      await axios.post(`${API}/admin/stores/${uploadForm.storeId}/logo`, {
+        logo_url: uploadForm.logoUrl
+      });
+
+      setSuccess(`Logo uploaded successfully for store ${uploadForm.storeId}`);
+      setUploadForm({ storeId: '', logoUrl: '' });
+      fetchStoreLogos(); // Refresh the list
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      setError(error.response?.data?.detail || 'Failed to upload logo');
+    }
+  };
+
+  const handleDeleteLogo = async (storeId) => {
+    if (window.confirm(`Are you sure you want to delete the logo for store ${storeId}?`)) {
+      try {
+        await axios.delete(`${API}/admin/stores/${storeId}/logo`);
+        setSuccess(`Logo deleted successfully for store ${storeId}`);
+        fetchStoreLogos(); // Refresh the list
+      } catch (error) {
+        console.error('Error deleting logo:', error);
+        setError(error.response?.data?.detail || 'Failed to delete logo');
+      }
+    }
+  };
+
+  // Pre-populate with Belleville Hometown Lumber logo
+  const presetBellevilleLogo = () => {
+    setUploadForm({
+      storeId: 'STORE_001',
+      logoUrl: 'https://customer-assets.emergentagent.com/job_cdaf2437-f20a-42e9-a5b5-224be1f5905f/artifacts/6wu4g008_logo.jpg'
+    });
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content large-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Manage Store Logos</h3>
+          <button className="modal-close" onClick={onClose}>&times;</button>
+        </div>
+
+        <div className="modal-body">
+          {error && <div className="error-message">{error}</div>}
+          {success && <div className="success-message">{success}</div>}
+
+          {/* Upload Form */}
+          <div className="logo-upload-section">
+            <h4>Upload Store Logo</h4>
+            <form onSubmit={handleLogoUpload} className="logo-upload-form">
+              <div className="form-group">
+                <label className="form-label">Store ID</label>
+                <input 
+                  type="text"
+                  className="form-input"
+                  value={uploadForm.storeId}
+                  onChange={(e) => setUploadForm({...uploadForm, storeId: e.target.value})}
+                  placeholder="e.g., STORE_001, STORE_002"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Logo URL</label>
+                <input 
+                  type="url"
+                  className="form-input"
+                  value={uploadForm.logoUrl}
+                  onChange={(e) => setUploadForm({...uploadForm, logoUrl: e.target.value})}
+                  placeholder="https://example.com/logo.png"
+                  required
+                />
+                <small className="form-hint">Enter the direct URL to the logo image (PNG, JPG, SVG)</small>
+              </div>
+
+              <div className="form-actions">
+                <button 
+                  type="button"
+                  className="btn-secondary btn-sm"
+                  onClick={presetBellevilleLogo}
+                >
+                  Use Belleville Hometown Lumber Logo
+                </button>
+                <button type="submit" className="btn-primary">
+                  Upload Logo
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Existing Logos */}
+          <div className="existing-logos-section">
+            <h4>Existing Store Logos</h4>
+            {loading ? (
+              <div className="loading-state">Loading store logos...</div>
+            ) : storeLogos.length === 0 ? (
+              <div className="empty-state">No store logos uploaded yet</div>
+            ) : (
+              <div className="logos-grid">
+                {storeLogos.map((logo) => (
+                  <div key={logo.store_id} className="logo-card">
+                    <div className="logo-preview">
+                      <img 
+                        src={logo.logo_url} 
+                        alt={`${logo.store_id} logo`}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
+                      />
+                      <div className="logo-error" style={{display: 'none'}}>
+                        Failed to load logo
+                      </div>
+                    </div>
+                    <div className="logo-info">
+                      <h5>{logo.store_id}</h5>
+                      <small>Updated: {new Date(logo.updated_date).toLocaleDateString()}</small>
+                      <div className="logo-url">
+                        <a href={logo.logo_url} target="_blank" rel="noopener noreferrer">
+                          View Logo
+                        </a>
+                      </div>
+                    </div>
+                    <div className="logo-actions">
+                      <button 
+                        className="btn-danger btn-sm"
+                        onClick={() => handleDeleteLogo(logo.store_id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="modal-actions">
+          <button type="button" className="btn-secondary" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default AdminPanel;
