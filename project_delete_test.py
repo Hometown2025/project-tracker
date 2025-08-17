@@ -228,36 +228,44 @@ class ProjectDeleteTester:
             # Verify associated tasks are deleted by checking individual task IDs
             tasks_deleted_successfully = True
             for task in created_tasks:
-                task_check = self.test_request("GET", f"/tasks/{task['id']}", expected_status=404,
-                                             auth_token=self.admin_token, test_name=f"Verify Task {task['id']} Deleted")
-                # If we get None (which means the test passed with 404), the task was deleted successfully
-                # If we get any response data, the task still exists
-                if task_check is not None:
+                # Make direct request to check if task exists
+                url = f"{self.base_url}/tasks/{task['id']}"
+                headers = {"Authorization": f"Bearer {self.admin_token}"}
+                response = self.session.get(url, headers=headers)
+                
+                self.log(f"Checking if task {task['id']} was deleted - Status: {response.status_code}")
+                
+                if response.status_code == 404:
+                    self.log(f"✅ Task {task['id']} successfully deleted")
+                    self.passed_tests += 1
+                else:
+                    self.log(f"❌ Task {task['id']} still exists (status: {response.status_code})", "ERROR")
                     tasks_deleted_successfully = False
-                    self.log(f"❌ Task {task['id']} still exists after project deletion", "ERROR")
-                    break
+                    self.failed_tests += 1
             
             if tasks_deleted_successfully:
                 self.log("✅ All associated tasks deleted successfully")
-            else:
-                self.failed_tests += 1
             
             # Verify associated ideas are deleted by checking individual idea IDs
             ideas_deleted_successfully = True
             for idea in created_ideas:
-                idea_check = self.test_request("GET", f"/ideas/{idea['id']}", expected_status=404,
-                                             auth_token=self.admin_token, test_name=f"Verify Idea {idea['id']} Deleted")
-                # If we get None (which means the test passed with 404), the idea was deleted successfully
-                # If we get any response data, the idea still exists
-                if idea_check is not None:
+                # Make direct request to check if idea exists
+                url = f"{self.base_url}/ideas/{idea['id']}"
+                headers = {"Authorization": f"Bearer {self.admin_token}"}
+                response = self.session.get(url, headers=headers)
+                
+                self.log(f"Checking if idea {idea['id']} was deleted - Status: {response.status_code}")
+                
+                if response.status_code == 404:
+                    self.log(f"✅ Idea {idea['id']} successfully deleted")
+                    self.passed_tests += 1
+                else:
+                    self.log(f"❌ Idea {idea['id']} still exists (status: {response.status_code})", "ERROR")
                     ideas_deleted_successfully = False
-                    self.log(f"❌ Idea {idea['id']} still exists after project deletion", "ERROR")
-                    break
+                    self.failed_tests += 1
             
             if ideas_deleted_successfully:
                 self.log("✅ All associated ideas deleted successfully")
-            else:
-                self.failed_tests += 1
 
     def test_authentication_and_authorization(self):
         """Test authentication and authorization for project deletion"""
