@@ -1792,13 +1792,15 @@ const EditProjectModal = ({ project, onClose, onSuccess }) => {
           </div>
 
           <div className="modal-actions">
-            <button 
-              type="button" 
-              className="btn-danger" 
-              onClick={handleDelete}
-            >
-              Delete Project
-            </button>
+            {user && (user.role === 'admin' || user.role === 'super_admin') && (
+              <button 
+                type="button" 
+                className="btn-danger" 
+                onClick={handleDelete}
+              >
+                Delete Project
+              </button>
+            )}
             <div className="modal-actions-right">
               <button type="button" className="btn-secondary" onClick={onClose}>
                 Cancel
