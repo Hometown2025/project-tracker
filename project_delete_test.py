@@ -230,14 +230,16 @@ class ProjectDeleteTester:
             for task in created_tasks:
                 task_check = self.test_request("GET", f"/tasks/{task['id']}", expected_status=404,
                                              auth_token=self.admin_token, test_name=f"Verify Task {task['id']} Deleted")
+                # If we get None (which means the test passed with 404), the task was deleted successfully
+                # If we get any response data, the task still exists
                 if task_check is not None:
                     tasks_deleted_successfully = False
+                    self.log(f"❌ Task {task['id']} still exists after project deletion", "ERROR")
                     break
             
             if tasks_deleted_successfully:
                 self.log("✅ All associated tasks deleted successfully")
             else:
-                self.log("❌ Some tasks were not properly deleted", "ERROR")
                 self.failed_tests += 1
             
             # Verify associated ideas are deleted by checking individual idea IDs
