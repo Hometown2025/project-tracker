@@ -2578,13 +2578,19 @@ const CreateTrussModal = ({ onClose, onSuccess }) => {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Designer <span className="optional">(optional)</span></label>
-              <input 
-                type="text"
-                className="form-input"
+              <select 
+                className="form-select"
                 value={formData.designer}
                 onChange={(e) => setFormData({...formData, designer: e.target.value})}
-                placeholder="Designer name"
-              />
+              >
+                <option value="">Select Designer</option>
+                <option value="Dan">Dan</option>
+                <option value="Dave">Dave</option>
+                <option value="Brandon">Brandon</option>
+                <option value="McKenzie">McKenzie</option>
+                <option value="Clayton">Clayton</option>
+                <option value="Nick">Nick</option>
+              </select>
             </div>
             <div className="form-group">
               <label className="form-label">Salesman <span className="optional">(optional)</span></label>
