@@ -2129,10 +2129,12 @@ async def get_projects(current_user: User = Depends(get_current_user)):
         project['task_count'] = total_tasks
         project['completed_tasks'] = completed_tasks
         project['file_count'] = file_count
-        project['calculated_estimated_total'] = budget_totals["project_estimated_total"]
-        project['calculated_actual_total'] = budget_totals["project_actual_total"]
-        project['total_estimated_with_project'] = budget_totals["total_estimated_with_project"]
-        project['budget_variance'] = budget_totals["budget_variance"]
+        project['project_total_budget'] = budget_totals["project_total_budget"]
+        project['rooms_allocated_estimated'] = budget_totals["rooms_allocated_estimated"]
+        project['rooms_actual_spent'] = budget_totals["rooms_actual_spent"]
+        project['remaining_budget'] = budget_totals["remaining_budget"]
+        project['total_variance'] = budget_totals["total_variance"]
+        project['allocation_percentage'] = budget_totals["allocation_percentage"]
     
     return [Project(**project) for project in projects]
 
