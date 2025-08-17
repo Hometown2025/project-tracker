@@ -181,10 +181,10 @@ const BudgetView = ({ projects, selectedProject, onProjectSelect }) => {
     }
   };
 
-  // Prepare chart data
+  // Prepare chart data - rooms as allocations of total budget
   const prepareChartData = () => {
     if (!budgetData || !budgetData.room_breakdown || !Array.isArray(budgetData.room_breakdown)) {
-      return { pieData: [], barData: [] };
+      return { pieData: [], barData: [], remainingData: null };
     }
 
     const pieData = budgetData.room_breakdown
@@ -194,12 +194,21 @@ const BudgetView = ({ projects, selectedProject, onProjectSelect }) => {
         value: room.room_total_estimated || 0
       }));
 
+    // Add remaining budget as a slice if there's remaining budget
+    if (budgetData.remaining_budget > 0) {
+      pieData.push({
+        label: 'Unallocated Budget',
+        value: budgetData.remaining_budget,
+        isRemaining: true
+      });
+    }
+
     const barData = budgetData.room_breakdown
       .filter(room => room && (room.room_total_estimated > 0 || room.room_total_actual > 0))
       .map(room => ({
         label: room.room_name || 'Unnamed Room',
-        estimated: room.room_total_estimated || 0,
-        actual: room.room_total_actual || 0
+        allocated: room.room_total_estimated || 0,  // Changed from 'estimated' to 'allocated'
+        spent: room.room_total_actual || 0          // Changed from 'actual' to 'spent'
       }));
 
     return { pieData, barData };
