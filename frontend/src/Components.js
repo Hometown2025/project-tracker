@@ -2155,5 +2155,8 @@ export default {
   CreateIdeaModal,
   EditIdeaModal,
   CreateProjectModal,
-  EditProjectModal
+  EditProjectModal,
+  StoreLogo
 };
+
+export { Dashboard, TaskView, ProjectView, CreateTaskModal, EditTaskModal, EditProjectModal, CreateProjectModal, CreateIdeaModal, EditIdeaModal, IdeasView: IdeasBoard, BudgetView, StoreLogo };
