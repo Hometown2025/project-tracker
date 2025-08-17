@@ -2514,8 +2514,12 @@ const CreateTrussModal = ({ onClose, onSuccess }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal truss-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2 className="modal-title">Add Truss Project</h2>
+          <h2 className="modal-title">Quick Add Truss Project</h2>
           <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        
+        <div className="form-note">
+          <p><strong>Quick Start:</strong> Only project name is required. You can add all other details (lumber specs, dates, etc.) later by editing the project.</p>
         </div>
         
         <form onSubmit={handleSubmit} className="modal-form">
@@ -2528,43 +2532,47 @@ const CreateTrussModal = ({ onClose, onSuccess }) => {
                 value={formData.project_name}
                 onChange={(e) => setFormData({...formData, project_name: e.target.value})}
                 required
+                placeholder="Enter project name..."
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Project Number</label>
+              <label className="form-label">Project Number <span className="optional">(optional)</span></label>
               <input 
                 type="text"
                 className="form-input"
                 value={formData.project_number}
                 onChange={(e) => setFormData({...formData, project_number: e.target.value})}
+                placeholder="e.g., TRP-2024-001"
               />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Designer</label>
+              <label className="form-label">Designer <span className="optional">(optional)</span></label>
               <input 
                 type="text"
                 className="form-input"
                 value={formData.designer}
                 onChange={(e) => setFormData({...formData, designer: e.target.value})}
+                placeholder="Designer name"
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Salesman</label>
+              <label className="form-label">Salesman <span className="optional">(optional)</span></label>
               <input 
                 type="text"
                 className="form-input"
                 value={formData.salesman}
                 onChange={(e) => setFormData({...formData, salesman: e.target.value})}
+                placeholder="Salesman name"
               />
             </div>
           </div>
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Project Status</label>
+              <label className="form-label">Initial Status</label>
               <select 
                 className="form-select"
                 value={formData.project_status}
@@ -2581,112 +2589,19 @@ const CreateTrussModal = ({ onClose, onSuccess }) => {
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Estimated Production Days</label>
-              <input 
-                type="number"
-                className="form-input"
-                step="0.25"
-                value={formData.estimated_production_days}
-                onChange={(e) => setFormData({...formData, estimated_production_days: e.target.value})}
+              <label className="form-label">Notes <span className="optional">(optional)</span></label>
+              <textarea 
+                className="form-textarea"
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                rows={2}
+                placeholder="Any initial notes..."
               />
             </div>
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Date Ordered</label>
-              <input 
-                type="date"
-                className="form-input"
-                value={formData.date_ordered}
-                onChange={(e) => setFormData({...formData, date_ordered: e.target.value})}
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Estimated Delivery</label>
-              <input 
-                type="date"
-                className="form-input"
-                value={formData.estimated_delivery}
-                onChange={(e) => setFormData({...formData, estimated_delivery: e.target.value})}
-              />
-            </div>
-          </div>
-
-          <div className="form-section">
-            <h4 className="form-section-title">Lumber Requirements</h4>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">2x4 Board Feet</label>
-                <input 
-                  type="number"
-                  className="form-input"
-                  step="0.01"
-                  value={formData.lumber_2x4_bd_ft}
-                  onChange={(e) => setFormData({...formData, lumber_2x4_bd_ft: e.target.value})}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">2x6 Board Feet</label>
-                <input 
-                  type="number"
-                  className="form-input"
-                  step="0.01"
-                  value={formData.lumber_2x6_bd_ft}
-                  onChange={(e) => setFormData({...formData, lumber_2x6_bd_ft: e.target.value})}
-                />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">2x8 12' Count</label>
-                <input 
-                  type="number"
-                  className="form-input"
-                  value={formData.lumber_2x8_12ft}
-                  onChange={(e) => setFormData({...formData, lumber_2x8_12ft: e.target.value})}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">2x8 16' Count</label>
-                <input 
-                  type="number"
-                  className="form-input"
-                  value={formData.lumber_2x8_16ft}
-                  onChange={(e) => setFormData({...formData, lumber_2x8_16ft: e.target.value})}
-                />
-              </div>
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">2x8 18' Count</label>
-                <input 
-                  type="number"
-                  className="form-input"
-                  value={formData.lumber_2x8_18ft}
-                  onChange={(e) => setFormData({...formData, lumber_2x8_18ft: e.target.value})}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">2x8 20' Count</label>
-                <input 
-                  type="number"
-                  className="form-input"
-                  value={formData.lumber_2x8_20ft}
-                  onChange={(e) => setFormData({...formData, lumber_2x8_20ft: e.target.value})}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Notes</label>
-            <textarea 
-              className="form-textarea"
-              value={formData.notes}
-              onChange={(e) => setFormData({...formData, notes: e.target.value})}
-              rows={3}
-            />
+          <div className="optional-fields-note">
+            <p><em>💡 Tip: Dates and lumber specifications can be added later when you have more details.</em></p>
           </div>
 
           <div className="modal-actions">
@@ -2694,7 +2609,7 @@ const CreateTrussModal = ({ onClose, onSuccess }) => {
               Cancel
             </button>
             <button type="submit" className="btn-primary">
-              Create Truss Project
+              Create Project
             </button>
           </div>
         </form>
