@@ -454,6 +454,12 @@ const AdminPanel = ({ onClose }) => {
             }}
           />
         )}
+
+        {showLogoManagement && (
+          <LogoManagementModal 
+            onClose={() => setShowLogoManagement(false)}
+          />
+        )}
       </div>
     </div>
   );
