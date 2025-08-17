@@ -3568,7 +3568,8 @@ body {
 }
 
 .project-name-cell {
-  max-width: 200px;
+  max-width: 300px;
+  min-width: 250px;
   white-space: normal;
   word-wrap: break-word;
   vertical-align: top;
