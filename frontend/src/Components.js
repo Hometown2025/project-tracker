@@ -2309,7 +2309,6 @@ const TrussView = ({ refreshData, user }) => {
             onChange={(e) => setFilterStatus(e.target.value)}
           >
             <option value="all">All Status</option>
-            <option value="awaiting_measurements">Awaiting Measurements</option>
             <option value="ready_for_shop">Ready for Shop</option>
             <option value="in_the_shop">In the Shop</option>
             <option value="optimizing">Optimizing</option>
