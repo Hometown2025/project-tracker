@@ -3497,7 +3497,6 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
-  table-layout: fixed;
 }
 
 .truss-table thead {
@@ -3515,16 +3514,6 @@ body {
   letter-spacing: 0.05em;
   white-space: nowrap;
   border-right: 1px solid #f3f4f6;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.truss-table th:first-child {
-  width: 280px;
-}
-
-.truss-table th:nth-child(5) {
-  width: 120px;
 }
 
 .truss-table th:last-child {
