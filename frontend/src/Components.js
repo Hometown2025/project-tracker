@@ -2361,7 +2361,41 @@ const TrussView = ({ refreshData, user }) => {
       {/* Truss Table */}
       <div className="truss-table-container">
         <table className="truss-table">
+          {/* Totals Row */}
           <thead>
+            <tr className="totals-row">
+              <th className="totals-cell">TOTALS</th>
+              <th className="totals-cell"></th>
+              <th className="totals-cell"></th>
+              <th className="totals-cell"></th>
+              <th className="totals-cell"></th>
+              <th className="totals-cell"></th>
+              <th className="totals-cell"></th>
+              <th className="totals-cell lumber-total">
+                {lumberTotals.lumber_2x4_bd_ft.toFixed(1)}
+              </th>
+              <th className="totals-cell lumber-total">
+                {lumberTotals.lumber_2x6_bd_ft.toFixed(1)}
+              </th>
+              <th className="totals-cell lumber-total">
+                {lumberTotals.lumber_2x8_12ft}
+              </th>
+              <th className="totals-cell lumber-total">
+                {lumberTotals.lumber_2x8_16ft}
+              </th>
+              <th className="totals-cell lumber-total">
+                {lumberTotals.lumber_2x8_18ft}
+              </th>
+              <th className="totals-cell lumber-total">
+                {lumberTotals.lumber_2x8_20ft}
+              </th>
+              <th className="totals-cell lumber-total">
+                {lumberTotals.estimated_production_days.toFixed(1)}
+              </th>
+              <th className="totals-cell"></th>
+              <th className="totals-cell"></th>
+            </tr>
+            {/* Column Headers */}
             <tr>
               <th onClick={() => handleSort('project_name')} className="sortable">
                 Project Name {getSortIcon('project_name')}
