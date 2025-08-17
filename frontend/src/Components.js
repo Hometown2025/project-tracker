@@ -1027,25 +1027,31 @@ const ProjectView = ({ projects, refreshData, setSelectedProject, setCurrentView
             </div>
 
             {/* Budget Summary */}
-            {(project.total_estimated_with_project > 0 || project.calculated_actual_total > 0) && (
+            {(project.project_total_budget > 0 || project.rooms_actual_spent > 0) && (
               <div className="project-budget-summary">
                 <div className="budget-row">
-                  <span className="budget-label">Total Estimated:</span>
-                  <span className="budget-value estimated">
-                    ${project.total_estimated_with_project?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
+                  <span className="budget-label">Total Budget:</span>
+                  <span className="budget-value total">
+                    ${project.project_total_budget?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
                   </span>
                 </div>
                 <div className="budget-row">
-                  <span className="budget-label">Total Actual:</span>
-                  <span className="budget-value actual">
-                    ${project.calculated_actual_total?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
+                  <span className="budget-label">Allocated:</span>
+                  <span className="budget-value allocated">
+                    ${project.rooms_allocated_estimated?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
                   </span>
                 </div>
-                {project.budget_variance !== 0 && (
+                <div className="budget-row">
+                  <span className="budget-label">Spent:</span>
+                  <span className="budget-value spent">
+                    ${project.rooms_actual_spent?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
+                  </span>
+                </div>
+                {project.remaining_budget !== 0 && (
                   <div className="budget-row">
-                    <span className="budget-label">Variance:</span>
-                    <span className={`budget-value variance ${project.budget_variance > 0 ? 'over' : 'under'}`}>
-                      {project.budget_variance > 0 ? '+' : ''}${project.budget_variance?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
+                    <span className="budget-label">Remaining:</span>
+                    <span className={`budget-value remaining ${project.remaining_budget >= 0 ? 'positive' : 'negative'}`}>
+                      ${project.remaining_budget?.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
                     </span>
                   </div>
                 )}
