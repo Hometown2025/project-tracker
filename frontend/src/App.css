@@ -1795,20 +1795,25 @@ body {
   font-weight: 600;
 }
 
-.budget-value.estimated {
+.budget-value.total {
   color: #3b82f6;
+  font-weight: 700;
 }
 
-.budget-value.actual {
-  color: #059669;
+.budget-value.allocated {
+  color: #8b5cf6;
 }
 
-.budget-value.variance.over {
+.budget-value.spent {
   color: #dc2626;
 }
 
-.budget-value.variance.under {
+.budget-value.remaining.positive {
   color: #059669;
+}
+
+.budget-value.remaining.negative {
+  color: #dc2626;
 }
 
 /* Room Budget Summary */
