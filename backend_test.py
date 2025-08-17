@@ -4992,6 +4992,9 @@ class TaskManagerTester:
             # Test auto-populate subtasks functionality (NEW TEST)
             self.test_auto_populate_subtasks_functionality()
             
+            # Test truss tracking system functionality (NEW TEST)
+            self.test_truss_tracking_system()
+            
             # Test authentication
             self.test_user_initialization()
             self.test_authentication_endpoints()
