@@ -306,39 +306,41 @@ const BudgetView = ({ projects, selectedProject, onProjectSelect }) => {
         <div className="budget-content">
           {/* Project Summary */}
           <div className="project-budget-summary">
-            <h3>Project Budget Summary</h3>
+            <h3>Project Budget Overview</h3>
             <div className="summary-cards">
-              <div className="summary-card project-estimated">
+              <div className="summary-card project-total">
                 <div className="card-icon">🏠</div>
                 <div className="card-content">
-                  <h4>Project Budget</h4>
-                  <div className="amount">${(budgetData.project_own_estimated_budget || 0).toLocaleString()}</div>
+                  <h4>Total Project Budget</h4>
+                  <div className="amount">${(budgetData.project_total_budget || 0).toLocaleString()}</div>
                 </div>
               </div>
               
-              <div className="summary-card total-estimated">
+              <div className="summary-card allocated">
                 <div className="card-icon">📊</div>
                 <div className="card-content">
-                  <h4>Total Estimated</h4>
-                  <div className="amount">${(budgetData.total_estimated_with_project || 0).toLocaleString()}</div>
+                  <h4>Allocated to Rooms</h4>
+                  <div className="amount">${(budgetData.rooms_allocated_estimated || 0).toLocaleString()}</div>
+                  <small>{(budgetData.allocation_percentage || 0).toFixed(1)}% of total</small>
                 </div>
               </div>
               
-              <div className="summary-card actual">
+              <div className="summary-card spent">
                 <div className="card-icon">💵</div>
                 <div className="card-content">
-                  <h4>Total Spent</h4>
-                  <div className="amount">${(budgetData.project_actual_total || 0).toLocaleString()}</div>
+                  <h4>Actually Spent</h4>
+                  <div className="amount">${(budgetData.rooms_actual_spent || 0).toLocaleString()}</div>
                 </div>
               </div>
               
-              <div className={`summary-card variance ${budgetData.budget_variance >= 0 ? 'over' : 'under'}`}>
-                <div className="card-icon">{budgetData.budget_variance >= 0 ? '📈' : '📉'}</div>
+              <div className={`summary-card remaining ${budgetData.remaining_budget >= 0 ? 'positive' : 'negative'}`}>
+                <div className="card-icon">{budgetData.remaining_budget >= 0 ? '💰' : '⚠️'}</div>
                 <div className="card-content">
-                  <h4>Variance</h4>
+                  <h4>Remaining Budget</h4>
                   <div className="amount">
-                    {budgetData.budget_variance >= 0 ? '+' : ''}${(budgetData.budget_variance || 0).toLocaleString()}
+                    ${(budgetData.remaining_budget || 0).toLocaleString()}
                   </div>
+                  <small>{budgetData.remaining_budget >= 0 ? 'Available' : 'Over-allocated'}</small>
                 </div>
               </div>
             </div>
