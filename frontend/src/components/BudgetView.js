@@ -51,7 +51,7 @@ const PieChart = ({ data, title }) => {
       ...item,
       pathData,
       percentage: percentage.toFixed(1),
-      color: ROOM_COLORS[index % ROOM_COLORS.length]
+      color: item.isRemaining ? '#e5e7eb' : ROOM_COLORS[index % ROOM_COLORS.length]
     };
   });
 
