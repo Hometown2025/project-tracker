@@ -1643,6 +1643,7 @@ const CreateIdeaModal = ({ projects, selectedProject, onClose, onSuccess }) => {
 
 // Edit Project Modal
 const EditProjectModal = ({ project, onClose, onSuccess }) => {
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: project.name || '',
     description: project.description || '',
