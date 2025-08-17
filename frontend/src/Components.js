@@ -2607,7 +2607,6 @@ const CreateTrussModal = ({ onClose, onSuccess }) => {
                 value={formData.project_status}
                 onChange={(e) => setFormData({...formData, project_status: e.target.value})}
               >
-                <option value="awaiting_measurements">Awaiting Measurements</option>
                 <option value="ready_for_shop">Ready for Shop</option>
                 <option value="in_the_shop">In the Shop</option>
                 <option value="optimizing">Optimizing</option>
