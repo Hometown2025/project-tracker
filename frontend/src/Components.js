@@ -2092,6 +2092,55 @@ const EditIdeaModal = ({ idea, projects, onClose, onSuccess }) => {
   );
 };
 
+// Store Logo Component
+const StoreLogo = ({ storeId, className = "store-logo" }) => {
+  const [logoUrl, setLogoUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (storeId) {
+      fetchStoreLogo();
+    }
+  }, [storeId]);
+
+  const fetchStoreLogo = async () => {
+    try {
+      const response = await axios.get(`${API}/stores/${storeId}/logo`);
+      setLogoUrl(response.data.logo_url);
+    } catch (error) {
+      console.error('Error fetching store logo:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className={`${className} loading`}>Loading...</div>;
+  }
+
+  if (!logoUrl) {
+    return (
+      <div className={`${className} default`}>
+        <span className="store-name">{storeId}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={className}>
+      <img 
+        src={logoUrl} 
+        alt={`${storeId} logo`}
+        onError={(e) => {
+          e.target.style.display = 'none';
+          e.target.nextSibling.style.display = 'inline';
+        }}
+      />
+      <span className="fallback-text" style={{display: 'none'}}>{storeId}</span>
+    </div>
+  );
+};
+
 // Export all components
 export default {
   Navigation,
