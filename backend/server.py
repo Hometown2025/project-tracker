@@ -1939,11 +1939,13 @@ class Project(BaseModel):
     actual_cost: Optional[float] = 0.0
     customer_id: Optional[str] = None  # Customer this project is for
     
-    # Calculated budget fields (computed from rooms and subtasks)
-    calculated_estimated_total: Optional[float] = 0.0  # Sum of all room/subtask estimated
-    calculated_actual_total: Optional[float] = 0.0     # Sum of all room/subtask actual
-    total_estimated_with_project: Optional[float] = 0.0 # Project estimated + calculated total
-    budget_variance: Optional[float] = 0.0              # Actual - Estimated
+    # Calculated budget fields (project as total, rooms as allocations)
+    project_total_budget: Optional[float] = 0.0        # Same as estimated_budget
+    rooms_allocated_estimated: Optional[float] = 0.0   # Sum of room allocated budgets
+    rooms_actual_spent: Optional[float] = 0.0          # Sum of room actual spending
+    remaining_budget: Optional[float] = 0.0            # Total - Allocated
+    total_variance: Optional[float] = 0.0              # Total - Actual Spent
+    allocation_percentage: Optional[float] = 0.0        # Allocated / Total * 100
 
 class ProjectCreate(BaseModel):
     name: str
