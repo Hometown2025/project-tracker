@@ -158,24 +158,21 @@ const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject,
             >
               All Projects ({projects.length})
             </button>
-            {projects.slice(0, 5).map(project => (
-              <button 
-                key={project.id}
-                className={`nav-item ${selectedProject?.id === project.id ? 'nav-item-active' : 'nav-item-inactive'}`}
-                onClick={() => setSelectedProject(project)}
-              >
-                <div 
-                  className="project-color-dot" 
-                  style={{ backgroundColor: project.color }}
-                ></div>
-                {project.name}
-              </button>
-            ))}
-            {projects.length > 5 && (
-              <div className="nav-item-disabled">
-                +{projects.length - 5} more projects
-              </div>
-            )}
+            <div className="project-list-scrollable">
+              {projects.map(project => (
+                <button 
+                  key={project.id}
+                  className={`nav-item ${selectedProject?.id === project.id ? 'nav-item-active' : 'nav-item-inactive'}`}
+                  onClick={() => setSelectedProject(project)}
+                >
+                  <div 
+                    className="project-color-dot" 
+                    style={{ backgroundColor: project.color }}
+                  ></div>
+                  {project.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
