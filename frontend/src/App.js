@@ -205,7 +205,9 @@ const AppContent = () => {
         
         {currentView === 'budget' && (
           <Components.BudgetView 
+            projects={projects}
             selectedProject={selectedProject}
+            onProjectSelect={setSelectedProject}
             refreshData={refreshData}
             user={user}
           />
