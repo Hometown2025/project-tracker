@@ -2696,7 +2696,7 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Project Number</label>
+              <label className="form-label">Project Number <span className="optional">(optional)</span></label>
               <input 
                 type="text"
                 className="form-input"
@@ -2708,7 +2708,7 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Designer</label>
+              <label className="form-label">Designer <span className="optional">(optional)</span></label>
               <input 
                 type="text"
                 className="form-input"
@@ -2717,7 +2717,7 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Salesman</label>
+              <label className="form-label">Salesman <span className="optional">(optional)</span></label>
               <input 
                 type="text"
                 className="form-input"
@@ -2746,7 +2746,7 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Estimated Production Days</label>
+              <label className="form-label">Estimated Production Days <span className="optional">(optional)</span></label>
               <input 
                 type="number"
                 className="form-input"
@@ -2759,7 +2759,7 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Date Ordered</label>
+              <label className="form-label">Date Ordered <span className="optional">(optional)</span></label>
               <input 
                 type="date"
                 className="form-input"
@@ -2768,7 +2768,7 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Estimated Delivery</label>
+              <label className="form-label">Estimated Delivery <span className="optional">(optional)</span></label>
               <input 
                 type="date"
                 className="form-input"
@@ -2779,7 +2779,7 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
           </div>
 
           <div className="form-section">
-            <h4 className="form-section-title">Lumber Requirements</h4>
+            <h4 className="form-section-title">Lumber Requirements <span className="optional">(all optional)</span></h4>
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">2x4 Board Feet</label>
@@ -2845,7 +2845,7 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Notes</label>
+            <label className="form-label">Notes <span className="optional">(optional)</span></label>
             <textarea 
               className="form-textarea"
               value={formData.notes}
