@@ -2248,7 +2248,6 @@ const TrussView = ({ refreshData, user }) => {
 
   const getStatusColor = (status) => {
     const colors = {
-      'awaiting_measurements': '#f59e0b',
       'ready_for_shop': '#3b82f6',
       'in_the_shop': '#8b5cf6',
       'optimizing': '#06b6d4',
