@@ -3582,6 +3582,7 @@ body {
   text-align: right;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
   min-width: 60px;
+  font-size: 0.675rem;
 }
 
 .notes-cell {
