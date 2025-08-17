@@ -2653,14 +2653,22 @@ const CreateTrussModal = ({ onClose, onSuccess }) => {
 
 // Edit Truss Modal
 const EditTrussModal = ({ truss, onClose, onSuccess }) => {
+  // Helper function to format date for HTML input
+  const formatDateForInput = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0]; // Returns YYYY-MM-DD format
+  };
+
   const [formData, setFormData] = useState({
     project_name: truss.project_name || '',
     project_number: truss.project_number || '',
     designer: truss.designer || '',
     salesman: truss.salesman || '',
     project_status: truss.project_status || 'ready_for_shop',
-    date_ordered: truss.date_ordered || '',
-    estimated_delivery: truss.estimated_delivery || '',
+    date_ordered: formatDateForInput(truss.date_ordered),
+    estimated_delivery: formatDateForInput(truss.estimated_delivery),
     lumber_2x4_bd_ft: truss.lumber_2x4_bd_ft || '',
     lumber_2x6_bd_ft: truss.lumber_2x6_bd_ft || '',
     lumber_2x8_12ft: truss.lumber_2x8_12ft || '',
@@ -2679,6 +2687,9 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
         if (formData[key] !== '') {
           if (key.includes('lumber_') || key === 'estimated_production_days') {
             submitData[key] = parseFloat(formData[key]) || null;
+          } else if (key === 'date_ordered' || key === 'estimated_delivery') {
+            // Ensure dates are in proper format
+            submitData[key] = formData[key];
           } else {
             submitData[key] = formData[key];
           }
@@ -2691,7 +2702,8 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
       onSuccess();
     } catch (error) {
       console.error('Error updating truss:', error);
-      alert('Failed to update truss project');
+      console.error('Error response:', error.response?.data);
+      alert(`Failed to update truss project: ${error.response?.data?.detail || error.message}`);
     }
   };
 
