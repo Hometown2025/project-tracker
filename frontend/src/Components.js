@@ -2655,7 +2655,7 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
     project_number: truss.project_number || '',
     designer: truss.designer || '',
     salesman: truss.salesman || '',
-    project_status: truss.project_status || 'awaiting_measurements',
+    project_status: truss.project_status || 'ready_for_shop',
     date_ordered: truss.date_ordered || '',
     estimated_delivery: truss.estimated_delivery || '',
     lumber_2x4_bd_ft: truss.lumber_2x4_bd_ft || '',
