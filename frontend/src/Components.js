@@ -2357,31 +2357,31 @@ const TrussView = ({ refreshData, user }) => {
               <th onClick={() => handleSort('project_status')} className="sortable">
                 Status {getSortIcon('project_status')}
               </th>
-              <th onClick={() => handleSort('date_ordered')} className="sortable">
+              <th onClick={() => handleSort('date_ordered')} className="sortable compact-header">
                 Date Ordered {getSortIcon('date_ordered')}
               </th>
-              <th onClick={() => handleSort('estimated_delivery')} className="sortable">
+              <th onClick={() => handleSort('estimated_delivery')} className="sortable compact-header">
                 Est. Delivery {getSortIcon('estimated_delivery')}
               </th>
-              <th onClick={() => handleSort('lumber_2x4_bd_ft')} className="sortable">
+              <th onClick={() => handleSort('lumber_2x4_bd_ft')} className="sortable compact-header">
                 2x4 BD FT {getSortIcon('lumber_2x4_bd_ft')}
               </th>
-              <th onClick={() => handleSort('lumber_2x6_bd_ft')} className="sortable">
+              <th onClick={() => handleSort('lumber_2x6_bd_ft')} className="sortable compact-header">
                 2x6 BD FT {getSortIcon('lumber_2x6_bd_ft')}
               </th>
-              <th onClick={() => handleSort('lumber_2x8_12ft')} className="sortable">
+              <th onClick={() => handleSort('lumber_2x8_12ft')} className="sortable compact-header">
                 2x8 12' {getSortIcon('lumber_2x8_12ft')}
               </th>
-              <th onClick={() => handleSort('lumber_2x8_16ft')} className="sortable">
+              <th onClick={() => handleSort('lumber_2x8_16ft')} className="sortable compact-header">
                 2x8 16' {getSortIcon('lumber_2x8_16ft')}
               </th>
-              <th onClick={() => handleSort('lumber_2x8_18ft')} className="sortable">
+              <th onClick={() => handleSort('lumber_2x8_18ft')} className="sortable compact-header">
                 2x8 18' {getSortIcon('lumber_2x8_18ft')}
               </th>
-              <th onClick={() => handleSort('lumber_2x8_20ft')} className="sortable">
+              <th onClick={() => handleSort('lumber_2x8_20ft')} className="sortable compact-header">
                 2x8 20' {getSortIcon('lumber_2x8_20ft')}
               </th>
-              <th onClick={() => handleSort('estimated_production_days')} className="sortable">
+              <th onClick={() => handleSort('estimated_production_days')} className="sortable compact-header">
                 Est. Days {getSortIcon('estimated_production_days')}
               </th>
               <th>Notes</th>
