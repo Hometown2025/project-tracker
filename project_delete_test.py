@@ -54,19 +54,19 @@ class ProjectDeleteTester:
                 self.passed_tests += 1
                 self.log(f"✅ PASSED: {test_name}", "SUCCESS")
                 try:
-                    return {"status": "passed", "data": response.json()}
+                    return response.json()
                 except:
-                    return {"status": "passed", "data": response.text}
+                    return response.text
             else:
                 self.failed_tests += 1
                 self.log(f"❌ FAILED: {test_name} - Expected {expected_status}, got {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
-                return {"status": "failed", "actual_status": response.status_code}
+                return None
                 
         except Exception as e:
             self.failed_tests += 1
             self.log(f"❌ FAILED: {test_name} - Exception: {str(e)}", "ERROR")
-            return {"status": "error", "error": str(e)}
+            return None
 
     def authenticate_users(self):
         """Authenticate all required users for testing"""
