@@ -2397,7 +2397,7 @@ const TrussView = ({ refreshData, user }) => {
                 <td>{truss.project_number || '-'}</td>
                 <td>{truss.designer || '-'}</td>
                 <td>{truss.salesman || '-'}</td>
-                <td className="status-cell">
+                <td>
                   <span 
                     className="status-badge" 
                     style={{ backgroundColor: getStatusColor(truss.project_status) }}
