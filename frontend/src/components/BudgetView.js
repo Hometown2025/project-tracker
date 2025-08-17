@@ -12,9 +12,9 @@ const ROOM_COLORS = [
 
 // PieChart Component
 const PieChart = ({ data, title }) => {
-  if (!data || data.length === 0) return null;
+  if (!data || !Array.isArray(data) || data.length === 0) return null;
 
-  const total = data.reduce((sum, item) => sum + item.value, 0);
+  const total = data.reduce((sum, item) => sum + (item?.value || 0), 0);
   if (total === 0) return null;
 
   let currentAngle = 0;
