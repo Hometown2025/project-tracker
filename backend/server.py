@@ -2103,7 +2103,7 @@ class TrussCreate(BaseModel):
     project_number: Optional[str] = None
     designer: Optional[str] = None
     salesman: Optional[str] = None
-    project_status: TrussStatus = TrussStatus.AWAITING_MEASUREMENTS
+    project_status: TrussStatus = TrussStatus.READY_FOR_SHOP
     date_ordered: Optional[date] = None
     estimated_delivery: Optional[date] = None
     lumber_2x4_bd_ft: Optional[float] = None
