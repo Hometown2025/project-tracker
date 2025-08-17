@@ -2405,8 +2405,8 @@ const TrussView = ({ refreshData, user }) => {
                     {formatStatus(truss.project_status)}
                   </span>
                 </td>
-                <td>{truss.date_ordered ? new Date(truss.date_ordered).toLocaleDateString() : '-'}</td>
-                <td>{truss.estimated_delivery ? new Date(truss.estimated_delivery).toLocaleDateString() : '-'}</td>
+                <td className="date-cell">{truss.date_ordered ? new Date(truss.date_ordered).toLocaleDateString() : '-'}</td>
+                <td className="date-cell">{truss.estimated_delivery ? new Date(truss.estimated_delivery).toLocaleDateString() : '-'}</td>
                 <td className="number-cell">{truss.lumber_2x4_bd_ft || '-'}</td>
                 <td className="number-cell">{truss.lumber_2x6_bd_ft || '-'}</td>
                 <td className="number-cell">{truss.lumber_2x8_12ft || '-'}</td>
