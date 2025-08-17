@@ -225,13 +225,19 @@ class ProjectDeleteTester:
             self.test_request("GET", f"/projects/{project_id}", expected_status=404,
                             auth_token=self.admin_token, test_name="Verify Project Deleted")
             
-            # Verify associated tasks are deleted
-            remaining_tasks = self.test_request("GET", f"/tasks?project_id={project_id}", 
-                                              auth_token=self.admin_token, test_name="Verify Tasks Deleted")
-            if remaining_tasks is not None and len(remaining_tasks) == 0:
+            # Verify associated tasks are deleted by checking individual task IDs
+            tasks_deleted_successfully = True
+            for task in created_tasks:
+                task_check = self.test_request("GET", f"/tasks/{task['id']}", expected_status=404,
+                                             auth_token=self.admin_token, test_name=f"Verify Task {task['id']} Deleted")
+                if task_check is not None:
+                    tasks_deleted_successfully = False
+                    break
+            
+            if tasks_deleted_successfully:
                 self.log("✅ All associated tasks deleted successfully")
             else:
-                self.log(f"❌ Tasks not properly deleted: {len(remaining_tasks) if remaining_tasks else 'unknown'} remaining", "ERROR")
+                self.log("❌ Some tasks were not properly deleted", "ERROR")
                 self.failed_tests += 1
             
             # Verify associated ideas are deleted
