@@ -169,11 +169,13 @@ const BudgetView = ({ projects, selectedProject, onProjectSelect }) => {
     setError('');
     
     try {
+      console.log('Fetching budget data for project:', selectedProject.id);
       const response = await axios.get(`${API}/projects/${selectedProject.id}/budget-summary`);
+      console.log('Budget data response:', response.data);
       setBudgetData(response.data);
     } catch (error) {
       console.error('Error fetching budget data:', error);
-      setError('Failed to load budget information');
+      setError(`Failed to load budget information: ${error.response?.data?.detail || error.message}`);
     } finally {
       setLoading(false);
     }
