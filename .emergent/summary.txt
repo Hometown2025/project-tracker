@@ -1,98 +1,72 @@
 <analysis>
-The previous AI engineer successfully evolved a Notion-style task manager into a multi-tenant lumberyard house building tracker. Initial efforts focused on core CRUD, role-based authentication, and real-time updates via polling (after WebSocket failure). Key feature additions included file attachments, a two-level subtask system, and terminology refactoring. Significant recent work involved implementing edit/delete functionality for Ideas, which led to comprehensive multi-store support by adding  to models, API endpoints, and frontend forms. A hierarchical super admin role was introduced, granting global control and delegated admin creation. Debugging efforts primarily resolved frontend-backend URL mismatches and database inconsistencies related to role changes. The system now robustly handles multi-tenancy and granular permissions, including a customer role for regular users with a new budget view.
+The previous AI engineer successfully transformed a basic task manager into a multi-tenant Lumberyard House Building Tracker. Initial development established core CRUD, RBAC, and multi-tenancy via . Subsequent work focused on robust feature expansion. Key implementations include a comprehensive budget system for projects and rooms (with detailed rollup calculations), a multi-faceted user management system allowing viewing/reactivation of deactivated users and super admin password resets, and auto-population of subtasks based on room labels. Architectural decisions involved strict use of environment variables for URLs, FastAPI for the backend, React for the frontend, and MongoDB as the database. The engineer adeptly handled technical challenges like frontend-backend API prefix mismatches and refined budget logic to align with allocation-based accounting. The application now supports complex permissions, detailed financial tracking, and improved user experience.
 </analysis>
 
 <product_requirements>
-The application, initially a Notion-style task manager, has evolved into a Lumberyard House Building Tracker with multi-tenancy. Key requirements include:
-*   **Core Management**: CRUD operations for House Building Projects and House Rooms (tasks), with rooms specific to projects.
-*   **Custom Dates**: Rooms and subtasks track  and .
-*   **User Management & Roles**: Secure login with  (global control, can create store admins),  (store-specific management, can create other store admins and customers), and  (read-only access to assigned projects, formerly Regular User).
-*   **Real-time Updates**: Polling-based notifications and messaging system.
-*   **File Attachments**: Upload, view, and manage files for projects and rooms/subtasks.
-*   **Subtasks**: 2-level nesting, auto-completion of parent, optional dates, and color-coding.
-*   **Ideas Board**: Creation, editing, and deletion (admin/super admin only).
-*   **Multi-Tenancy**: Support for multiple lumber yard locations ( based data isolation).
-*   **Customer-Focused Dashboard**: Regular users (now customers) should only see dashboard stats for assigned projects.
-*   **Budget Tab**: Customers can view overall budget, spending, and cost estimates for their assigned projects, with read-only access.
-*   **Customer Communication**: Customers can communicate with admins within the system.
-*   **Hierarchical User Deletion**: Super admin can delete any user/admin across stores; store admins can deactivate/delete users only within their store.
+The Lumberyard House Building Tracker facilitates managing house construction projects across multiple lumber yard locations. It includes CRUD for House Building Projects and House Rooms (tasks), with custom  and  for rooms and subtasks. A robust role-based access control system (, , ) ensures data isolation and hierarchical permissions.  has global control,  manages their store, and  has read-only project access. Real-time updates occur via polling, and users can attach files. A 2-level subtask system supports optional dates and color-coding. An Ideas Board is available for admin creation/editing. A Budget Tab allows customers to view overall project budgets, spending, and cost estimates, with the recent enhancement where project budget acts as a total from which room budgets are allocated. The system now supports viewing/reactivating deactivated users and super admin password resets, and auto-populates subtasks based on room types. Store-specific logos can be uploaded by super admins and displayed.
 </product_requirements>
 
 <key_technical_concepts>
 -   **Full-stack Architecture**: React (frontend), FastAPI (backend), MongoDB (database).
--   **Role-Based Access Control (RBAC)**: , ,  roles for granular permissions.
+-   **Role-Based Access Control (RBAC)**: SUPER_ADMIN, ADMIN, CUSTOMER roles.
 -   **Multi-Tenancy**:  for data isolation.
--   **RESTful APIs**: Backend endpoints for data and user management.
+-   **RESTful APIs**: Backend endpoints.
 -   **Frontend State Management**: React Context ().
 -   **Polling**: For real-time updates.
 -   **Environment Variables**: , .
--   **Pydantic**: Data validation and serialization in FastAPI.
+-   **Pydantic**: Data validation in FastAPI.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a standard full-stack structure:
+The application utilizes a standard full-stack setup:
 
 
 
 -   :
-    -   **Importance**: Core FastAPI application for API routes, MongoDB interaction, and business logic.
+    -   **Importance**: Core FastAPI application handling API routes, MongoDB interaction, and business logic.
     -   **Changes**:
-        -   User, Project, Task, Idea models updated with .
-        -   New  and  enums added.
-        -   Authentication/Authorization logic updated to enforce  filtering and hierarchical role permissions (e.g.,  can create  for any store;  can create / for their own store).
-        -   CRUD endpoints for Projects, Tasks, Ideas, and Users updated to filter/set  and respect new role hierarchy.
-        -   Dashboard statistics and Calendar endpoints updated to filter data based on user role and .
-        -   , ,  models and associated API endpoints (, ) added.
-        -   User deactivation endpoint () enhanced to support permanent deletion by .
-        -   Fixed Pydantic validation errors by implementing automatic role migration for old 'user' role records to 'customer'.
-
+        -   Task, TaskCreate, TaskUpdate models updated with  and .
+        -   ProjectCreate model updated with .
+        -   New , , and user creation username conflict handling.
+        -   New  and  endpoints.
+        -    endpoint added for standard subtask templates.
+        -   Budget rollup calculations added for projects and tasks, updating  and  endpoints with new calculated fields.
+        -    and  models updated to include calculated budget fields.
+        -   New  model and endpoints (, ) for logo management, with  returned on login.
+        -   Refactored budget calculation logic to treat project budget as total, with rooms as allocations.
 -   :
     -   **Importance**: Main React component managing routing and global layout.
-    -   **Changes**: Integrated  component.
-
+    -   **Changes**:  component props updated to pass  and .
 -   :
     -   **Importance**: Manages user authentication, session, and roles.
-    -   **Changes**:  logic updated to include  role.  function added. Login function updated to pass .
-
+    -   **Changes**: Login function updated to pass  and now returns .
 -   :
     -   **Importance**: Centralizes reusable UI components and main views.
     -   **Changes**:
-        -    component implemented.
-        -   Navigation updated to include Budget tab.
-        -   User role terminology  to  etc.
-        -    and  updated to conditionally render edit/delete buttons based on user role ( check). Add House Room button hidden for customers.
-
+        -    and  updated to include  field and handle its submission.
+        -    and  updated to include  and  fields and handle their submission.
+        -    component: Added  function and a Generate Standard Subtasks button.
+        -    and  updated to display new calculated budget totals (, ,  for projects; ,  for tasks).
+        -    component updated to include .
+        -    component added to display store logos.
 -   :
     -   **Importance**: User login interface.
-    -   **Changes**: Added  input field to the login form.
-
+    -   **Changes**: Updated to display  in the login header.
 -   :
     -   **Importance**: Admin user management interface.
     -   **Changes**:
-        -    updated to include  field and restrict role options based on the current logged-in user's permissions.
-        -   User list () updated to conditionally show deactivate/delete options for users based on  and  roles.
-        -   Logic for displaying system stats (e.g., total admins) updated to correctly count  and  roles.
-        -   Fixed  references to .
-
+        -   Implemented a tab system for Active Users and Deactivated Users.
+        -   Added  and  functions.
+        -   User list actions updated to include reactivate button.
+        -   Username conflict handling improved.
+        -    component, along with generate/reset password functions, added for Super Admins. Reset password button added to user actions.
+        -    component added for Super Admins to upload/manage store logos, with a Manage Store Logos button.
 -   :
     -   **Importance**: Displays budget information for projects.
-    -   **Changes**: New file, created to show cost estimates, actual spending, and budget items.
-
+    -   **Changes**: Rewritten to include  based Pie and Bar charts for overall project budget and room-level breakdowns, using the project's estimated budget as the total and room budgets as allocations. Fixed API constant usage and added error handling.
 -   :
-    -   **Importance**: Script to create sample users and projects for multi-store testing.
-    -   **Changes**: Updated to use new roles (, ).
-
--   :
-    -   **Importance**: Script to create a  user.
-    -   **Changes**: New file, defines the  store  user.
-
--   :
-    -   **Importance**: Script to create sample budget data.
-    -   **Changes**: New file, helps populate budget items for projects.
-
--   :
-    -   **Importance**: User documentation for multi-store setup and login.
-    -   **Changes**: Updated with  credentials, details on hierarchical user management, and budget feature.
+    -   **Importance**: Global CSS styles for the application.
+    -   **Changes**: Added styles for AdminPanel tabs, budget summaries, chart components, and logo elements.
 </code_architecture>
 
 <pending_tasks>
@@ -103,23 +77,15 @@ The application uses a standard full-stack structure:
 </pending_tasks>
 
 <current_work>
-The application has been transformed into a customer-focused lumber yard platform with robust multi-tenancy and a hierarchical user management system.
+The application has been continuously enhanced, transforming into a robust Lumberyard House Building Tracker. Most recently, the focus has been on comprehensive financial and user management features.
 
-**Key features implemented in the last few turns:**
-*   **Multi-Store System**: All data (projects, rooms, ideas, users) is isolated by . The login form now requires a .
-*   **Hierarchical User Roles**:
-    *   **SUPER_ADMIN** ( store ID, /): Can view and manage all data across all stores, and can create  users for any store. Can delete any user.
-    *   **ADMIN** (e.g., //): Manages users and data within their assigned store. Can now create other  users and  users within their own store. Can delete ideas, tasks, projects from their store.
-    *   **CUSTOMER** (e.g., //): Replaces the Regular User role. Has read-only access to assigned projects and can communicate with admins. Cannot create/edit/delete content.
-*   **Ideas Board**: Edit and delete functionality for ideas is fully implemented and accessible to  and  roles.
-*   **Dashboard Filtering**:  users' dashboards now correctly display statistics only for projects they are assigned to.
-*   **Budget Tab**: A new Budget tab is added for  users to view overall project budgets, spending, and cost estimates. The backend API for budget data is implemented.
-*   **Enhanced User Deletion**:  can permanently delete any user (including other admins).  users can deactivate users or delete non-admin users within their own store, but cannot delete other s.
-*   **Robustness**: Addressed backend Pydantic validation issues and frontend URL hardcoding.
+**Budgeting System Refinement**: The budget calculation logic was fundamentally changed. Previously, room budgets were added to the project budget. Now, the **house project budget is the total available funds**, and **room budgets are allocations that subtract from this total**. This change accurately reflects a top-down budgeting approach. The backend was updated with new calculation functions (, , ) and corresponding fields in the  model and API endpoints. The frontend  was completely rewritten to display this new logic using interactive **Pie and Bar charts**, showing allocated vs. spent, remaining budget, and a breakdown by rooms with percentages, all using the existing color scheme.  and  were also updated to display the new budget metrics.
 
-The current immediate work involves adding a scroll bar to the project list to ensure all project labels are visible, following the user's latest explicit request.
+**Store Logo Management**: A system for managing **store-specific logos** was implemented. Super Admins can now **upload and manage logos** for different stores via a new  in the . These logos are stored and dynamically displayed in the application's header/navigation ( component in ) and on the .
+
+Immediately prior to this summary, the user identified that the **project list on the left sidebar only shows a limited number of projects with a X projects, +Y more projects indicator** and requested a scroll bar or dropdown for easier access to all projects. This is the next task to address.
 </current_work>
 
 <optional_next_step>
-Add a scroll bar to the project list in the frontend to display all project labels.
+Implement a scroll bar or dropdown for the project list on the left side to show all projects directly.
 </optional_next_step>

@@ -7,7 +7,7 @@ import requests
 import json
 import time
 
-BACKEND_URL = "https://lumbertracker.preview.emergentagent.com/api"
+BACKEND_URL = "https://house-budget-app.preview.emergentagent.com/api"
 
 def test_messaging_system():
     print("🔄 Testing Messaging System...")

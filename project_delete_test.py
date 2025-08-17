@@ -11,7 +11,7 @@ import sys
 import os
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://cbeb4b42-6dc1-47fd-acaa-07a377732d5e.preview.emergentagent.com/api"
+BACKEND_URL = "https://house-budget-app.preview.emergentagent.com/api"
 
 class ProjectDeleteTester:
     def __init__(self):
