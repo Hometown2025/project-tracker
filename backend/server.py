@@ -1400,6 +1400,87 @@ async def check_username_availability(
         "reason": "Username is available"
     }
 
+@api_router.post("/admin/stores/{store_id}/logo")
+async def upload_store_logo(
+    store_id: str,
+    logo_url: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Upload/update logo for a store - Super Admin only"""
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    
+    logo_url_str = logo_url.get("logo_url")
+    if not logo_url_str:
+        raise HTTPException(status_code=400, detail="Logo URL is required")
+    
+    # Update or create store logo record
+    result = await db.store_logos.update_one(
+        {"store_id": store_id},
+        {
+            "$set": {
+                "store_id": store_id,
+                "logo_url": logo_url_str,
+                "updated_by": current_user.id,
+                "updated_date": datetime.utcnow()
+            }
+        },
+        upsert=True
+    )
+    
+    return {
+        "message": f"Logo uploaded successfully for store {store_id}",
+        "store_id": store_id,
+        "logo_url": logo_url_str
+    }
+
+@api_router.get("/stores/{store_id}/logo")
+async def get_store_logo(store_id: str):
+    """Get logo URL for a specific store - Public endpoint"""
+    logo_record = await db.store_logos.find_one({"store_id": store_id})
+    
+    if not logo_record:
+        return {"store_id": store_id, "logo_url": None}
+    
+    return {
+        "store_id": store_id,
+        "logo_url": logo_record["logo_url"],
+        "updated_date": logo_record.get("updated_date")
+    }
+
+@api_router.get("/admin/stores/logos")
+async def get_all_store_logos(current_user: User = Depends(get_current_user)):
+    """Get all store logos - Super Admin only"""
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    
+    logos = await db.store_logos.find({}).to_list(1000)
+    
+    # Clean up MongoDB ObjectIds
+    result_logos = []
+    for logo in logos:
+        if "_id" in logo:
+            del logo["_id"]
+        result_logos.append(logo)
+    
+    return result_logos
+
+@api_router.delete("/admin/stores/{store_id}/logo")
+async def delete_store_logo(
+    store_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Delete logo for a store - Super Admin only"""
+    if current_user.role != UserRole.SUPER_ADMIN:
+        raise HTTPException(status_code=403, detail="Super admin access required")
+    
+    result = await db.store_logos.delete_one({"store_id": store_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Store logo not found")
+    
+    return {"message": f"Logo deleted successfully for store {store_id}"}
+
 # Room Type Subtask Templates
 ROOM_SUBTASK_TEMPLATES = {
     "kitchen": [
