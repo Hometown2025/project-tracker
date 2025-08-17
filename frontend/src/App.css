@@ -3522,6 +3522,35 @@ body {
   text-align: center;
 }
 
+/* Totals Row Styling */
+.totals-row {
+  background: #e0e7ff;
+  border-bottom: 2px solid #8b5cf6;
+}
+
+.totals-cell {
+  padding: 0.5rem 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #4338ca;
+  text-align: center;
+  border-right: 1px solid #c7d2fe;
+}
+
+.totals-cell:first-child {
+  text-align: left;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: #3730a3;
+}
+
+.lumber-total {
+  background: #ddd6fe;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 800;
+}
+
 .truss-table th:last-child {
   border-right: none;
 }
