@@ -94,7 +94,7 @@ const PieChart = ({ data, title }) => {
 const BarChart = ({ data, title }) => {
   if (!data || !Array.isArray(data) || data.length === 0) return null;
 
-  const maxValue = Math.max(...data.map(item => Math.max(item?.estimated || 0, item?.actual || 0)));
+  const maxValue = Math.max(...data.map(item => Math.max(item?.allocated || 0, item?.spent || 0)));
   if (maxValue === 0) return null;
 
   return (
@@ -106,29 +106,29 @@ const BarChart = ({ data, title }) => {
             <div className="bar-label">{item.label}</div>
             <div className="bars">
               <div className="bar-pair">
-                <div className="bar estimated-bar">
+                <div className="bar allocated-bar">
                   <div 
                     className="bar-fill"
                     style={{ 
-                      height: `${((item.estimated || 0) / maxValue) * 100}%`,
+                      height: `${((item.allocated || 0) / maxValue) * 100}%`,
                       backgroundColor: ROOM_COLORS[index % ROOM_COLORS.length],
                       opacity: 0.7
                     }}
                   ></div>
                   <div className="bar-value">
-                    ${(item.estimated || 0).toLocaleString()}
+                    ${(item.allocated || 0).toLocaleString()}
                   </div>
                 </div>
-                <div className="bar actual-bar">
+                <div className="bar spent-bar">
                   <div 
                     className="bar-fill"
                     style={{ 
-                      height: `${((item.actual || 0) / maxValue) * 100}%`,
+                      height: `${((item.spent || 0) / maxValue) * 100}%`,
                       backgroundColor: ROOM_COLORS[index % ROOM_COLORS.length]
                     }}
                   ></div>
                   <div className="bar-value">
-                    ${(item.actual || 0).toLocaleString()}
+                    ${(item.spent || 0).toLocaleString()}
                   </div>
                 </div>
               </div>
@@ -137,12 +137,12 @@ const BarChart = ({ data, title }) => {
         ))}
         <div className="bar-legend">
           <div className="legend-item">
-            <div className="legend-color estimated"></div>
-            <span>Estimated</span>
+            <div className="legend-color allocated"></div>
+            <span>Allocated</span>
           </div>
           <div className="legend-item">
-            <div className="legend-color actual"></div>
-            <span>Actual</span>
+            <div className="legend-color spent"></div>
+            <span>Spent</span>
           </div>
         </div>
       </div>
