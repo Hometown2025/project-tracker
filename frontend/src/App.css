@@ -2272,6 +2272,165 @@ body {
   }
 }
 
+/* Logo Management Modal Styles */
+.large-modal {
+  max-width: 800px;
+  max-height: 90vh;
+}
+
+.logo-upload-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.logo-upload-section h4 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+}
+
+.logo-upload-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.existing-logos-section h4 {
+  margin: 0 0 1rem 0;
+  color: #374151;
+}
+
+.logos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.logo-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.logo-preview {
+  height: 120px;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.logo-preview img {
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.logo-error {
+  color: #6b7280;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.logo-info {
+  padding: 1rem;
+}
+
+.logo-info h5 {
+  margin: 0 0 0.5rem 0;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.logo-info small {
+  color: #6b7280;
+  font-size: 0.75rem;
+}
+
+.logo-url {
+  margin-top: 0.5rem;
+}
+
+.logo-url a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.logo-url a:hover {
+  text-decoration: underline;
+}
+
+.logo-actions {
+  padding: 0 1rem 1rem;
+  text-align: right;
+}
+
+.empty-state, .loading-state {
+  text-align: center;
+  color: #6b7280;
+  padding: 2rem;
+  font-style: italic;
+}
+
+.success-message {
+  background: #dcfce7;
+  border: 1px solid #22c55e;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #16a34a;
+  margin-bottom: 1rem;
+}
+
+.error-message {
+  background: #fef2f2;
+  border: 1px solid #ef4444;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #dc2626;
+  margin-bottom: 1rem;
+}
+
+/* Responsive adjustments for logo management */
+@media (max-width: 768px) {
+  .large-modal {
+    max-width: 95vw;
+    margin: 1rem;
+  }
+  
+  .logos-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .admin-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
 .admin-section {
   margin-bottom: 2rem;
 }
