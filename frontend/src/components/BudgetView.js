@@ -354,13 +354,13 @@ const BudgetView = ({ projects, selectedProject, onProjectSelect }) => {
                 {pieData.length > 0 && (
                   <PieChart 
                     data={pieData} 
-                    title="Budget Distribution by Room" 
+                    title="Budget Allocation by Room" 
                   />
                 )}
                 {barData.length > 0 && (
                   <BarChart 
                     data={barData} 
-                    title="Estimated vs Actual by Room" 
+                    title="Allocated vs Spent by Room" 
                   />
                 )}
               </div>
