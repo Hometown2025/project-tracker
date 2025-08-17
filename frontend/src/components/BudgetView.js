@@ -4,20 +4,161 @@ import axios from 'axios';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const BudgetView = ({ selectedProject }) => {
+// Color palette for rooms (matching the existing project colors)
+const ROOM_COLORS = [
+  '#8B5CF6', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', 
+  '#8B5A2B', '#EC4899', '#6366F1', '#84CC16', '#F97316'
+];
+
+// PieChart Component
+const PieChart = ({ data, title }) => {
+  if (!data || data.length === 0) return null;
+
+  const total = data.reduce((sum, item) => sum + item.value, 0);
+  if (total === 0) return null;
+
+  let currentAngle = 0;
+  const radius = 80;
+  const centerX = 100;
+  const centerY = 100;
+
+  const slices = data.map((item, index) => {
+    const percentage = (item.value / total) * 100;
+    const angle = (item.value / total) * 360;
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + angle;
+    
+    const startAngleRad = (startAngle * Math.PI) / 180;
+    const endAngleRad = (endAngle * Math.PI) / 180;
+    
+    const x1 = centerX + radius * Math.cos(startAngleRad);
+    const y1 = centerY + radius * Math.sin(startAngleRad);
+    const x2 = centerX + radius * Math.cos(endAngleRad);
+    const y2 = centerY + radius * Math.sin(endAngleRad);
+    
+    const largeArcFlag = angle > 180 ? 1 : 0;
+    
+    const pathData = [
+      `M ${centerX} ${centerY}`,
+      `L ${x1} ${y1}`,
+      `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
+      'Z'
+    ].join(' ');
+    
+    currentAngle += angle;
+    
+    return {
+      ...item,
+      pathData,
+      percentage: percentage.toFixed(1),
+      color: ROOM_COLORS[index % ROOM_COLORS.length]
+    };
+  });
+
+  return (
+    <div className="pie-chart-container">
+      <h4 className="chart-title">{title}</h4>
+      <div className="pie-chart-wrapper">
+        <svg width="200" height="200" viewBox="0 0 200 200">
+          {slices.map((slice, index) => (
+            <g key={index}>
+              <path
+                d={slice.pathData}
+                fill={slice.color}
+                stroke="#fff"
+                strokeWidth="2"
+              />
+              <title>{`${slice.label}: $${slice.value.toLocaleString()} (${slice.percentage}%)`}</title>
+            </g>
+          ))}
+        </svg>
+        <div className="pie-legend">
+          {slices.map((slice, index) => (
+            <div key={index} className="legend-item">
+              <div 
+                className="legend-color" 
+                style={{ backgroundColor: slice.color }}
+              ></div>
+              <span className="legend-text">
+                {slice.label} ({slice.percentage}%)
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// BarChart Component
+const BarChart = ({ data, title }) => {
+  if (!data || data.length === 0) return null;
+
+  const maxValue = Math.max(...data.map(item => Math.max(item.estimated || 0, item.actual || 0)));
+  if (maxValue === 0) return null;
+
+  return (
+    <div className="bar-chart-container">
+      <h4 className="chart-title">{title}</h4>
+      <div className="bar-chart-wrapper">
+        {data.map((item, index) => (
+          <div key={index} className="bar-group">
+            <div className="bar-label">{item.label}</div>
+            <div className="bars">
+              <div className="bar-pair">
+                <div className="bar estimated-bar">
+                  <div 
+                    className="bar-fill"
+                    style={{ 
+                      height: `${((item.estimated || 0) / maxValue) * 100}%`,
+                      backgroundColor: ROOM_COLORS[index % ROOM_COLORS.length],
+                      opacity: 0.7
+                    }}
+                  ></div>
+                  <div className="bar-value">
+                    ${(item.estimated || 0).toLocaleString()}
+                  </div>
+                </div>
+                <div className="bar actual-bar">
+                  <div 
+                    className="bar-fill"
+                    style={{ 
+                      height: `${((item.actual || 0) / maxValue) * 100}%`,
+                      backgroundColor: ROOM_COLORS[index % ROOM_COLORS.length]
+                    }}
+                  ></div>
+                  <div className="bar-value">
+                    ${(item.actual || 0).toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+        <div className="bar-legend">
+          <div className="legend-item">
+            <div className="legend-color estimated"></div>
+            <span>Estimated</span>
+          </div>
+          <div className="legend-item">
+            <div className="legend-color actual"></div>
+            <span>Actual</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const BudgetView = ({ projects, selectedProject, onProjectSelect }) => {
   const { user } = useAuth();
-  const [budgetSummary, setBudgetSummary] = useState(null);
-  const [budgetItems, setBudgetItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [budgetData, setBudgetData] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (selectedProject) {
       fetchBudgetData();
-    } else {
-      setBudgetSummary(null);
-      setBudgetItems([]);
-      setLoading(false);
     }
   }, [selectedProject]);
 
@@ -28,38 +169,75 @@ const BudgetView = ({ selectedProject }) => {
     setError('');
     
     try {
-      const response = await axios.get(`${API}/projects/${selectedProject.id}/budget`);
-      setBudgetSummary(response.data);
-      setBudgetItems(response.data.budget_items || []);
+      const response = await axios.get(`${API}/projects/${selectedProject.id}/budget-summary`);
+      setBudgetData(response.data);
     } catch (error) {
-      console.error('Error fetching budget:', error);
+      console.error('Error fetching budget data:', error);
       setError('Failed to load budget information');
-      setBudgetSummary(null);
-      setBudgetItems([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatCurrency = (amount) => {
-    if (typeof amount !== 'number') return '$0.00';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
+  // Prepare chart data
+  const prepareChartData = () => {
+    if (!budgetData || !budgetData.room_breakdown) return { pieData: [], barData: [] };
+
+    const pieData = budgetData.room_breakdown
+      .filter(room => room.room_total_estimated > 0)
+      .map(room => ({
+        label: room.room_name,
+        value: room.room_total_estimated
+      }));
+
+    const barData = budgetData.room_breakdown.map(room => ({
+      label: room.room_name,
+      estimated: room.room_total_estimated,
+      actual: room.room_total_actual
+    }));
+
+    return { pieData, barData };
   };
 
-  const categoryColors = {
-    'Materials': '#4CAF50',
-    'Labor': '#2196F3', 
-    'Equipment': '#FF9800',
-    'Permits': '#9C27B0',
-    'Other': '#607D8B'
-  };
+  if (!selectedProject) {
+    return (
+      <div className="budget-view">
+        <div className="budget-header">
+          <h2>Budget Overview</h2>
+          <div className="project-selector">
+            <label>Select a project to view budget details:</label>
+            <select 
+              onChange={(e) => {
+                const project = projects.find(p => p.id === e.target.value);
+                onProjectSelect(project);
+              }}
+              value=""
+            >
+              <option value="">Choose a project...</option>
+              {projects.map(project => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        
+        <div className="budget-placeholder">
+          <div className="placeholder-icon">💰</div>
+          <h3>No Project Selected</h3>
+          <p>Choose a project from the dropdown above to view detailed budget information, cost breakdowns, and spending analysis.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
       <div className="budget-view">
+        <div className="budget-header">
+          <h2>Budget Overview - {selectedProject.name}</h2>
+        </div>
         <div className="loading-state">
           <div className="spinner"></div>
           <p>Loading budget information...</p>
@@ -71,170 +249,168 @@ const BudgetView = ({ selectedProject }) => {
   if (error) {
     return (
       <div className="budget-view">
+        <div className="budget-header">
+          <h2>Budget Overview - {selectedProject.name}</h2>
+        </div>
         <div className="error-state">
-          <svg className="w-8 h-8 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-red-600">{error}</p>
+          <div className="error-icon">⚠️</div>
+          <h3>Budget Information Unavailable</h3>
+          <p>{error}</p>
+          <button className="btn-primary" onClick={fetchBudgetData}>
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
-  if (!selectedProject) {
-    return (
-      <div className="budget-view">
-        <div className="empty-state">
-          <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                  d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-          </svg>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Project Selected</h3>
-          <p className="text-gray-500">Select a project to view budget information</p>
-        </div>
-      </div>
-    );
-  }
+  const { pieData, barData } = prepareChartData();
 
   return (
     <div className="budget-view">
-      <div className="view-header">
-        <div>
-          <h1 className="page-title">Project Budget</h1>
-          <p className="page-subtitle">{selectedProject.name}</p>
+      <div className="budget-header">
+        <h2>Budget Overview - {selectedProject.name}</h2>
+        <div className="project-selector">
+          <select 
+            onChange={(e) => {
+              const project = projects.find(p => p.id === e.target.value);
+              onProjectSelect(project);
+            }}
+            value={selectedProject.id}
+          >
+            {projects.map(project => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {budgetSummary && (
-        <>
-          {/* Budget Summary Cards */}
-          <div className="budget-summary-cards">
-            <div className="budget-card">
-              <div className="budget-card-header">
-                <h3>Total Estimate</h3>
-                <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                </svg>
+      {budgetData && (
+        <div className="budget-content">
+          {/* Project Summary */}
+          <div className="project-budget-summary">
+            <h3>Project Budget Summary</h3>
+            <div className="summary-cards">
+              <div className="summary-card project-estimated">
+                <div className="card-icon">🏠</div>
+                <div className="card-content">
+                  <h4>Project Budget</h4>
+                  <div className="amount">${(budgetData.project_own_estimated_budget || 0).toLocaleString()}</div>
+                </div>
               </div>
-              <div className="budget-amount">{formatCurrency(budgetSummary.total_estimated)}</div>
-            </div>
-
-            <div className="budget-card">
-              <div className="budget-card-header">
-                <h3>Amount Spent</h3>
-                <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
+              
+              <div className="summary-card total-estimated">
+                <div className="card-icon">📊</div>
+                <div className="card-content">
+                  <h4>Total Estimated</h4>
+                  <div className="amount">${(budgetData.total_estimated_with_project || 0).toLocaleString()}</div>
+                </div>
               </div>
-              <div className="budget-amount">{formatCurrency(budgetSummary.total_spent)}</div>
-            </div>
-
-            <div className={`budget-card ${budgetSummary.over_budget ? 'over-budget' : ''}`}>
-              <div className="budget-card-header">
-                <h3>Remaining</h3>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                </svg>
+              
+              <div className="summary-card actual">
+                <div className="card-icon">💵</div>
+                <div className="card-content">
+                  <h4>Total Spent</h4>
+                  <div className="amount">${(budgetData.project_actual_total || 0).toLocaleString()}</div>
+                </div>
               </div>
-              <div className="budget-amount">
-                {formatCurrency(budgetSummary.remaining_budget)}
-              </div>
-              {budgetSummary.over_budget && (
-                <div className="over-budget-warning">Over Budget!</div>
-              )}
-            </div>
-          </div>
-
-          {/* Budget Progress Bar */}
-          <div className="budget-progress">
-            <div className="budget-progress-header">
-              <h3>Budget Progress</h3>
-              <span className="progress-percentage">
-                {budgetSummary.total_estimated > 0 
-                  ? Math.round((budgetSummary.total_spent / budgetSummary.total_estimated) * 100)
-                  : 0}% Used
-              </span>
-            </div>
-            <div className="progress-bar">
-              <div 
-                className={`progress-fill ${budgetSummary.over_budget ? 'over-budget' : ''}`}
-                style={{
-                  width: `${Math.min(
-                    budgetSummary.total_estimated > 0 
-                      ? (budgetSummary.total_spent / budgetSummary.total_estimated) * 100 
-                      : 0, 
-                    100
-                  )}%`
-                }}
-              ></div>
-            </div>
-          </div>
-
-          {/* Budget Items */}
-          {budgetItems.length > 0 && (
-            <div className="budget-items">
-              <h3 className="section-title">Budget Breakdown</h3>
-              <div className="budget-items-list">
-                {budgetItems.map(item => (
-                  <div key={item.id} className="budget-item">
-                    <div className="budget-item-header">
-                      <div className="budget-item-info">
-                        <div 
-                          className="category-indicator"
-                          style={{ backgroundColor: categoryColors[item.category] || categoryColors['Other'] }}
-                        ></div>
-                        <div>
-                          <h4 className="budget-item-name">{item.item_name}</h4>
-                          <p className="budget-item-category">{item.category}</p>
-                          {item.description && (
-                            <p className="budget-item-description">{item.description}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="budget-item-amounts">
-                        <div className="estimated-cost">
-                          <span className="label">Estimated:</span>
-                          <span className="amount">{formatCurrency(item.estimated_cost * item.quantity)}</span>
-                        </div>
-                        {item.actual_cost && (
-                          <div className="actual-cost">
-                            <span className="label">Actual:</span>
-                            <span className="amount">{formatCurrency(item.actual_cost * item.quantity)}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div className="budget-item-details">
-                      <span className="quantity">Qty: {item.quantity} {item.unit}</span>
-                      <span className="unit-price">
-                        {formatCurrency(item.estimated_cost)} per {item.unit}
-                      </span>
-                    </div>
+              
+              <div className={`summary-card variance ${budgetData.budget_variance >= 0 ? 'over' : 'under'}`}>
+                <div className="card-icon">{budgetData.budget_variance >= 0 ? '📈' : '📉'}</div>
+                <div className="card-content">
+                  <h4>Variance</h4>
+                  <div className="amount">
+                    {budgetData.budget_variance >= 0 ? '+' : ''}${(budgetData.budget_variance || 0).toLocaleString()}
                   </div>
-                ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Charts Section */}
+          {(pieData.length > 0 || barData.length > 0) && (
+            <div className="budget-charts">
+              <h3>Room Budget Analysis</h3>
+              <div className="charts-container">
+                {pieData.length > 0 && (
+                  <PieChart 
+                    data={pieData} 
+                    title="Budget Distribution by Room" 
+                  />
+                )}
+                {barData.length > 0 && (
+                  <BarChart 
+                    data={barData} 
+                    title="Estimated vs Actual by Room" 
+                  />
+                )}
               </div>
             </div>
           )}
 
-          {budgetItems.length === 0 && (
-            <div className="empty-budget-items">
-              <svg className="w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Budget Items</h3>
-              <p className="text-gray-500">
-                {user?.role === 'customer' 
-                  ? 'Your lumber yard will add budget items for this project soon.'
-                  : 'No budget items have been added to this project yet.'}
-              </p>
+          {/* Room Breakdown */}
+          {budgetData.room_breakdown && budgetData.room_breakdown.length > 0 && (
+            <div className="room-breakdown">
+              <h3>Room-by-Room Breakdown</h3>
+              <div className="breakdown-table">
+                <div className="table-header">
+                  <div className="col room-name">Room</div>
+                  <div className="col budget-info">Room Budget</div>
+                  <div className="col subtask-info">Subtasks</div>
+                  <div className="col total-info">Total</div>
+                  <div className="col percentage">% of Project</div>
+                  <div className="col variance">Variance</div>
+                </div>
+                {budgetData.room_breakdown.map((room, index) => {
+                  const percentage = budgetData.total_estimated_with_project > 0 
+                    ? ((room.room_total_estimated / budgetData.total_estimated_with_project) * 100).toFixed(1)
+                    : 0;
+                  
+                  return (
+                    <div key={room.room_id} className="table-row">
+                      <div className="col room-name">
+                        <div 
+                          className="room-color-indicator"
+                          style={{ backgroundColor: ROOM_COLORS[index % ROOM_COLORS.length] }}
+                        ></div>
+                        <span>{room.room_name}</span>
+                        <small>{room.subtask_count} subtasks</small>
+                      </div>
+                      <div className="col budget-info">
+                        <div className="budget-amounts">
+                          <div className="estimated">${room.room_estimated_budget.toLocaleString()}</div>
+                          <div className="actual">${room.room_actual_cost.toLocaleString()}</div>
+                        </div>
+                      </div>
+                      <div className="col subtask-info">
+                        <div className="budget-amounts">
+                          <div className="estimated">${room.subtask_estimated_total.toLocaleString()}</div>
+                          <div className="actual">${room.subtask_actual_total.toLocaleString()}</div>
+                        </div>
+                      </div>
+                      <div className="col total-info">
+                        <div className="budget-amounts total">
+                          <div className="estimated">${room.room_total_estimated.toLocaleString()}</div>
+                          <div className="actual">${room.room_total_actual.toLocaleString()}</div>
+                        </div>
+                      </div>
+                      <div className="col percentage">
+                        <div className="percentage-value">{percentage}%</div>
+                      </div>
+                      <div className={`col variance ${room.room_budget_variance >= 0 ? 'over' : 'under'}`}>
+                        <div className="variance-value">
+                          {room.room_budget_variance >= 0 ? '+' : ''}${room.room_budget_variance.toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );
