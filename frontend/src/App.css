@@ -2283,6 +2283,12 @@ body {
   margin-bottom: 1rem;
 }
 
+.admin-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
 .admin-section-header h3 {
   font-size: 1.25rem;
   font-weight: 600;
