@@ -1683,10 +1683,12 @@ const EditProjectModal = ({ project, onClose, onSuccess }) => {
     if (window.confirm('Are you sure you want to delete this project? This will also delete all associated tasks and ideas.')) {
       try {
         await axios.delete(`${API}/projects/${project.id}`);
+        alert('Project deleted successfully!');
         onSuccess();
         onClose();
       } catch (error) {
         console.error('Error deleting project:', error);
+        alert(`Failed to delete project: ${error.response?.data?.detail || error.message}`);
       }
     }
   };
