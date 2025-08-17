@@ -80,8 +80,8 @@ class ProjectDeleteTester:
         }
         
         admin_response = self.test_request("POST", "/auth/login", admin_login, 200, "Admin Authentication")
-        if admin_response:
-            self.admin_token = admin_response.get('session_token')
+        if admin_response and admin_response["status"] == "passed":
+            self.admin_token = admin_response["data"].get('session_token')
             self.log("✅ Admin authenticated successfully")
         
         # Super Admin authentication (superadmin/superadmin123/GLOBAL)
@@ -92,8 +92,8 @@ class ProjectDeleteTester:
         }
         
         superadmin_response = self.test_request("POST", "/auth/login", superadmin_login, 200, "Super Admin Authentication")
-        if superadmin_response:
-            self.superadmin_token = superadmin_response.get('session_token')
+        if superadmin_response and superadmin_response["status"] == "passed":
+            self.superadmin_token = superadmin_response["data"].get('session_token')
             self.log("✅ Super Admin authenticated successfully")
         
         # Customer authentication (demo/demo/STORE_001)
@@ -104,8 +104,8 @@ class ProjectDeleteTester:
         }
         
         customer_response = self.test_request("POST", "/auth/login", customer_login, 200, "Customer Authentication")
-        if customer_response:
-            self.customer_token = customer_response.get('session_token')
+        if customer_response and customer_response["status"] == "passed":
+            self.customer_token = customer_response["data"].get('session_token')
             self.log("✅ Customer authenticated successfully")
 
     def test_project_deletion_functionality(self):
