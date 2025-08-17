@@ -240,13 +240,19 @@ class ProjectDeleteTester:
                 self.log("❌ Some tasks were not properly deleted", "ERROR")
                 self.failed_tests += 1
             
-            # Verify associated ideas are deleted
-            remaining_ideas = self.test_request("GET", f"/ideas?project_id={project_id}",
-                                              auth_token=self.admin_token, test_name="Verify Ideas Deleted")
-            if remaining_ideas is not None and len(remaining_ideas) == 0:
+            # Verify associated ideas are deleted by checking individual idea IDs
+            ideas_deleted_successfully = True
+            for idea in created_ideas:
+                idea_check = self.test_request("GET", f"/ideas/{idea['id']}", expected_status=404,
+                                             auth_token=self.admin_token, test_name=f"Verify Idea {idea['id']} Deleted")
+                if idea_check is not None:
+                    ideas_deleted_successfully = False
+                    break
+            
+            if ideas_deleted_successfully:
                 self.log("✅ All associated ideas deleted successfully")
             else:
-                self.log(f"❌ Ideas not properly deleted: {len(remaining_ideas) if remaining_ideas else 'unknown'} remaining", "ERROR")
+                self.log("❌ Some ideas were not properly deleted", "ERROR")
                 self.failed_tests += 1
 
     def test_authentication_and_authorization(self):
