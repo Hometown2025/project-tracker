@@ -3672,6 +3672,26 @@ body {
   color: #ef4444;
 }
 
+.optional {
+  color: #6b7280;
+  font-weight: 400;
+  font-size: 0.75rem;
+}
+
+.optional-fields-note {
+  background: #f0f9ff;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #0ea5e9;
+  margin: 1rem 0;
+}
+
+.optional-fields-note p {
+  margin: 0;
+  color: #0c4a6e;
+  font-size: 0.875rem;
+}
+
 .modal-actions-right {
   display: flex;
   gap: 0.75rem;
