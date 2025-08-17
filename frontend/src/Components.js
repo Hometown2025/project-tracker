@@ -2468,6 +2468,500 @@ const TrussView = ({ refreshData, user }) => {
   );
 };
 
+// Create Truss Modal
+const CreateTrussModal = ({ onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    project_name: '',
+    project_number: '',
+    designer: '',
+    salesman: '',
+    project_status: 'awaiting_measurements',
+    date_ordered: '',
+    estimated_delivery: '',
+    lumber_2x4_bd_ft: '',
+    lumber_2x6_bd_ft: '',
+    lumber_2x8_12ft: '',
+    lumber_2x8_16ft: '',
+    lumber_2x8_18ft: '',
+    lumber_2x8_20ft: '',
+    estimated_production_days: '',
+    notes: ''
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const submitData = {};
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== '') {
+          if (key.includes('lumber_') || key === 'estimated_production_days') {
+            submitData[key] = parseFloat(formData[key]) || null;
+          } else {
+            submitData[key] = formData[key];
+          }
+        }
+      });
+
+      await axios.post(`${API}/trusses`, submitData);
+      onSuccess();
+    } catch (error) {
+      console.error('Error creating truss:', error);
+      alert('Failed to create truss project');
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal truss-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">Add Truss Project</h2>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Project Name <span className="required">*</span></label>
+              <input 
+                type="text"
+                className="form-input"
+                value={formData.project_name}
+                onChange={(e) => setFormData({...formData, project_name: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Project Number</label>
+              <input 
+                type="text"
+                className="form-input"
+                value={formData.project_number}
+                onChange={(e) => setFormData({...formData, project_number: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Designer</label>
+              <input 
+                type="text"
+                className="form-input"
+                value={formData.designer}
+                onChange={(e) => setFormData({...formData, designer: e.target.value})}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Salesman</label>
+              <input 
+                type="text"
+                className="form-input"
+                value={formData.salesman}
+                onChange={(e) => setFormData({...formData, salesman: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Project Status</label>
+              <select 
+                className="form-select"
+                value={formData.project_status}
+                onChange={(e) => setFormData({...formData, project_status: e.target.value})}
+              >
+                <option value="awaiting_measurements">Awaiting Measurements</option>
+                <option value="ready_for_shop">Ready for Shop</option>
+                <option value="in_the_shop">In the Shop</option>
+                <option value="optimizing">Optimizing</option>
+                <option value="awaiting_final_measurements">Awaiting Final Measurements</option>
+                <option value="completed">Completed</option>
+                <option value="delivered">Delivered</option>
+                <option value="on_hold">On Hold</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Estimated Production Days</label>
+              <input 
+                type="number"
+                className="form-input"
+                step="0.25"
+                value={formData.estimated_production_days}
+                onChange={(e) => setFormData({...formData, estimated_production_days: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Date Ordered</label>
+              <input 
+                type="date"
+                className="form-input"
+                value={formData.date_ordered}
+                onChange={(e) => setFormData({...formData, date_ordered: e.target.value})}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Estimated Delivery</label>
+              <input 
+                type="date"
+                className="form-input"
+                value={formData.estimated_delivery}
+                onChange={(e) => setFormData({...formData, estimated_delivery: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h4 className="form-section-title">Lumber Requirements</h4>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">2x4 Board Feet</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  step="0.01"
+                  value={formData.lumber_2x4_bd_ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x4_bd_ft: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">2x6 Board Feet</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  step="0.01"
+                  value={formData.lumber_2x6_bd_ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x6_bd_ft: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">2x8 12' Count</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  value={formData.lumber_2x8_12ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x8_12ft: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">2x8 16' Count</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  value={formData.lumber_2x8_16ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x8_16ft: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">2x8 18' Count</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  value={formData.lumber_2x8_18ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x8_18ft: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">2x8 20' Count</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  value={formData.lumber_2x8_20ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x8_20ft: e.target.value})}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Notes</label>
+            <textarea 
+              className="form-textarea"
+              value={formData.notes}
+              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              rows={3}
+            />
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" className="btn-secondary" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              Create Truss Project
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+// Edit Truss Modal
+const EditTrussModal = ({ truss, onClose, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    project_name: truss.project_name || '',
+    project_number: truss.project_number || '',
+    designer: truss.designer || '',
+    salesman: truss.salesman || '',
+    project_status: truss.project_status || 'awaiting_measurements',
+    date_ordered: truss.date_ordered || '',
+    estimated_delivery: truss.estimated_delivery || '',
+    lumber_2x4_bd_ft: truss.lumber_2x4_bd_ft || '',
+    lumber_2x6_bd_ft: truss.lumber_2x6_bd_ft || '',
+    lumber_2x8_12ft: truss.lumber_2x8_12ft || '',
+    lumber_2x8_16ft: truss.lumber_2x8_16ft || '',
+    lumber_2x8_18ft: truss.lumber_2x8_18ft || '',
+    lumber_2x8_20ft: truss.lumber_2x8_20ft || '',
+    estimated_production_days: truss.estimated_production_days || '',
+    notes: truss.notes || ''
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const submitData = {};
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== '') {
+          if (key.includes('lumber_') || key === 'estimated_production_days') {
+            submitData[key] = parseFloat(formData[key]) || null;
+          } else {
+            submitData[key] = formData[key];
+          }
+        } else {
+          submitData[key] = null;
+        }
+      });
+
+      await axios.put(`${API}/trusses/${truss.id}`, submitData);
+      onSuccess();
+    } catch (error) {
+      console.error('Error updating truss:', error);
+      alert('Failed to update truss project');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (window.confirm(`Are you sure you want to delete the truss "${truss.project_name}"?`)) {
+      try {
+        await axios.delete(`${API}/trusses/${truss.id}`);
+        onSuccess();
+        onClose();
+      } catch (error) {
+        console.error('Error deleting truss:', error);
+        alert('Failed to delete truss project');
+      }
+    }
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal truss-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">Edit Truss Project</h2>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Project Name <span className="required">*</span></label>
+              <input 
+                type="text"
+                className="form-input"
+                value={formData.project_name}
+                onChange={(e) => setFormData({...formData, project_name: e.target.value})}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Project Number</label>
+              <input 
+                type="text"
+                className="form-input"
+                value={formData.project_number}
+                onChange={(e) => setFormData({...formData, project_number: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Designer</label>
+              <input 
+                type="text"
+                className="form-input"
+                value={formData.designer}
+                onChange={(e) => setFormData({...formData, designer: e.target.value})}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Salesman</label>
+              <input 
+                type="text"
+                className="form-input"
+                value={formData.salesman}
+                onChange={(e) => setFormData({...formData, salesman: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Project Status</label>
+              <select 
+                className="form-select"
+                value={formData.project_status}
+                onChange={(e) => setFormData({...formData, project_status: e.target.value})}
+              >
+                <option value="awaiting_measurements">Awaiting Measurements</option>
+                <option value="ready_for_shop">Ready for Shop</option>
+                <option value="in_the_shop">In the Shop</option>
+                <option value="optimizing">Optimizing</option>
+                <option value="awaiting_final_measurements">Awaiting Final Measurements</option>
+                <option value="completed">Completed</option>
+                <option value="delivered">Delivered</option>
+                <option value="on_hold">On Hold</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Estimated Production Days</label>
+              <input 
+                type="number"
+                className="form-input"
+                step="0.25"
+                value={formData.estimated_production_days}
+                onChange={(e) => setFormData({...formData, estimated_production_days: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Date Ordered</label>
+              <input 
+                type="date"
+                className="form-input"
+                value={formData.date_ordered}
+                onChange={(e) => setFormData({...formData, date_ordered: e.target.value})}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">Estimated Delivery</label>
+              <input 
+                type="date"
+                className="form-input"
+                value={formData.estimated_delivery}
+                onChange={(e) => setFormData({...formData, estimated_delivery: e.target.value})}
+              />
+            </div>
+          </div>
+
+          <div className="form-section">
+            <h4 className="form-section-title">Lumber Requirements</h4>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">2x4 Board Feet</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  step="0.01"
+                  value={formData.lumber_2x4_bd_ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x4_bd_ft: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">2x6 Board Feet</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  step="0.01"
+                  value={formData.lumber_2x6_bd_ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x6_bd_ft: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">2x8 12' Count</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  value={formData.lumber_2x8_12ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x8_12ft: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">2x8 16' Count</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  value={formData.lumber_2x8_16ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x8_16ft: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">2x8 18' Count</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  value={formData.lumber_2x8_18ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x8_18ft: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">2x8 20' Count</label>
+                <input 
+                  type="number"
+                  className="form-input"
+                  value={formData.lumber_2x8_20ft}
+                  onChange={(e) => setFormData({...formData, lumber_2x8_20ft: e.target.value})}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Notes</label>
+            <textarea 
+              className="form-textarea"
+              value={formData.notes}
+              onChange={(e) => setFormData({...formData, notes: e.target.value})}
+              rows={3}
+            />
+          </div>
+
+          <div className="modal-actions">
+            <button 
+              type="button" 
+              className="btn-danger" 
+              onClick={handleDelete}
+            >
+              Delete Project
+            </button>
+            <div className="modal-actions-right">
+              <button type="button" className="btn-secondary" onClick={onClose}>
+                Cancel
+              </button>
+              <button type="submit" className="btn-primary">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Export all components
 export default {
   Navigation,
