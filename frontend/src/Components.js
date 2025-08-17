@@ -2689,8 +2689,12 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
           if (key.includes('lumber_') || key === 'estimated_production_days') {
             submitData[key] = parseFloat(formData[key]) || null;
           } else if (key === 'date_ordered' || key === 'estimated_delivery') {
-            // Ensure dates are in proper format
-            submitData[key] = formData[key];
+            // Convert date string to ISO datetime string for backend
+            if (formData[key]) {
+              submitData[key] = new Date(formData[key] + 'T00:00:00').toISOString();
+            } else {
+              submitData[key] = null;
+            }
           } else {
             submitData[key] = formData[key];
           }
