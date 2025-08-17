@@ -2220,6 +2220,27 @@ const TrussView = ({ refreshData, user }) => {
       }
     });
 
+  // Calculate lumber totals from filtered results
+  const lumberTotals = filteredAndSortedTrusses.reduce((totals, truss) => {
+    return {
+      lumber_2x4_bd_ft: totals.lumber_2x4_bd_ft + (parseFloat(truss.lumber_2x4_bd_ft) || 0),
+      lumber_2x6_bd_ft: totals.lumber_2x6_bd_ft + (parseFloat(truss.lumber_2x6_bd_ft) || 0),
+      lumber_2x8_12ft: totals.lumber_2x8_12ft + (parseInt(truss.lumber_2x8_12ft) || 0),
+      lumber_2x8_16ft: totals.lumber_2x8_16ft + (parseInt(truss.lumber_2x8_16ft) || 0),
+      lumber_2x8_18ft: totals.lumber_2x8_18ft + (parseInt(truss.lumber_2x8_18ft) || 0),
+      lumber_2x8_20ft: totals.lumber_2x8_20ft + (parseInt(truss.lumber_2x8_20ft) || 0),
+      estimated_production_days: totals.estimated_production_days + (parseFloat(truss.estimated_production_days) || 0)
+    };
+  }, {
+    lumber_2x4_bd_ft: 0,
+    lumber_2x6_bd_ft: 0,
+    lumber_2x8_12ft: 0,
+    lumber_2x8_16ft: 0,
+    lumber_2x8_18ft: 0,
+    lumber_2x8_20ft: 0,
+    estimated_production_days: 0
+  });
+
   const handleSort = (column) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
