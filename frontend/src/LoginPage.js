@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
+import { StoreLogo } from './Components';
 import './App.css';
 
 const LoginPage = () => {
