@@ -2505,7 +2505,7 @@ const CreateTrussModal = ({ onClose, onSuccess }) => {
     project_number: '',
     designer: '',
     salesman: '',
-    project_status: 'awaiting_measurements',
+    project_status: 'ready_for_shop',
     date_ordered: '',
     estimated_delivery: '',
     lumber_2x4_bd_ft: '',
