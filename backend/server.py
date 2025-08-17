@@ -2929,6 +2929,92 @@ async def get_calendar_data(current_user: User = Depends(get_current_user)):
     
     return calendar_events
 
+# Truss Routes
+@api_router.post("/trusses", response_model=Truss)
+async def create_truss(truss: TrussCreate, current_user: User = Depends(get_current_user)):
+    """Create truss (Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can create trusses")
+    
+    truss_dict = truss.dict()
+    truss_obj = Truss(**truss_dict, store_id=current_user.store_id, created_by=current_user.id)
+    await db.trusses.insert_one(truss_obj.dict())
+    
+    return truss_obj
+
+@api_router.get("/trusses", response_model=List[Truss])
+async def get_trusses(current_user: User = Depends(get_current_user)):
+    """Get trusses - Super Admin sees all from all stores, Admin sees all from their store"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can view trusses")
+    
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super Admin sees all trusses from all stores
+        trusses = await db.trusses.find().to_list(1000)
+    else:
+        # Admin sees all trusses from their store
+        trusses = await db.trusses.find({"store_id": current_user.store_id}).to_list(1000)
+    
+    # Convert to Truss objects
+    return [Truss(**truss) for truss in trusses]
+
+@api_router.get("/trusses/{truss_id}", response_model=Truss)
+async def get_truss(truss_id: str, current_user: User = Depends(get_current_user)):
+    """Get specific truss (Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can view trusses")
+    
+    truss = await db.trusses.find_one({"id": truss_id})
+    if not truss:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    # Check store access for regular admins
+    if current_user.role == UserRole.ADMIN and truss.get("store_id") != current_user.store_id:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    return Truss(**truss)
+
+@api_router.put("/trusses/{truss_id}", response_model=Truss)
+async def update_truss(truss_id: str, truss_update: TrussUpdate, current_user: User = Depends(get_current_user)):
+    """Update truss (Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can update trusses")
+    
+    truss = await db.trusses.find_one({"id": truss_id})
+    if not truss:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    # Check store access for regular admins
+    if current_user.role == UserRole.ADMIN and truss.get("store_id") != current_user.store_id:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    # Update fields
+    update_data = {k: v for k, v in truss_update.dict().items() if v is not None}
+    if update_data:
+        update_data["updated_date"] = datetime.utcnow()
+        await db.trusses.update_one({"id": truss_id}, {"$set": update_data})
+    
+    # Get updated truss
+    updated_truss = await db.trusses.find_one({"id": truss_id})
+    return Truss(**updated_truss)
+
+@api_router.delete("/trusses/{truss_id}")
+async def delete_truss(truss_id: str, current_user: User = Depends(get_current_user)):
+    """Delete truss (Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can delete trusses")
+    
+    truss = await db.trusses.find_one({"id": truss_id})
+    if not truss:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    # Check store access for regular admins
+    if current_user.role == UserRole.ADMIN and truss.get("store_id") != current_user.store_id:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    await db.trusses.delete_one({"id": truss_id})
+    return {"message": "Truss deleted successfully"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
