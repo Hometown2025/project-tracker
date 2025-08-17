@@ -1781,11 +1781,13 @@ async def get_project_budget_summary(
     return {
         "project_id": project_id,
         "project_name": project["name"],
-        "project_own_estimated_budget": project_totals["project_own_estimated"],
-        "project_estimated_total": project_totals["project_estimated_total"],
-        "project_actual_total": project_totals["project_actual_total"],
-        "total_estimated_with_project": project_totals["total_estimated_with_project"],
-        "budget_variance": project_totals["budget_variance"],
+        "project_total_budget": project_totals["project_total_budget"],
+        "rooms_allocated_estimated": project_totals["rooms_allocated_estimated"],
+        "rooms_actual_spent": project_totals["rooms_actual_spent"],
+        "remaining_budget": project_totals["remaining_budget"],
+        "spending_variance": project_totals["spending_variance"],
+        "total_variance": project_totals["total_variance"],
+        "allocation_percentage": project_totals["allocation_percentage"],
         "room_count": project_totals["room_count"],
         "total_subtasks": project_totals["total_subtasks"],
         "room_breakdown": room_breakdown
