@@ -1723,9 +1723,9 @@ body {
 }
 
 .tab-button.active {
-  color: #8b5cf6;
-  border-bottom-color: #8b5cf6;
-  background: #faf5ff;
+  color: #e73137;
+  border-bottom-color: #e73137;
+  background: #fef2f2;
 }
 
 /* Reset Password Modal Styles */
