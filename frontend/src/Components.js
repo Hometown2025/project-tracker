@@ -12,7 +12,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 // Navigation Component
-const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject, selectedProject, user, onLogout, onShowAdmin }) => {
+const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject, selectedProject, user, onLogout, onShowAdmin, sidebarCollapsed, onToggleSidebar }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   
