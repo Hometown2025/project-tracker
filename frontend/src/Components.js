@@ -196,7 +196,7 @@ const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject,
         </div>
       </div>
 
-      {projects.length > 0 && (
+      {projects.length > 0 && !sidebarCollapsed && (
         <div className="nav-section">
           <h3 className="nav-section-title">Your Projects</h3>
           <div className="nav-items">
