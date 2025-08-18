@@ -266,7 +266,7 @@ body {
 .sidebar {
   width: 260px;
   background: linear-gradient(135deg, #e73137 0%, #c82f35 100%);
-  color: white;
+  color: black;
   height: 100vh;
   position: fixed;
   left: 0;
