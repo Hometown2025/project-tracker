@@ -1504,19 +1504,6 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Room Budget <span className="optional">(optional)</span></label>
-              <input 
-                type="number"
-                className="form-input"
-                value={formData.estimated_budget}
-                onChange={(e) => setFormData({...formData, estimated_budget: e.target.value})}
-                placeholder="Estimated cost for this room"
-                min="0"
-                step="0.01"
-              />
-            </div>
-
-            <div className="form-group">
               <label className="form-label">Actual Cost <span className="optional">(optional)</span></label>
               <input 
                 type="number"
