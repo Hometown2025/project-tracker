@@ -2084,7 +2084,6 @@ class Truss(BaseModel):
     salesman: Optional[str] = None
     project_status: TrussStatus = TrussStatus.READY_FOR_SHOP
     date_ordered: Optional[datetime] = None
-    shipment_date: Optional[datetime] = None
     shipment_date: Optional[datetime] = None  # For calendar integration
     lumber_2x4_bd_ft: Optional[float] = None  # Board feet of 2x4 lumber
     lumber_2x6_bd_ft: Optional[float] = None  # Board feet of 2x6 lumber
