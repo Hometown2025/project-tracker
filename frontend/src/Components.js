@@ -18,18 +18,32 @@ const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject,
   
   return (
     <>
-      <nav className="sidebar">
+      <nav className={`sidebar ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
             <StoreLogo storeId={user?.store_id} className="sidebar-logo" />
-            <h2 className="sidebar-title">
-              <svg className="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              House Builder
-            </h2>
+            {!sidebarCollapsed && (
+              <h2 className="sidebar-title">
+                <svg className="w-8 h-8 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                House Builder
+              </h2>
+            )}
           </div>
+          
+          {/* Sidebar Toggle Button */}
+          <button 
+            className="sidebar-toggle"
+            onClick={onToggleSidebar}
+            title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                    d={sidebarCollapsed ? "M13 5l7 7-7 7M5 5l7 7-7 7" : "M11 19l-7-7 7-7M3 12h18"} />
+            </svg>
+          </button>
           
           {/* User Info */}
           <div className="user-info-section">
