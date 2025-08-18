@@ -3600,9 +3600,9 @@ body {
   padding: 0.5rem 0.25rem;
   font-size: 0.7rem;
   font-weight: 700;
-  color: #4338ca;
+  color: #c82f35;
   text-align: center;
-  border-right: 1px solid #c7d2fe;
+  border-right: 1px solid #fecaca;
 }
 
 .totals-cell:first-child {
