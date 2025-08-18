@@ -1536,6 +1536,20 @@ ROOM_SUBTASK_TEMPLATES = {
         {"title": "Flooring", "description": "Install laundry room flooring"},
         {"title": "Appliances", "description": "Install washer, dryer, and connections"},
         {"title": "Ventilation", "description": "Install proper ventilation for dryer"}
+    ],
+    "pantry": [
+        {"title": "Wall Coverings", "description": "Install wall coverings, paint, or wallpaper"},
+        {"title": "Flooring", "description": "Install pantry flooring"},
+        {"title": "Cabinets", "description": "Install pantry cabinets and shelving systems"},
+        {"title": "Cabinet Hardware", "description": "Install cabinet handles, knobs, and drawer slides"}
+    ],
+    "closet": [
+        {"title": "Shelving", "description": "Install closet shelving and organization systems"}
+    ],
+    "dining room": [
+        {"title": "Wall Coverings", "description": "Install wall coverings, paint, or wallpaper"},
+        {"title": "Flooring", "description": "Install dining room flooring"},
+        {"title": "Lighting", "description": "Install dining room lighting fixtures and chandeliers"}
     ]
 }
 
