@@ -141,34 +141,37 @@ const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject,
           <button 
             className={`nav-item ${currentView === 'budget' ? 'nav-item-active' : 'nav-item-inactive'}`}
             onClick={() => setCurrentView('budget')}
+            title={sidebarCollapsed ? 'Budget' : ''}
           >
             <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                     d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
-            Budget
+            {!sidebarCollapsed && 'Budget'}
           </button>
           
           <button 
             className={`nav-item ${currentView === 'calendar' ? 'nav-item-active' : 'nav-item-inactive'}`}
             onClick={() => setCurrentView('calendar')}
+            title={sidebarCollapsed ? 'Calendar' : ''}
           >
             <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            Calendar
+            {!sidebarCollapsed && 'Calendar'}
           </button>
           
           <button 
             className={`nav-item ${currentView === 'ideas' ? 'nav-item-active' : 'nav-item-inactive'}`}
             onClick={() => setCurrentView('ideas')}
+            title={sidebarCollapsed ? 'Ideas' : ''}
           >
             <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                     d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
             </svg>
-            Ideas
+            {!sidebarCollapsed && 'Ideas'}
           </button>
 
           {/* Trusses tab - Admin only */}
@@ -176,13 +179,18 @@ const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject,
             <button 
               className={`nav-item ${currentView === 'trusses' ? 'nav-item-active' : 'nav-item-inactive'}`}
               onClick={() => setCurrentView('trusses')}
+              title={sidebarCollapsed ? 'Trusses (Admin Only)' : ''}
             >
               <svg className="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                       d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
               </svg>
-              Trusses
-              <span className="nav-badge">Admin Only</span>
+              {!sidebarCollapsed && (
+                <>
+                  Trusses
+                  <span className="nav-badge">Admin Only</span>
+                </>
+              )}
             </button>
           )}
         </div>
