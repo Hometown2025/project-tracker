@@ -2085,6 +2085,7 @@ class Truss(BaseModel):
     project_status: TrussStatus = TrussStatus.READY_FOR_SHOP
     date_ordered: Optional[datetime] = None
     estimated_delivery: Optional[datetime] = None
+    shipment_date: Optional[datetime] = None  # For calendar integration
     lumber_2x4_bd_ft: Optional[float] = None  # Board feet of 2x4 lumber
     lumber_2x6_bd_ft: Optional[float] = None  # Board feet of 2x6 lumber
     lumber_2x8_12ft: Optional[int] = None     # Count of 2x8 12' lumber
@@ -2093,6 +2094,8 @@ class Truss(BaseModel):
     lumber_2x8_20ft: Optional[int] = None     # Count of 2x8 20' lumber
     estimated_production_days: Optional[float] = None
     notes: Optional[str] = None
+    is_archived: bool = False  # For archiving delivered projects
+    archived_date: Optional[datetime] = None
     store_id: str  # Store/Lumberyard identifier
     created_by: str
     created_date: datetime = Field(default_factory=datetime.utcnow)
