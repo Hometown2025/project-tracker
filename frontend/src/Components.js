@@ -1801,6 +1801,12 @@ const EditProjectModal = ({ project, onClose, onSuccess }) => {
                     }
                   </span>
                 </div>
+                {project.square_footage && (
+                  <div className="stat-item">
+                    <span className="stat-label">Square Footage:</span>
+                    <span className="stat-value">{project.square_footage.toLocaleString()} sq ft</span>
+                  </div>
+                )}
                 <div className="stat-item">
                   <span className="stat-label">Created:</span>
                   <span className="stat-value">
