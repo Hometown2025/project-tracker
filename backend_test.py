@@ -5236,6 +5236,9 @@ class TaskManagerTester:
             # Test auto-populate subtasks functionality (NEW TEST)
             self.test_auto_populate_subtasks_functionality()
             
+            # Test bathroom subtask generation functionality (NEW TEST)
+            self.test_bathroom_subtask_generation()
+            
             # Test truss tracking system functionality (NEW TEST)
             self.test_truss_tracking_system()
             
