@@ -2349,18 +2349,30 @@ const TrussView = ({ refreshData, user }) => {
     <div className="truss-view">
       <div className="view-header">
         <div>
-          <h1 className="page-title">Truss Tracker</h1>
+          <h1 className="page-title">
+            Truss Tracker {showArchived && '(Archived)'}
+          </h1>
           <p className="page-subtitle">Manage truss projects and production</p>
         </div>
-        <button 
-          className="btn-primary"
-          onClick={() => setShowCreateModal(true)}
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Quick Add Project
-        </button>
+        <div className="header-actions">
+          <button 
+            className={`btn-secondary ${showArchived ? 'btn-active' : ''}`}
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            {showArchived ? 'Show Active' : 'Show Archived'}
+          </button>
+          {!showArchived && (
+            <button 
+              className="btn-primary"
+              onClick={() => setShowCreateModal(true)}
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Quick Add Project
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filters and Search */}
