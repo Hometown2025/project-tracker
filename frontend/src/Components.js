@@ -2669,6 +2669,78 @@ const TrussView = ({ refreshData, user }) => {
   );
 };
 
+// Shipment Modal Component
+const ShipmentModal = ({ truss, onClose, onSubmit }) => {
+  const [shipmentDate, setShipmentDate] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!shipmentDate) {
+      alert('Please select a shipment date');
+      return;
+    }
+    onSubmit(shipmentDate);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal shipment-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">Schedule Shipment</h2>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+        
+        <form onSubmit={handleSubmit} className="modal-form">
+          <div className="form-group">
+            <label className="form-label">Project</label>
+            <div className="project-info">
+              <strong>{truss.project_name}</strong>
+              {truss.project_number && <span> (#{truss.project_number})</span>}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Current Status</label>
+            <div className="status-info">
+              <span 
+                className="status-badge" 
+                style={{ backgroundColor: truss.project_status === 'completed' ? '#10b981' : '#22c55e' }}
+              >
+                {truss.project_status === 'completed' ? 'Completed' : 'Delivered'}
+              </span>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Shipment Date <span className="required">*</span></label>
+            <input 
+              type="date"
+              className="form-input"
+              value={shipmentDate}
+              onChange={(e) => setShipmentDate(e.target.value)}
+              min={new Date().toISOString().split('T')[0]} // Today or later
+              required
+            />
+          </div>
+
+          <div className="form-note">
+            <p><strong>Note:</strong> This shipment will be added to the calendar and visible to all team members.</p>
+          </div>
+
+          <div className="modal-actions">
+            <button type="button" className="btn-secondary" onClick={onClose}>
+              Cancel
+            </button>
+            <button type="submit" className="btn-primary">
+              Schedule Shipment
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
 // Create Truss Modal
 const CreateTrussModal = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
