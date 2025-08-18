@@ -2174,10 +2174,14 @@ const TrussView = ({ refreshData, user }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState('project_name');
   const [sortDirection, setSortDirection] = useState('asc');
+  const [showArchived, setShowArchived] = useState(false);
+  const [showShipmentModal, setShowShipmentModal] = useState(false);
+  const [shipmentTruss, setShipmentTruss] = useState(null);
 
   const fetchTrusses = async () => {
     try {
-      const response = await axios.get(`${API}/trusses`);
+      const endpoint = showArchived ? `${API}/trusses/archived` : `${API}/trusses`;
+      const response = await axios.get(endpoint);
       setTrusses(response.data);
     } catch (error) {
       console.error('Error fetching trusses:', error);
@@ -2188,7 +2192,7 @@ const TrussView = ({ refreshData, user }) => {
 
   useEffect(() => {
     fetchTrusses();
-  }, []);
+  }, [showArchived]);
 
   // Get unique designers for filter
   const uniqueDesigners = [...new Set(trusses.map(t => t.designer).filter(Boolean))];
