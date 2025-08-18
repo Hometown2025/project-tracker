@@ -1575,6 +1575,12 @@ def detect_room_type(room_title: str) -> str:
         return "garage"
     elif any(word in room_title_lower for word in ["laundry", "utility", "wash"]):
         return "laundry room"
+    elif any(word in room_title_lower for word in ["pantry", "food storage"]):
+        return "pantry"
+    elif any(word in room_title_lower for word in ["closet", "wardrobe", "walk-in"]):
+        return "closet"
+    elif any(word in room_title_lower for word in ["dining", "dining room"]):
+        return "dining room"
     
     return None
 
