@@ -612,43 +612,32 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
                 />
               )}
 
-              {/* Room Budget Summary (for main rooms only) */}
-              {task.subtask_level === 0 && (task.total_estimated > 0 || task.total_actual > 0) && (
+              {/* Room Cost Summary (for main rooms only) */}
+              {task.subtask_level === 0 && (task.total_actual > 0 || task.subtask_actual_total > 0) && (
                 <div className="room-budget-summary">
-                  <h4 className="budget-summary-title">Room Budget</h4>
-                  <div className="budget-grid">
-                    <div className="budget-column">
+                  <h4 className="budget-summary-title">Room Costs</h4>
+                  <div className="cost-grid">
+                    <div className="cost-column">
                       <div className="budget-item">
-                        <span className="budget-label">Room:</span>
+                        <span className="budget-label">Room Cost:</span>
                         <span className="budget-amount">
-                          ${(task.estimated_budget || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} / 
                           ${(task.actual_cost || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </span>
                       </div>
                       <div className="budget-item">
-                        <span className="budget-label">Subtasks:</span>
+                        <span className="budget-label">Subtasks Cost:</span>
                         <span className="budget-amount">
-                          ${(task.subtask_estimated_total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} / 
                           ${(task.subtask_actual_total || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </span>
                       </div>
                     </div>
-                    <div className="budget-column">
+                    <div className="cost-column">
                       <div className="budget-item total">
-                        <span className="budget-label">Total:</span>
+                        <span className="budget-label">Total Cost:</span>
                         <span className="budget-amount">
-                          ${(task.total_estimated || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} / 
                           ${(task.total_actual || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </span>
                       </div>
-                      {task.budget_variance !== 0 && (
-                        <div className="budget-item variance">
-                          <span className="budget-label">Variance:</span>
-                          <span className={`budget-amount ${task.budget_variance > 0 ? 'over' : 'under'}`}>
-                            {task.budget_variance > 0 ? '+' : ''}${Math.abs(task.budget_variance || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
