@@ -3110,7 +3110,7 @@ body {
 
 /* File List Styles */
 .file-list {
-  margin-top: 1.5rem;
+  margin-top: 1rem;
 }
 
 .file-item {
@@ -3119,7 +3119,7 @@ body {
 
 .file-item:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* File Manager Styles */
