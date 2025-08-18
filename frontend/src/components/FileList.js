@@ -199,7 +199,7 @@ const FileList = ({ projectId, taskId, refreshTrigger = 0 }) => {
 
   return (
     <div className="file-list">
-      <div className="grid gap-4">
+      <div className="grid gap-2">
         {files.map((file) => (
           <div key={file.id} className="file-item">
             <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
