@@ -202,87 +202,36 @@ const FileList = ({ projectId, taskId, refreshTrigger = 0 }) => {
       <div className="grid gap-2">
         {files.map((file) => (
           <div key={file.id} className="file-item">
-            <div className="flex items-center gap-2 p-2 bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors">
+            <div className="flex items-center gap-2 p-1.5 bg-gray-50 rounded border hover:bg-gray-100 transition-colors">
               {/* File Icon */}
               <div className={`flex-shrink-0 ${getFileTypeColor(file.file_type)}`}>
-                <div className="w-4 h-4">
-                  {React.cloneElement(getFileIcon(file.file_type), { className: "w-4 h-4" })}
+                <div className="w-3 h-3">
+                  {React.cloneElement(getFileIcon(file.file_type), { className: "w-3 h-3" })}
                 </div>
               </div>
 
-              {/* File Info */}
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-gray-900 truncate text-sm">{file.original_filename}</h4>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>{formatFileSize(file.file_size)}</span>
-                  <span>•</span>
-                  <span>{formatDate(file.uploaded_at)}</span>
-                  <span>•</span>
-                  <span className="capitalize">{file.file_type}</span>
-                </div>
-              </div>
+              {/* Filename as download link */}
+              <button
+                onClick={() => downloadFile(file.id, file.original_filename)}
+                className="flex-1 text-left text-sm text-blue-600 hover:text-blue-800 hover:underline truncate font-medium"
+                title={`Download ${file.original_filename} (${formatFileSize(file.file_size)})`}
+              >
+                {file.original_filename}
+              </button>
 
-              {/* Thumbnail for images */}
-              {file.is_image && file.thumbnail_path && (
-                <div className="flex-shrink-0">
-                  <img
-                    src={`${API}/files/thumbnail/${file.id}`}
-                    alt={file.original_filename}
-                    className="w-8 h-8 object-cover rounded cursor-pointer hover:opacity-75"
-                    onClick={() => previewImage(file.id, file.original_filename)}
-                  />
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex-shrink-0 flex items-center gap-1">
-                {file.can_view_inline && (
-                  <button
-                    onClick={() => viewFile(file.id, file.original_filename, file.file_type)}
-                    className="p-1.5 text-gray-400 hover:text-green-600 rounded transition-colors"
-                    title="View Online"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </button>
-                )}
-
-                {file.is_image && (
-                  <button
-                    onClick={() => previewImage(file.id, file.original_filename)}
-                    className="p-1.5 text-gray-400 hover:text-purple-600 rounded transition-colors"
-                    title="Preview Image"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                  </button>
-                )}
-                
+              {/* Preview button for images only */}
+              {file.is_image && (
                 <button
-                  onClick={() => downloadFile(file.id, file.original_filename)}
-                  className="p-1.5 text-gray-400 hover:text-blue-600 rounded transition-colors"
-                  title="Download"
+                  onClick={() => previewImage(file.id, file.original_filename)}
+                  className="p-1 text-gray-400 hover:text-blue-600 rounded transition-colors flex-shrink-0"
+                  title="Preview Image"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
                 </button>
-
-                {canDelete() && (
-                  <button
-                    onClick={() => deleteFile(file.id, file.original_filename)}
-                    className="p-1.5 text-gray-400 hover:text-red-600 rounded transition-colors"
-                    title="Delete"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           </div>
         ))}
