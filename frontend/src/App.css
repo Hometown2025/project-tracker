@@ -1310,14 +1310,54 @@ body {
   border-left: 3px solid;
   color: #1a202c;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .calendar-event:hover {
   background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-event-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.calendar-event-title {
+  font-weight: 600;
+  color: #1a202c;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.calendar-event-project {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  opacity: 0.8;
+}
+
+.calendar-project-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.calendar-project-name {
+  font-size: 0.5rem;
+  color: #6b7280;
+  font-weight: 500;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
   transform: scale(1.02);
 }
 
