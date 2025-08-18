@@ -1475,7 +1475,7 @@ body {
   background: white;
   border-radius: 1rem;
   width: 100%;
-  max-width: 500px;
+  max-width: 650px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
