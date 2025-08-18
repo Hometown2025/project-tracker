@@ -472,9 +472,10 @@ body {
 }
 
 .nav-item-active {
-  background: linear-gradient(135deg, #e73137 0%, #c82f35 100%);
+  background: rgba(255, 255, 255, 0.2);
   color: white;
-  box-shadow: 0 4px 12px rgba(231, 49, 55, 0.3);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+  font-weight: 700;
 }
 
 .nav-item-inactive {
