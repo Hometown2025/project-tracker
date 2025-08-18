@@ -1853,8 +1853,13 @@ const CreateProjectModal = ({ onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Prepare data for submission, handle budget field properly
+      // Prepare data for submission, handle square footage field properly
       const submitData = { ...formData };
+      if (submitData.square_footage !== '' && submitData.square_footage !== null) {
+        submitData.square_footage = parseInt(submitData.square_footage) || null;
+      } else {
+        submitData.square_footage = null;
+      }
 
       await axios.post(`${API}/projects`, submitData);
       onSuccess();
