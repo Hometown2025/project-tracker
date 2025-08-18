@@ -5947,6 +5947,9 @@ class TaskManagerTester:
             # Test NEW room type subtask generation features (PANTRY, CLOSET, DINING ROOM)
             self.test_new_room_type_subtask_generation()
             
+            # Test UPDATED room subtask configurations (KITCHEN, BEDROOM, LIVING ROOM)
+            self.test_updated_room_subtask_configurations()
+            
             # Test truss tracking system functionality (NEW TEST)
             self.test_truss_tracking_system()
             
