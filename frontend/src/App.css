@@ -1969,7 +1969,13 @@ body {
   gap: 1rem;
 }
 
-.budget-column {
+.cost-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.budget-column, .cost-column {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
