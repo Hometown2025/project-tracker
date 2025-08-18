@@ -1172,9 +1172,8 @@ const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
     due_date: task.due_date || '',
     order_date: task.order_date || '',
     delivery_date: task.delivery_date || '',
-    project_id: task.project_id || '',
     actual_cost: task.actual_cost || '',
-    square_footage: task.square_footage || ''
+    project_id: task.project_id || ''
   });
 
   const handleSubmit = async (e) => {
