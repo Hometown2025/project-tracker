@@ -355,7 +355,7 @@ body {
 .avatar-circle {
   width: 2.5rem;
   height: 2.5rem;
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #e73137 0%, #c82f35 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
