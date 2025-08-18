@@ -1004,12 +1004,12 @@ body {
 }
 
 .checkbox:hover {
-  border-color: #8b5cf6;
+  border-color: #e73137;
 }
 
 .checkbox.checked {
-  background: #8b5cf6;
-  border-color: #8b5cf6;
+  background: #e73137;
+  border-color: #e73137;
 }
 
 .check-icon {
