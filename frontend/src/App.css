@@ -3592,8 +3592,8 @@ body {
 
 /* Totals Row Styling */
 .totals-row {
-  background: #e0e7ff;
-  border-bottom: 2px solid #8b5cf6;
+  background: #fef2f2;
+  border-bottom: 2px solid #e73137;
 }
 
 .totals-cell {
