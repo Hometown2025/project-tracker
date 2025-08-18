@@ -2983,16 +2983,20 @@ async def create_truss(truss: TrussCreate, current_user: User = Depends(get_curr
 
 @api_router.get("/trusses", response_model=List[Truss])
 async def get_trusses(current_user: User = Depends(get_current_user)):
-    """Get trusses - Super Admin sees all from all stores, Admin sees all from their store"""
+    """Get trusses - Super Admin sees all from all stores, Admin sees all from their store (excludes archived by default)"""
     if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
         raise HTTPException(status_code=403, detail="Only admins can view trusses")
     
+    # Build query to exclude archived projects
+    query_filter = {"is_archived": {"$ne": True}}
+    
     if current_user.role == UserRole.SUPER_ADMIN:
-        # Super Admin sees all trusses from all stores
-        trusses = await db.trusses.find().to_list(1000)
+        # Super Admin sees all non-archived trusses from all stores
+        trusses = await db.trusses.find(query_filter).to_list(1000)
     else:
-        # Admin sees all trusses from their store
-        trusses = await db.trusses.find({"store_id": current_user.store_id}).to_list(1000)
+        # Admin sees all non-archived trusses from their store
+        query_filter["store_id"] = current_user.store_id
+        trusses = await db.trusses.find(query_filter).to_list(1000)
     
     # Convert to Truss objects
     return [Truss(**truss) for truss in trusses]
