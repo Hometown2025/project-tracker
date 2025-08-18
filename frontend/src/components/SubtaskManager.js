@@ -279,11 +279,13 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
                               <h4 className={`subtask-title ${subtask.completed ? 'completed' : ''}`}>
                                 {subtask.title}
                               </h4>
-                              <div 
-                                className="w-2 h-2 rounded-full flex-shrink-0"
-                                style={{ backgroundColor: taskColor }}
-                                title={`Room: ${parentTask.title}`}
-                              ></div>
+                              <div className="subtask-room-label">
+                                <div 
+                                  className="w-2 h-2 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: taskColor }}
+                                ></div>
+                                <span className="room-name">{parentTask.title}</span>
+                              </div>
                             </div>
                             
                             {/* Subtask Actions */}
