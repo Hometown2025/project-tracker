@@ -840,11 +840,27 @@ const CalendarView = ({ tasks, projects, refreshData, setCurrentView, setSelecte
                     return (
                       <div 
                         key={event.id} 
-                        className={`calendar-event ${event.event_type} priority-${event.priority}`}
+                        className={`calendar-event ${event.event_type} priority-${event.priority} ${project ? 'clickable' : ''}`}
                         style={{ borderColor: project?.color || '#8B5CF6' }}
-                        title={`${event.title} (${event.event_label})`}
+                        title={`${event.title} (${event.event_label})\nProject: ${project?.name || 'No Project'}\nClick to view project`}
+                        onClick={() => handleEventClick(event)}
                       >
-                        {event.title.length > 25 ? `${event.title.substring(0, 25)}...` : event.title}
+                        <div className="calendar-event-content">
+                          <div className="calendar-event-title">
+                            {event.title.length > 20 ? `${event.title.substring(0, 20)}...` : event.title}
+                          </div>
+                          {project && (
+                            <div className="calendar-event-project">
+                              <div 
+                                className="calendar-project-indicator"
+                                style={{ backgroundColor: project.color }}
+                              ></div>
+                              <span className="calendar-project-name">
+                                {project.name.length > 15 ? `${project.name.substring(0, 15)}...` : project.name}
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
