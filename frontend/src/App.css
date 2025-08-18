@@ -3698,6 +3698,67 @@ body {
   transform: translateY(-1px);
 }
 
+.btn-icon.shipment {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.btn-icon.shipment:hover {
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-icon.archive {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.btn-icon.archive:hover {
+  background: #8b5cf6;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-icon.unarchive {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.btn-icon.unarchive:hover {
+  background: #22c55e;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.btn-active {
+  background: #8b5cf6;
+  color: white;
+}
+
+.shipment-modal {
+  width: 90%;
+  max-width: 500px;
+}
+
+.project-info {
+  padding: 0.75rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.875rem;
+}
+
+.status-info {
+  padding: 0.5rem 0;
+}
+
 .empty-state {
   text-align: center;
   padding: 3rem;
