@@ -1890,6 +1890,20 @@ const CreateProjectModal = ({ onClose, onSuccess }) => {
           </div>
 
           <div className="form-group">
+            <label className="form-label">Total Square Footage <span className="optional">(optional)</span></label>
+            <input 
+              type="number"
+              placeholder="Enter total square footage (e.g., 2400)"
+              className="form-input"
+              value={formData.square_footage}
+              onChange={(e) => setFormData({...formData, square_footage: e.target.value})}
+              min="0"
+              step="1"
+            />
+            <small className="form-hint">Total living space square footage of the house</small>
+          </div>
+
+          <div className="form-group">
             <label className="form-label">Color</label>
             <div className="color-picker">
               {colors.map(color => (
