@@ -529,13 +529,16 @@ body {
 
 /* Main Content */
 .main-content {
-  margin-left: 260px;
+  flex: 1;
   min-height: 100vh;
   background: #f8fafc;
   transition: all 0.3s ease;
+  width: calc(100vw - 260px);
+  margin-left: 260px;
 }
 
 .sidebar-collapsed .main-content {
+  width: calc(100vw - 64px);
   margin-left: 64px;
 }
 
