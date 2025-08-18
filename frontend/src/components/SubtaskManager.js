@@ -11,7 +11,7 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
   const [loading, setLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [newSubtask, setNewSubtask] = useState({ title: '', description: '', order_date: '', delivery_date: '' });
+  const [newSubtask, setNewSubtask] = useState({ title: '', description: '', order_date: '', delivery_date: '', actual_cost: '' });
   const [editingSubtask, setEditingSubtask] = useState(null);
   const [expandedSubtasks, setExpandedSubtasks] = useState(new Set());
   const { canCreate, canEdit } = useAuth();
