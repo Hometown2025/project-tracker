@@ -4963,6 +4963,250 @@ class TaskManagerTester:
         
         self.log("\n=== Auto-Populate Subtasks Testing Complete ===")
 
+    def test_truss_archiving_and_shipment_scheduling(self):
+        """Test new truss archiving and shipment scheduling functionality"""
+        self.log("\n=== Testing Truss Archiving and Shipment Scheduling Functionality ===")
+        
+        if not self.admin_token:
+            self.log("❌ No admin token available for truss archiving tests", "ERROR")
+            return
+        
+        # 1. Create a test truss project
+        self.log("\n--- 1. Creating Test Truss Project ---")
+        test_truss = {
+            "project_name": "Archive Test Truss Project",
+            "project_number": "ARCH-2024-001",
+            "designer": "Test Designer",
+            "salesman": "Test Salesman",
+            "project_status": "completed",  # Start with completed status
+            "date_ordered": datetime.now().isoformat(),
+            "estimated_delivery": (datetime.now() + timedelta(days=7)).isoformat(),
+            "lumber_2x4_bf": 150.5,
+            "lumber_2x6_bf": 200.75,
+            "lumber_2x8_12ft": 25,
+            "lumber_2x8_16ft": 30,
+            "lumber_2x8_18ft": 15,
+            "lumber_2x8_20ft": 10,
+            "estimated_production_days": 5,
+            "notes": "Test truss for archiving functionality"
+        }
+        
+        created_truss = self.test_request("POST", "/trusses", test_truss, 200, 
+                                        "Create Test Truss for Archiving", auth_token=self.admin_token)
+        
+        if not created_truss:
+            self.log("❌ Failed to create test truss, skipping archiving tests", "ERROR")
+            return
+        
+        truss_id = created_truss['id']
+        self.log(f"✅ Created test truss: {truss_id}")
+        
+        # 2. Test Archive Functionality
+        self.log("\n--- 2. Testing Archive Functionality ---")
+        
+        # First, set status to "delivered" (required for archiving)
+        delivered_update = {"project_status": "delivered"}
+        updated_truss = self.test_request("PUT", f"/trusses/{truss_id}", delivered_update, 200,
+                                        "Set Truss Status to Delivered", auth_token=self.admin_token)
+        
+        if updated_truss and updated_truss.get('project_status') == 'delivered':
+            self.log("✅ Truss status set to delivered")
+            
+            # Test archive endpoint: POST /api/trusses/{id}/archive
+            archive_response = self.test_request("POST", f"/trusses/{truss_id}/archive", {}, 200,
+                                               "Archive Delivered Truss", auth_token=self.admin_token)
+            
+            if archive_response:
+                self.log("✅ Truss archived successfully")
+                
+                # Verify GET /api/trusses excludes archived projects
+                active_trusses = self.test_request("GET", "/trusses", auth_token=self.admin_token,
+                                                 test_name="Get Active Trusses (Should Exclude Archived)")
+                
+                if active_trusses is not None:
+                    archived_truss_found = any(truss['id'] == truss_id for truss in active_trusses)
+                    if not archived_truss_found:
+                        self.log("✅ Archived truss excluded from active trusses list")
+                    else:
+                        self.log("❌ Archived truss still appears in active trusses list", "ERROR")
+                        self.failed_tests += 1
+                
+                # Test GET /api/trusses/archived shows only archived projects
+                archived_trusses = self.test_request("GET", "/trusses/archived", auth_token=self.admin_token,
+                                                   test_name="Get Archived Trusses")
+                
+                if archived_trusses is not None:
+                    archived_truss_found = any(truss['id'] == truss_id for truss in archived_trusses)
+                    if archived_truss_found:
+                        self.log("✅ Archived truss appears in archived trusses list")
+                    else:
+                        self.log("❌ Archived truss not found in archived trusses list", "ERROR")
+                        self.failed_tests += 1
+                
+                # Test unarchive endpoint: POST /api/trusses/{id}/unarchive
+                unarchive_response = self.test_request("POST", f"/trusses/{truss_id}/unarchive", {}, 200,
+                                                     "Unarchive Truss", auth_token=self.admin_token)
+                
+                if unarchive_response:
+                    self.log("✅ Truss unarchived successfully")
+                    
+                    # Verify truss appears in active list again
+                    active_trusses_after = self.test_request("GET", "/trusses", auth_token=self.admin_token,
+                                                           test_name="Get Active Trusses After Unarchive")
+                    
+                    if active_trusses_after is not None:
+                        unarchived_truss_found = any(truss['id'] == truss_id for truss in active_trusses_after)
+                        if unarchived_truss_found:
+                            self.log("✅ Unarchived truss appears in active trusses list")
+                        else:
+                            self.log("❌ Unarchived truss not found in active trusses list", "ERROR")
+                            self.failed_tests += 1
+        
+        # 3. Test Shipment Scheduling
+        self.log("\n--- 3. Testing Shipment Scheduling ---")
+        
+        # Create another test truss for shipment scheduling
+        shipment_truss = {
+            "project_name": "Shipment Test Truss Project",
+            "project_number": "SHIP-2024-001",
+            "designer": "Shipment Designer",
+            "salesman": "Shipment Salesman",
+            "project_status": "completed",
+            "date_ordered": datetime.now().isoformat(),
+            "estimated_delivery": (datetime.now() + timedelta(days=5)).isoformat(),
+            "lumber_2x4_bf": 100.0,
+            "lumber_2x6_bf": 150.0,
+            "estimated_production_days": 3,
+            "notes": "Test truss for shipment scheduling"
+        }
+        
+        shipment_truss_created = self.test_request("POST", "/trusses", shipment_truss, 200,
+                                                 "Create Test Truss for Shipment", auth_token=self.admin_token)
+        
+        if shipment_truss_created:
+            shipment_truss_id = shipment_truss_created['id']
+            self.log(f"✅ Created shipment test truss: {shipment_truss_id}")
+            
+            # Test schedule shipment: POST /api/trusses/{id}/schedule-shipment with shipment_date
+            shipment_date = (datetime.now() + timedelta(days=3)).isoformat()
+            shipment_data = {"shipment_date": shipment_date}
+            
+            schedule_response = self.test_request("POST", f"/trusses/{shipment_truss_id}/schedule-shipment", 
+                                                shipment_data, 200, "Schedule Truss Shipment", auth_token=self.admin_token)
+            
+            if schedule_response:
+                self.log("✅ Truss shipment scheduled successfully")
+                
+                # Verify the shipment_date is saved correctly
+                updated_truss = self.test_request("GET", f"/trusses/{shipment_truss_id}", auth_token=self.admin_token,
+                                                test_name="Verify Shipment Date Saved")
+                
+                if updated_truss and updated_truss.get('shipment_date'):
+                    self.log(f"✅ Shipment date saved correctly: {updated_truss['shipment_date']}")
+                else:
+                    self.log("❌ Shipment date not saved correctly", "ERROR")
+                    self.failed_tests += 1
+        
+        # 4. Test Calendar Integration
+        self.log("\n--- 4. Testing Calendar Integration ---")
+        
+        # Test GET /api/calendar endpoint as an admin user
+        calendar_events = self.test_request("GET", "/calendar", auth_token=self.admin_token,
+                                          test_name="Get Calendar Events with Truss Shipments")
+        
+        if calendar_events is not None:
+            self.log(f"✅ Retrieved {len(calendar_events)} calendar events")
+            
+            # Verify truss shipments appear in calendar events with "🚛 Truss Shipment:" title
+            truss_shipment_events = [event for event in calendar_events 
+                                   if event.get('title', '').startswith('🚛 Truss Shipment:')]
+            
+            if truss_shipment_events:
+                self.log(f"✅ Found {len(truss_shipment_events)} truss shipment events in calendar")
+                
+                # Check for our specific shipment
+                our_shipment_event = None
+                for event in truss_shipment_events:
+                    if shipment_truss_created and event.get('truss_id') == shipment_truss_id:
+                        our_shipment_event = event
+                        break
+                
+                if our_shipment_event:
+                    self.log(f"✅ Our scheduled truss shipment appears in calendar: {our_shipment_event['title']}")
+                    
+                    # Verify event structure
+                    required_fields = ['id', 'truss_id', 'title', 'date', 'priority', 'status', 'event_type', 'event_label']
+                    for field in required_fields:
+                        if field in our_shipment_event:
+                            self.log(f"✅ Calendar event has required field '{field}': {our_shipment_event[field]}")
+                        else:
+                            self.log(f"❌ Calendar event missing required field: {field}", "ERROR")
+                            self.failed_tests += 1
+                else:
+                    self.log("❌ Our scheduled truss shipment not found in calendar events", "ERROR")
+                    self.failed_tests += 1
+            else:
+                self.log("ℹ️ No truss shipment events found in calendar (may be expected if no shipments scheduled)")
+        
+        # 5. Test Access Control
+        self.log("\n--- 5. Testing Access Control ---")
+        
+        # Test that only admins can access truss archive/shipment endpoints
+        if self.demo_token:
+            # Demo user (customer) should not be able to archive trusses
+            self.test_request("POST", f"/trusses/{truss_id}/archive", {}, 403,
+                            "Customer Archive Truss (Should Fail)", auth_token=self.demo_token)
+            
+            # Demo user should not be able to schedule shipments
+            self.test_request("POST", f"/trusses/{truss_id}/schedule-shipment", 
+                            {"shipment_date": datetime.now().isoformat()}, 403,
+                            "Customer Schedule Shipment (Should Fail)", auth_token=self.demo_token)
+            
+            # Demo user should not be able to view archived trusses
+            self.test_request("GET", "/trusses/archived", expected_status=403,
+                            auth_token=self.demo_token, test_name="Customer View Archived Trusses (Should Fail)")
+        
+        # 6. Test Store Isolation for Regular Admins vs Super Admins
+        self.log("\n--- 6. Testing Store Isolation ---")
+        
+        if self.store2_token:
+            # Store 2 admin should not be able to access Store 1 trusses
+            self.test_request("POST", f"/trusses/{truss_id}/archive", {}, 404,
+                            "Store 2 Admin Archive Store 1 Truss (Should Fail)", auth_token=self.store2_token)
+            
+            self.test_request("POST", f"/trusses/{truss_id}/schedule-shipment", 
+                            {"shipment_date": datetime.now().isoformat()}, 404,
+                            "Store 2 Admin Schedule Store 1 Shipment (Should Fail)", auth_token=self.store2_token)
+        
+        # Test that archived trusses don't appear in calendar
+        self.log("\n--- 7. Testing Archived Trusses Don't Appear in Calendar ---")
+        
+        if created_truss:
+            # Archive the truss again
+            delivered_update = {"project_status": "delivered"}
+            self.test_request("PUT", f"/trusses/{truss_id}", delivered_update, 200,
+                            "Set Truss Status to Delivered Again", auth_token=self.admin_token)
+            
+            self.test_request("POST", f"/trusses/{truss_id}/archive", {}, 200,
+                            "Archive Truss Again", auth_token=self.admin_token)
+            
+            # Get calendar events again
+            calendar_events_after_archive = self.test_request("GET", "/calendar", auth_token=self.admin_token,
+                                                            test_name="Get Calendar After Archiving Truss")
+            
+            if calendar_events_after_archive is not None:
+                # Check that archived truss doesn't appear in calendar
+                archived_truss_in_calendar = any(event.get('truss_id') == truss_id 
+                                               for event in calendar_events_after_archive)
+                
+                if not archived_truss_in_calendar:
+                    self.log("✅ Archived truss does not appear in calendar events")
+                else:
+                    self.log("❌ Archived truss still appears in calendar events", "ERROR")
+                    self.failed_tests += 1
+        
+        self.log("\n--- Truss Archiving and Shipment Scheduling Tests Complete ---")
+
     def run_all_tests(self):
         """Run all backend tests including authentication and real-time messaging"""
         self.log("🚀 Starting Comprehensive Backend API Testing with Authentication and Real-time Features")
@@ -4994,6 +5238,9 @@ class TaskManagerTester:
             
             # Test truss tracking system functionality (NEW TEST)
             self.test_truss_tracking_system()
+            
+            # Test NEW truss archiving and shipment scheduling functionality
+            self.test_truss_archiving_and_shipment_scheduling()
             
             # Test authentication
             self.test_user_initialization()
