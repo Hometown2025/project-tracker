@@ -1848,11 +1848,6 @@ const CreateProjectModal = ({ onClose, onSuccess }) => {
     try {
       // Prepare data for submission, handle budget field properly
       const submitData = { ...formData };
-      if (submitData.estimated_budget !== '' && submitData.estimated_budget !== null) {
-        submitData.estimated_budget = parseFloat(submitData.estimated_budget) || null;
-      } else {
-        submitData.estimated_budget = null;
-      }
 
       await axios.post(`${API}/projects`, submitData);
       onSuccess();
