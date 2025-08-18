@@ -3001,6 +3001,22 @@ async def get_trusses(current_user: User = Depends(get_current_user)):
     # Convert to Truss objects
     return [Truss(**truss) for truss in trusses]
 
+@api_router.get("/trusses/archived")
+async def get_archived_trusses(current_user: User = Depends(get_current_user)):
+    """Get archived trusses - Super Admin sees all from all stores, Admin sees all from their store"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can view archived trusses")
+    
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super Admin sees all archived trusses from all stores
+        trusses = await db.trusses.find({"is_archived": True}).to_list(1000)
+    else:
+        # Admin sees all archived trusses from their store
+        trusses = await db.trusses.find({"store_id": current_user.store_id, "is_archived": True}).to_list(1000)
+    
+    # Convert to Truss objects
+    return [Truss(**truss) for truss in trusses]
+
 @api_router.get("/trusses/{truss_id}", response_model=Truss)
 async def get_truss(truss_id: str, current_user: User = Depends(get_current_user)):
     """Get specific truss (Admin only)"""
