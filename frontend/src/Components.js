@@ -51,13 +51,15 @@ const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject,
               <div className="avatar-circle">
                 {user?.username?.charAt(0).toUpperCase() || 'U'}
               </div>
-              <div className="user-details">
-                <div className="username">{user?.username}</div>
-                <div className={`user-role role-${user?.role}`}>
-                  {(user?.role === 'admin' || user?.role === 'super_admin') ? 
-                    (user?.role === 'super_admin' ? 'Super Admin' : 'Administrator') : 'Customer'}
+              {!sidebarCollapsed && (
+                <div className="user-details">
+                  <div className="username">{user?.username}</div>
+                  <div className={`user-role role-${user?.role}`}>
+                    {(user?.role === 'admin' || user?.role === 'super_admin') ? 
+                      (user?.role === 'super_admin' ? 'Super Admin' : 'Administrator') : 'Customer'}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
             
             <div className="user-actions">
