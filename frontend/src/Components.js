@@ -1840,8 +1840,7 @@ const CreateProjectModal = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    color: '#8B5CF6',
-    estimated_budget: ''
+    color: '#8B5CF6'
   });
 
   const colors = [
