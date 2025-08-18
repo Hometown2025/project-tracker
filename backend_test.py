@@ -6237,7 +6237,14 @@ class TaskManagerTester:
             self.failed_tests += 1
         
         # Print final results
-        self.print_test_summary()
+        self.log("\n" + "="*50)
+        self.log("🏁 CALENDAR TESTING COMPLETE")
+        self.log(f"✅ Passed: {self.passed_tests}")
+        self.log(f"❌ Failed: {self.failed_tests}")
+        self.log(f"📊 Success Rate: {(self.passed_tests/(self.passed_tests + self.failed_tests)*100):.1f}%" if (self.passed_tests + self.failed_tests) > 0 else "No tests run")
+        self.log("="*50)
+        
+        return self.failed_tests == 0
 
 if __name__ == "__main__":
     import sys
