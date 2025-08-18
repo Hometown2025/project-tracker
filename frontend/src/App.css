@@ -687,8 +687,8 @@ body {
 }
 
 .stats-card-total {
-  --gradient-start: #8b5cf6;
-  --gradient-end: #7c3aed;
+  --gradient-start: #e73137;
+  --gradient-end: #c82f35;
 }
 
 .stats-card-completed {
