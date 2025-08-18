@@ -183,7 +183,7 @@ class FocusedRoomTester:
                         self.log(f"✅ Subtask generation successful for {room_type}")
                         
                         # Verify the correct number of subtasks were created
-                        generated_subtasks = subtasks_response.get('subtasks', [])
+                        generated_subtasks = subtasks_response.get('created_subtasks', [])
                         expected_count = test_data["expected_count"]
                         
                         if len(generated_subtasks) == expected_count:
