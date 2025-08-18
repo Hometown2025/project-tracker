@@ -20,6 +20,7 @@ const AppContent = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const [dashboardStats, setDashboardStats] = useState(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [appLoading, setAppLoading] = useState(false);
   const [activeToasts, setActiveToasts] = useState([]);
 
