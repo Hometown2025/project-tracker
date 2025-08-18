@@ -33,18 +33,36 @@ const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject,
             )}
           </div>
           
-          {/* Sidebar Toggle Button */}
-          <button 
-            className="sidebar-toggle"
-            onClick={onToggleSidebar}
-            title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d={sidebarCollapsed ? "M13 5l7 7-7 7M5 5l7 7-7 7" : "M11 19l-7-7 7-7M3 12h18"} />
-            </svg>
-          </button>
+          {/* Sidebar Toggle Button - Only show in header when expanded */}
+          {!sidebarCollapsed && (
+            <button 
+              className="sidebar-toggle"
+              onClick={onToggleSidebar}
+              title="Collapse Sidebar"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M11 19l-7-7 7-7M3 12h18" />
+              </svg>
+            </button>
+          )}
         </div>
+
+        {/* Toggle Button Below Logo - Only show when collapsed */}
+        {sidebarCollapsed && (
+          <div className="collapsed-toggle-container">
+            <button 
+              className="sidebar-toggle collapsed-toggle"
+              onClick={onToggleSidebar}
+              title="Expand Sidebar"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        )}
 
         {/* Admin Panel Section - Now directly under the logo */}
         {(user?.role === 'admin' || user?.role === 'super_admin') && (
