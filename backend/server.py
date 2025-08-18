@@ -2126,6 +2126,7 @@ class TrussUpdate(BaseModel):
     salesman: Optional[str] = None
     project_status: Optional[TrussStatus] = None
     date_ordered: Optional[datetime] = None
+    estimated_delivery: Optional[datetime] = None
     shipment_date: Optional[datetime] = None
     lumber_2x4_bd_ft: Optional[float] = None
     lumber_2x6_bd_ft: Optional[float] = None
