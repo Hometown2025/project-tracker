@@ -6131,7 +6131,123 @@ class TaskManagerTester:
         
         return self.failed_tests == 0
 
+    def create_calendar_test_data(self):
+        """Create test data specifically for calendar testing"""
+        self.log("\n=== Creating Calendar Test Data ===")
+        
+        if not self.admin_token:
+            self.log("❌ No admin token available for test data creation", "ERROR")
+            return
+        
+        # Create test projects
+        test_projects = [
+            {
+                "name": "Calendar Test Project 1",
+                "description": "Project for testing calendar functionality",
+                "color": "#FF6B6B"
+            },
+            {
+                "name": "Calendar Test Project 2", 
+                "description": "Second project for calendar testing",
+                "color": "#4ECDC4"
+            }
+        ]
+        
+        for project_data in test_projects:
+            created_project = self.test_request("POST", "/projects", project_data, 200, 
+                                              f"Create {project_data['name']}", auth_token=self.admin_token)
+            if created_project:
+                self.test_data['projects'].append(created_project)
+        
+        # Create test tasks with various date types
+        if self.test_data['projects']:
+            project_id = self.test_data['projects'][0]['id']
+            
+            test_tasks = [
+                {
+                    "project_id": project_id,
+                    "title": "Task with Due Date",
+                    "description": "Task to test due date calendar events",
+                    "priority": "high",
+                    "due_date": (date.today() + timedelta(days=7)).isoformat()
+                },
+                {
+                    "project_id": project_id,
+                    "title": "Task with Order Date",
+                    "description": "Task to test order date calendar events",
+                    "priority": "medium",
+                    "order_date": (date.today() + timedelta(days=3)).isoformat()
+                },
+                {
+                    "project_id": project_id,
+                    "title": "Task with Delivery Date",
+                    "description": "Task to test delivery date calendar events",
+                    "priority": "high",
+                    "delivery_date": (date.today() + timedelta(days=10)).isoformat()
+                },
+                {
+                    "project_id": project_id,
+                    "title": "Task with Multiple Dates",
+                    "description": "Task to test multiple calendar events from one task",
+                    "priority": "high",
+                    "due_date": (date.today() + timedelta(days=14)).isoformat(),
+                    "order_date": (date.today() + timedelta(days=5)).isoformat(),
+                    "delivery_date": (date.today() + timedelta(days=12)).isoformat()
+                }
+            ]
+            
+            for task_data in test_tasks:
+                created_task = self.test_request("POST", "/tasks", task_data, 200,
+                                               f"Create {task_data['title']}", auth_token=self.admin_token)
+                if created_task:
+                    self.test_data['tasks'].append(created_task)
+        
+        # Create test truss data if admin has access
+        test_truss = {
+            "project_name": "Calendar Test Truss Project",
+            "project_number": "CAL-001",
+            "designer": "Test Designer",
+            "salesman": "Test Salesman",
+            "project_status": "ready_for_shop",
+            "shipment_date": (datetime.now() + timedelta(days=8)).isoformat()
+        }
+        
+        created_truss = self.test_request("POST", "/trusses", test_truss, 200,
+                                        "Create Test Truss for Calendar", auth_token=self.admin_token)
+        if created_truss:
+            self.log("✅ Created test truss with shipment date for calendar testing")
+    
+    def run_calendar_focused_tests(self):
+        """Run calendar-focused tests as requested in review"""
+        self.log("🚀 Starting Calendar Functionality Testing")
+        self.log(f"Backend URL: {self.base_url}")
+        
+        try:
+            # Authentication setup
+            self.test_multi_store_authentication()
+            
+            # Create test data for calendar testing
+            self.create_calendar_test_data()
+            
+            # Main calendar functionality test
+            self.test_calendar_functionality_comprehensive()
+            
+        except Exception as e:
+            self.log(f"❌ Calendar test suite failed with exception: {str(e)}", "ERROR")
+            self.failed_tests += 1
+        
+        # Print final results
+        self.print_test_summary()
+
 if __name__ == "__main__":
-    tester = TaskManagerTester()
-    success = tester.run_all_tests()
-    sys.exit(0 if success else 1)
+    import sys
+    
+    # Check if calendar-focused testing is requested
+    if len(sys.argv) > 1 and sys.argv[1] == "--calendar":
+        tester = TaskManagerTester()
+        success = tester.run_calendar_focused_tests()
+        sys.exit(0 if success else 1)
+    else:
+        tester = TaskManagerTester()
+        success = tester.run_all_tests()
+        sys.exit(0 if success else 1)
