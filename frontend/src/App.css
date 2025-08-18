@@ -3090,13 +3090,13 @@ body {
 }
 
 .file-drop-zone:hover {
-  border-color: #8b5cf6;
-  background: #f8f6ff;
+  border-color: #e73137;
+  background: #fef2f2;
 }
 
 .file-drop-zone.dragging {
-  border-color: #8b5cf6;
-  background: #f0edff;
+  border-color: #e73137;
+  background: #fef2f2;
   transform: scale(1.02);
 }
 
