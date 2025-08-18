@@ -436,6 +436,12 @@ body {
   font-weight: 500;
 }
 
+/* Navigation Sections */
+.admin-section {
+  margin-bottom: 1rem;
+  padding: 0 1rem;
+}
+
 .nav-section {
   margin-bottom: 2rem;
   padding: 0 1rem;
