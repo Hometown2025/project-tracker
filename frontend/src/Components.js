@@ -1904,20 +1904,6 @@ const CreateProjectModal = ({ onClose, onSuccess }) => {
           </div>
 
           <div className="form-group">
-            <label className="form-label">Overall Budget <span className="optional">(optional)</span></label>
-            <input 
-              type="number"
-              placeholder="Enter total project budget (e.g., 250000)"
-              className="form-input"
-              value={formData.estimated_budget}
-              onChange={(e) => setFormData({...formData, estimated_budget: e.target.value})}
-              min="0"
-              step="0.01"
-            />
-            <small className="form-hint">This is the total budget for the entire house project</small>
-          </div>
-
-          <div className="form-group">
             <label className="form-label">Color</label>
             <div className="color-picker">
               {colors.map(color => (
