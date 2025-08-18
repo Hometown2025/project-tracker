@@ -188,9 +188,13 @@ class BathroomSubtaskTester:
                     self.failed_tests += 1
                 
                 # Get the actual created subtasks to verify content
-                created_subtasks_list = self.test_request("GET", f"/tasks?parent_task_id={task_id}", 
+                created_subtasks_list = self.test_request("GET", f"/tasks", 
                                                         auth_token=self.admin_token,
                                                         test_name=f"Get Generated Subtasks for {scenario['title']}")
+                
+                # Filter to only the subtasks for this parent task
+                if created_subtasks_list:
+                    created_subtasks_list = [subtask for subtask in created_subtasks_list if subtask.get('parent_task_id') == task_id]
                 
                 if created_subtasks_list:
                     self.log(f"✅ Retrieved {len(created_subtasks_list)} generated subtasks")
