@@ -3009,18 +3009,18 @@ body {
 
 /* File Upload Styles */
 .file-upload-container {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .file-drop-zone {
   border: 2px dashed #d1d5db;
-  border-radius: 12px;
-  padding: 2rem;
+  border-radius: 8px;
+  padding: 1rem;
   text-align: center;
   cursor: pointer;
   transition: all 0.3s ease;
   background: #fafafa;
-  min-height: 150px;
+  min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3047,27 +3047,33 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
 }
 
 .upload-progress {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   width: 100%;
-  max-width: 300px;
+  max-width: 250px;
 }
 
 .upload-icon {
   color: #8b5cf6;
 }
 
+.upload-icon svg {
+  width: 2rem;
+  height: 2rem;
+}
+
 .upload-text {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: 500;
   color: #374151;
   margin: 0;
+}
 }
 
 .upload-link {
