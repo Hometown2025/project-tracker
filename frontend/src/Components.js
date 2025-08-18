@@ -2653,6 +2653,18 @@ const TrussView = ({ refreshData, user }) => {
           }}
         />
       )}
+
+      {/* Shipment Scheduling Modal */}
+      {showShipmentModal && shipmentTruss && (
+        <ShipmentModal 
+          truss={shipmentTruss}
+          onClose={() => {
+            setShowShipmentModal(false);
+            setShipmentTruss(null);
+          }}
+          onSubmit={submitShipment}
+        />
+      )}
     </div>
   );
 };
