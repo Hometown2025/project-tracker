@@ -432,12 +432,12 @@ body {
 
 .nav-badge {
   font-size: 0.625rem;
-  background: #f1f5f9;
-  color: #64748b;
+  background: rgba(255, 255, 255, 0.9);
+  color: #e73137;
   padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
   margin-left: auto;
-  font-weight: 500;
+  font-weight: 600;
 }
 
 /* Admin Panel Button Special Styling */
