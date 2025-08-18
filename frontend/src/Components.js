@@ -1370,7 +1370,6 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
     order_date: '',
     delivery_date: '',
     project_id: selectedProject?.id || '',
-    estimated_budget: '',
     actual_cost: ''
   });
 
