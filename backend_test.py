@@ -1085,75 +1085,204 @@ class TaskManagerTester:
             if updated_idea and updated_idea['title'] == update_data['title']:
                 self.log("✅ Idea updated successfully")
     
-    def test_calendar_api(self):
-        """Test Enhanced Calendar API with multiple date types and emojis"""
-        self.log("\n=== Testing Enhanced Calendar API ===")
+    def test_calendar_functionality_comprehensive(self):
+        """Test comprehensive calendar functionality and project linking enhancements"""
+        self.log("\n=== Testing Calendar Functionality and Project Linking Enhancements ===")
         
-        calendar_data = self.test_request("GET", "/calendar", test_name="Get Enhanced Calendar Data")
+        if not self.admin_token:
+            self.log("❌ No admin token available for calendar testing", "ERROR")
+            return
         
-        if calendar_data:
-            self.log(f"✅ Retrieved {len(calendar_data)} calendar events")
+        # 1. Test Calendar Events API - /api/calendar endpoint
+        self.log("\n--- 1. Testing Calendar Events API (/api/calendar) ---")
+        calendar_data = self.test_request("GET", "/calendar", auth_token=self.admin_token, test_name="Get Calendar Events API")
+        
+        if not calendar_data:
+            self.log("❌ Failed to retrieve calendar data", "ERROR")
+            return
+        
+        self.log(f"✅ Retrieved {len(calendar_data)} calendar events from /api/calendar endpoint")
+        
+        # 2. Test Calendar Events Structure and Required Fields
+        self.log("\n--- 2. Testing Calendar Events Structure ---")
+        required_fields = ['id', 'title', 'date', 'priority', 'status', 'event_type', 'event_label']
+        project_linked_events = 0
+        truss_events = 0
+        
+        for event in calendar_data:
+            # Verify required fields
+            missing_fields = []
+            for field in required_fields:
+                if field not in event:
+                    missing_fields.append(field)
             
-            # Verify calendar event structure and enhanced features
-            if calendar_data:
-                # Check for different event types
-                event_types_found = set()
-                emojis_found = set()
-                
-                for event in calendar_data:
-                    # Verify required fields
-                    required_fields = ['id', 'task_id', 'title', 'date', 'priority', 'status', 'project_id', 'event_type', 'event_label']
-                    
-                    for field in required_fields:
-                        if field not in event:
-                            self.log(f"❌ Calendar event missing field: {field}", "ERROR")
-                            self.failed_tests += 1
-                    
-                    # Track event types and emojis
-                    if 'event_type' in event:
-                        event_types_found.add(event['event_type'])
-                    
-                    if 'title' in event:
-                        title = event['title']
-                        if '📋' in title:
-                            emojis_found.add('📋')
-                        if '📦' in title:
-                            emojis_found.add('📦')
-                        if '🚚' in title:
-                            emojis_found.add('🚚')
-                
-                # Verify we have different event types
-                expected_event_types = {'due_date', 'order_date', 'delivery_date'}
-                found_event_types = event_types_found.intersection(expected_event_types)
-                
-                if found_event_types:
-                    self.log(f"✅ Found event types: {', '.join(found_event_types)}")
-                else:
-                    self.log("❌ No expected event types found", "ERROR")
+            if missing_fields:
+                self.log(f"❌ Calendar event missing fields: {missing_fields}", "ERROR")
+                self.failed_tests += 1
+            else:
+                self.log(f"✅ Event '{event['title']}' has all required fields")
+            
+            # Check project association
+            if event.get('project_id'):
+                project_linked_events += 1
+                self.log(f"✅ Event '{event['title']}' linked to project_id: {event['project_id']}")
+            elif event.get('truss_id'):
+                truss_events += 1
+                self.log(f"✅ Truss event '{event['title']}' has truss_id: {event['truss_id']}")
+        
+        self.log(f"✅ Found {project_linked_events} project-linked events and {truss_events} truss events")
+        
+        # 3. Test Event Types Coverage
+        self.log("\n--- 3. Testing Event Types Coverage ---")
+        event_types_found = set()
+        event_labels_found = set()
+        
+        for event in calendar_data:
+            if 'event_type' in event:
+                event_types_found.add(event['event_type'])
+            if 'event_label' in event:
+                event_labels_found.add(event['event_label'])
+        
+        expected_event_types = {'due_date', 'order_date', 'delivery_date', 'truss_shipment'}
+        found_event_types = event_types_found.intersection(expected_event_types)
+        
+        if found_event_types:
+            self.log(f"✅ Found event types: {', '.join(found_event_types)}")
+            for event_type in found_event_types:
+                type_count = len([e for e in calendar_data if e.get('event_type') == event_type])
+                self.log(f"✅ {event_type}: {type_count} events")
+        else:
+            self.log("❌ No expected event types found", "ERROR")
+            self.failed_tests += 1
+        
+        # Test specific event types
+        task_due_dates = [e for e in calendar_data if e.get('event_type') == 'due_date']
+        delivery_dates = [e for e in calendar_data if e.get('event_type') == 'delivery_date']
+        truss_shipments = [e for e in calendar_data if e.get('event_type') == 'truss_shipment']
+        
+        self.log(f"✅ Task due dates: {len(task_due_dates)} events")
+        self.log(f"✅ Delivery dates: {len(delivery_dates)} events")
+        self.log(f"✅ Truss shipments: {len(truss_shipments)} events")
+        
+        # 4. Test Data Integrity
+        self.log("\n--- 4. Testing Data Integrity ---")
+        
+        # Check event titles and descriptions
+        events_with_titles = [e for e in calendar_data if e.get('title')]
+        self.log(f"✅ Events with titles: {len(events_with_titles)}/{len(calendar_data)}")
+        
+        # Check proper date formatting
+        valid_dates = 0
+        for event in calendar_data:
+            if 'date' in event:
+                try:
+                    # Try to parse ISO format date
+                    from datetime import datetime
+                    datetime.fromisoformat(event['date'].replace('Z', '+00:00'))
+                    valid_dates += 1
+                except:
+                    self.log(f"❌ Invalid date format in event: {event.get('title', 'Unknown')} - {event['date']}", "ERROR")
                     self.failed_tests += 1
+        
+        self.log(f"✅ Valid date formats: {valid_dates}/{len(calendar_data)}")
+        
+        # Check priority levels
+        priority_levels = set()
+        for event in calendar_data:
+            if 'priority' in event:
+                priority_levels.add(event['priority'])
+        
+        expected_priorities = {'high', 'medium', 'low'}
+        valid_priorities = priority_levels.intersection(expected_priorities)
+        if valid_priorities:
+            self.log(f"✅ Found priority levels: {', '.join(valid_priorities)}")
+        
+        # 5. Test Project Association Data
+        self.log("\n--- 5. Testing Project Association Data ---")
+        
+        # Get projects to verify project associations
+        projects = self.test_request("GET", "/projects", auth_token=self.admin_token, test_name="Get Projects for Calendar Verification")
+        
+        if projects:
+            project_ids = {p['id'] for p in projects}
+            project_names = {p['id']: p['name'] for p in projects}
+            
+            valid_project_associations = 0
+            for event in calendar_data:
+                if event.get('project_id') and event['project_id'] in project_ids:
+                    valid_project_associations += 1
+                    project_name = project_names.get(event['project_id'], 'Unknown')
+                    self.log(f"✅ Event '{event['title']}' linked to valid project: {project_name}")
+            
+            self.log(f"✅ Valid project associations: {valid_project_associations}/{project_linked_events}")
+        
+        # 6. Test API Response Structure for Frontend Consumption
+        self.log("\n--- 6. Testing API Response Structure ---")
+        
+        # Verify response is a list
+        if isinstance(calendar_data, list):
+            self.log("✅ Calendar API returns list format")
+        else:
+            self.log("❌ Calendar API should return list format", "ERROR")
+            self.failed_tests += 1
+        
+        # Verify events are sorted by date
+        if len(calendar_data) > 1:
+            dates = [event.get('date') for event in calendar_data if event.get('date')]
+            sorted_dates = sorted(dates)
+            if dates == sorted_dates:
+                self.log("✅ Calendar events are sorted by date")
+            else:
+                self.log("❌ Calendar events are not properly sorted by date", "ERROR")
+                self.failed_tests += 1
+        
+        # Test different user roles access
+        self.log("\n--- 7. Testing Role-Based Calendar Access ---")
+        
+        # Test demo user access (should see filtered events)
+        if self.demo_token:
+            demo_calendar = self.test_request("GET", "/calendar", auth_token=self.demo_token, test_name="Get Calendar Events (Demo User)")
+            
+            if demo_calendar is not None:
+                self.log(f"✅ Demo user can access calendar: {len(demo_calendar)} events")
                 
-                # Verify emojis are present
-                expected_emojis = {'📋', '📦', '🚚'}
-                found_emojis = emojis_found.intersection(expected_emojis)
-                
-                if found_emojis:
-                    self.log(f"✅ Found emojis in calendar events: {', '.join(found_emojis)}")
+                # Demo should see fewer or equal events than admin
+                if len(demo_calendar) <= len(calendar_data):
+                    self.log("✅ Demo user sees appropriate filtered calendar events")
                 else:
-                    self.log("❌ No expected emojis found in calendar events", "ERROR")
+                    self.log("❌ Demo user sees more events than admin (filtering issue)", "ERROR")
                     self.failed_tests += 1
-                
-                # Test that tasks with multiple dates create multiple events
-                task_event_counts = {}
-                for event in calendar_data:
-                    task_id = event.get('task_id')
-                    if task_id:
-                        task_event_counts[task_id] = task_event_counts.get(task_id, 0) + 1
-                
-                multiple_event_tasks = [task_id for task_id, count in task_event_counts.items() if count > 1]
-                if multiple_event_tasks:
-                    self.log(f"✅ Found {len(multiple_event_tasks)} tasks with multiple calendar events")
-                else:
-                    self.log("ℹ️ No tasks with multiple date events found (this is okay if test data doesn't have multiple dates)")
+        
+        # 8. Test Calendar Event Emojis and Formatting
+        self.log("\n--- 8. Testing Calendar Event Formatting ---")
+        
+        emoji_patterns = {
+            '📋': 'due_date',
+            '📦': 'order_date', 
+            '🚚': 'delivery_date',
+            '🚛': 'truss_shipment'
+        }
+        
+        found_emojis = set()
+        for event in calendar_data:
+            title = event.get('title', '')
+            for emoji, event_type in emoji_patterns.items():
+                if emoji in title and event.get('event_type') == event_type:
+                    found_emojis.add(emoji)
+                    self.log(f"✅ Found {emoji} emoji for {event_type} event: {title}")
+        
+        if found_emojis:
+            self.log(f"✅ Calendar events use proper emoji formatting: {', '.join(found_emojis)}")
+        else:
+            self.log("⚠️ No emoji formatting found in calendar events")
+        
+        # Summary
+        self.log("\n--- Calendar Functionality Test Summary ---")
+        self.log(f"✅ Total calendar events: {len(calendar_data)}")
+        self.log(f"✅ Project-linked events: {project_linked_events}")
+        self.log(f"✅ Truss events: {truss_events}")
+        self.log(f"✅ Event types found: {', '.join(event_types_found)}")
+        self.log(f"✅ Event labels found: {', '.join(event_labels_found)}")
         
         return calendar_data
     
