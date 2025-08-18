@@ -507,7 +507,7 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   scrollbar-width: thin;
-  scrollbar-color: rgba(139, 92, 246, 0.3) transparent;
+  scrollbar-color: rgba(231, 49, 55, 0.3) transparent;
 }
 
 .project-list-scrollable::-webkit-scrollbar {
