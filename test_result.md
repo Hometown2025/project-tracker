@@ -468,7 +468,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Updated Room Subtask Configurations (Kitchen, Bedroom, Living Room)"
+    - "Calendar Functionality and Project Linking Enhancements"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
