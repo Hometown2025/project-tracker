@@ -5678,6 +5678,240 @@ class TaskManagerTester:
         
         self.log(f"\n=== New Room Type Subtask Generation Testing Complete ===")
 
+    def test_updated_room_subtask_configurations(self):
+        """Test Updated Kitchen, Bedroom, and Living Room Subtask Configurations"""
+        self.log("\n=== Testing Updated Room Subtask Configurations (Kitchen, Bedroom, Living Room) ===")
+        
+        if not self.admin_token:
+            self.log("❌ No admin token available for room subtask testing", "ERROR")
+            return
+        
+        # Create a test project for room tasks
+        room_project = {
+            "name": "Updated Room Subtask Testing Project",
+            "description": "Testing updated subtask configurations for Kitchen, Bedroom, and Living Room",
+            "color": "#FF9800"
+        }
+        
+        created_project = self.test_request("POST", "/projects", room_project, 200, 
+                                          "Create Room Testing Project", auth_token=self.admin_token)
+        
+        if not created_project:
+            self.log("❌ Failed to create test project for room testing", "ERROR")
+            return
+        
+        project_id = created_project['id']
+        self.log(f"✅ Created test project: {project_id}")
+        
+        # Define expected subtasks for each room type
+        expected_room_subtasks = {
+            "kitchen": {
+                "count": 9,
+                "subtasks": [
+                    {"title": "Wall Coverings", "description": "Install wall coverings, paint, or wallpaper"},
+                    {"title": "Flooring", "description": "Install kitchen flooring"},
+                    {"title": "Lighting", "description": "Install kitchen lighting and electrical fixtures"},
+                    {"title": "Cabinets", "description": "Install kitchen cabinets and storage solutions"},
+                    {"title": "Cabinet Hardware", "description": "Install cabinet handles, knobs, and drawer slides"},
+                    {"title": "Sink", "description": "Install kitchen sink and disposal"},
+                    {"title": "Faucet", "description": "Install kitchen faucet and water connections"},
+                    {"title": "Countertop", "description": "Install kitchen countertops"},
+                    {"title": "Backsplash", "description": "Install kitchen backsplash and tile work"}
+                ]
+            },
+            "bedroom": {
+                "count": 3,
+                "subtasks": [
+                    {"title": "Wall Coverings", "description": "Install wall coverings, paint, or wallpaper"},
+                    {"title": "Flooring", "description": "Install bedroom flooring"},
+                    {"title": "Lighting", "description": "Install bedroom lighting and electrical fixtures"}
+                ]
+            },
+            "living room": {
+                "count": 4,
+                "subtasks": [
+                    {"title": "Wall Coverings", "description": "Install wall coverings, paint, or wallpaper"},
+                    {"title": "Flooring", "description": "Install living room flooring"},
+                    {"title": "Lighting", "description": "Install living room lighting and electrical fixtures"},
+                    {"title": "Fire Place", "description": "Install or renovate fireplace and surround"}
+                ]
+            }
+        }
+        
+        # Test scenarios for each room type with various title variations
+        room_test_scenarios = {
+            "kitchen": [
+                {"title": "Kitchen Remodel", "description": "Complete kitchen renovation"},
+                {"title": "Main Kitchen", "description": "Main kitchen upgrade"},
+                {"title": "Galley Kitchen", "description": "Galley kitchen renovation"}
+            ],
+            "bedroom": [
+                {"title": "Master Bedroom", "description": "Master bedroom renovation"},
+                {"title": "Guest Bedroom", "description": "Guest bedroom update"},
+                {"title": "Kids Bedroom", "description": "Children's bedroom makeover"}
+            ],
+            "living room": [
+                {"title": "Living Room Renovation", "description": "Living room complete renovation"},
+                {"title": "Family Room", "description": "Family room update"},
+                {"title": "Great Room", "description": "Great room renovation"}
+            ]
+        }
+        
+        # Test each room type
+        for room_type, scenarios in room_test_scenarios.items():
+            self.log(f"\n--- Testing {room_type.upper()} Room Type ---")
+            expected_config = expected_room_subtasks[room_type]
+            
+            for scenario in scenarios:
+                self.log(f"\n--- Testing Scenario: {scenario['title']} ---")
+                
+                # Create room task
+                room_task = {
+                    "project_id": project_id,
+                    "title": scenario['title'],
+                    "description": scenario['description'],
+                    "priority": "high"
+                }
+                
+                created_task = self.test_request("POST", "/tasks", room_task, 200, 
+                                               f"Create {room_type.title()} Task - {scenario['title']}", 
+                                               auth_token=self.admin_token)
+                
+                if not created_task:
+                    self.log(f"❌ Failed to create {room_type} task: {scenario['title']}", "ERROR")
+                    continue
+                
+                task_id = created_task['id']
+                self.log(f"✅ Created {room_type} task: {task_id}")
+                
+                # Test room detection and subtask generation
+                subtask_response = self.test_request("POST", f"/tasks/{task_id}/generate-subtasks", 
+                                                   None, 200, 
+                                                   f"Generate Subtasks for {scenario['title']}", 
+                                                   auth_token=self.admin_token)
+                
+                if subtask_response:
+                    # Verify room type detection
+                    detected_room_type = subtask_response.get('room_type')
+                    if detected_room_type == room_type:
+                        self.log(f"✅ Room type correctly detected as: {detected_room_type}")
+                    else:
+                        self.log(f"❌ Room type detection failed: expected {room_type}, got {detected_room_type}", "ERROR")
+                        self.failed_tests += 1
+                    
+                    # Verify subtask count
+                    message = subtask_response.get('message', '')
+                    expected_count = expected_config['count']
+                    if f'generated {expected_count} standard subtasks' in message:
+                        self.log(f"✅ Correct number of subtasks created: {expected_count}")
+                    else:
+                        self.log(f"❌ Incorrect subtask count in message: {message}", "ERROR")
+                        self.failed_tests += 1
+                    
+                    # Get the actual created subtasks to verify content
+                    created_subtasks_list = self.test_request("GET", f"/tasks?parent_task_id={task_id}", 
+                                                            auth_token=self.admin_token,
+                                                            test_name=f"Get Generated Subtasks for {scenario['title']}")
+                    
+                    if created_subtasks_list:
+                        self.log(f"✅ Retrieved {len(created_subtasks_list)} generated subtasks")
+                        
+                        # Verify all expected subtasks are present
+                        created_titles = [subtask['title'] for subtask in created_subtasks_list]
+                        expected_titles = [subtask['title'] for subtask in expected_config['subtasks']]
+                        
+                        # Check each expected subtask
+                        for expected_subtask in expected_config['subtasks']:
+                            if expected_subtask['title'] in created_titles:
+                                self.log(f"✅ Found expected subtask: '{expected_subtask['title']}'")
+                                
+                                # Find the created subtask and verify description
+                                created_subtask = next((s for s in created_subtasks_list if s['title'] == expected_subtask['title']), None)
+                                if created_subtask and created_subtask['description'] == expected_subtask['description']:
+                                    self.log(f"✅ Correct description for '{expected_subtask['title']}'")
+                                else:
+                                    self.log(f"❌ Incorrect description for '{expected_subtask['title']}'", "ERROR")
+                                    self.failed_tests += 1
+                            else:
+                                self.log(f"❌ Missing expected subtask: '{expected_subtask['title']}'", "ERROR")
+                                self.failed_tests += 1
+                        
+                        # Verify no old subtasks are present (for kitchen specifically)
+                        if room_type == "kitchen":
+                            old_kitchen_subtasks = ["Electrical Work", "Painting", "Windows", "Appliances"]
+                            for old_subtask in old_kitchen_subtasks:
+                                if old_subtask in created_titles:
+                                    self.log(f"❌ Found old subtask '{old_subtask}' - should be removed", "ERROR")
+                                    self.failed_tests += 1
+                                else:
+                                    self.log(f"✅ Confirmed old subtask '{old_subtask}' is no longer generated")
+                        
+                        # Verify subtask structure and required fields
+                        for subtask in created_subtasks_list:
+                            required_fields = ['id', 'title', 'description', 'estimated_budget', 'actual_cost', 
+                                             'order_date', 'delivery_date', 'store_id', 'project_id', 'parent_task_id']
+                            
+                            missing_fields = [field for field in required_fields if field not in subtask]
+                            if missing_fields:
+                                self.log(f"❌ Subtask '{subtask['title']}' missing fields: {missing_fields}", "ERROR")
+                                self.failed_tests += 1
+                            else:
+                                self.log(f"✅ Subtask '{subtask['title']}' has all required fields")
+                        
+                        # Verify no duplicate subtasks
+                        if len(created_titles) == len(set(created_titles)):
+                            self.log("✅ No duplicate subtasks found")
+                        else:
+                            self.log("❌ Duplicate subtasks detected", "ERROR")
+                            self.failed_tests += 1
+                    
+                    else:
+                        self.log(f"❌ Failed to retrieve generated subtasks for {scenario['title']}", "ERROR")
+                        self.failed_tests += 1
+                
+                else:
+                    self.log(f"❌ Failed to generate subtasks for {scenario['title']}", "ERROR")
+                    self.failed_tests += 1
+        
+        # Test duplicate prevention
+        self.log("\n--- Testing Duplicate Prevention ---")
+        if room_test_scenarios.get("kitchen"):
+            first_kitchen = room_test_scenarios["kitchen"][0]
+            
+            # Try to generate subtasks again for a room that already has subtasks
+            kitchen_task = {
+                "project_id": project_id,
+                "title": first_kitchen['title'],
+                "description": first_kitchen['description'],
+                "priority": "high"
+            }
+            
+            duplicate_task = self.test_request("POST", "/tasks", kitchen_task, 200, 
+                                             "Create Duplicate Kitchen Task", 
+                                             auth_token=self.admin_token)
+            
+            if duplicate_task:
+                # Generate subtasks first time
+                first_generation = self.test_request("POST", f"/tasks/{duplicate_task['id']}/generate-subtasks", 
+                                                   None, 200, 
+                                                   "First Subtask Generation", 
+                                                   auth_token=self.admin_token)
+                
+                if first_generation:
+                    # Try to generate again (should be prevented)
+                    second_generation = self.test_request("POST", f"/tasks/{duplicate_task['id']}/generate-subtasks", 
+                                                        None, 200, 
+                                                        "Duplicate Subtask Generation Prevention", 
+                                                        auth_token=self.admin_token)
+                    
+                    if second_generation and 'already has' in second_generation.get('message', ''):
+                        self.log("✅ Duplicate subtask generation properly prevented")
+                    else:
+                        self.log("❌ Duplicate prevention not working", "ERROR")
+                        self.failed_tests += 1
+        
+        self.log(f"\n✅ Updated Room Subtask Configuration Testing Complete")
+
     def run_all_tests(self):
         """Run all backend tests including authentication and real-time messaging"""
         self.log("🚀 Starting Comprehensive Backend API Testing with Authentication and Real-time Features")
