@@ -1370,8 +1370,7 @@ const CreateTaskModal = ({ projects, selectedProject, onClose, onSuccess }) => {
     order_date: '',
     delivery_date: '',
     project_id: selectedProject?.id || '',
-    actual_cost: '',
-    square_footage: ''
+    actual_cost: ''
   });
 
   const handleSubmit = async (e) => {
