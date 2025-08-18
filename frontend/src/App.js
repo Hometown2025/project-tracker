@@ -161,7 +161,7 @@ const AppContent = () => {
   }
 
   return (
-    <div className="App">
+    <div className={`App ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <Components.Navigation 
         currentView={currentView} 
         setCurrentView={setCurrentView}
@@ -171,6 +171,8 @@ const AppContent = () => {
         user={user}
         onLogout={handleLogout}
         onShowAdmin={() => setShowAdminPanel(true)}
+        sidebarCollapsed={sidebarCollapsed}
+        onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       
       <main className="main-content">
