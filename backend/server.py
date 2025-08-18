@@ -2928,6 +2928,41 @@ async def get_calendar_data(current_user: User = Depends(get_current_user)):
                 "event_label": "Delivery"
             })
     
+    # Add truss shipment events
+    # Build truss query based on user role (admins only)
+    if current_user.role in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        if current_user.role == UserRole.SUPER_ADMIN:
+            # Super Admin can see all truss shipments from all stores
+            truss_query = {
+                "shipment_date": {"$exists": True, "$ne": None},
+                "is_archived": {"$ne": True}  # Exclude archived
+            }
+        else:
+            # Admin can see truss shipments from their store
+            truss_query = {
+                "store_id": current_user.store_id,
+                "shipment_date": {"$exists": True, "$ne": None},
+                "is_archived": {"$ne": True}  # Exclude archived
+            }
+        
+        trusses_with_shipments = await db.trusses.find(truss_query).to_list(1000)
+        
+        for truss in trusses_with_shipments:
+            if truss.get("shipment_date"):
+                calendar_events.append({
+                    "id": f"{truss['id']}_shipment",
+                    "truss_id": truss["id"],
+                    "title": f"🚛 Truss Shipment: {truss['project_name']}",
+                    "date": truss["shipment_date"].isoformat(),
+                    "priority": "high",
+                    "status": truss["project_status"],
+                    "project_id": None,  # Trusses don't have project_id
+                    "event_type": "truss_shipment",
+                    "event_label": "Truss Shipment",
+                    "project_number": truss.get("project_number"),
+                    "designer": truss.get("designer")
+                })
+    
     # Sort events by date
     calendar_events.sort(key=lambda x: x["date"])
     
