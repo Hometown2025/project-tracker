@@ -1173,7 +1173,6 @@ const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
     order_date: task.order_date || '',
     delivery_date: task.delivery_date || '',
     project_id: task.project_id || '',
-    estimated_budget: task.estimated_budget || '',
     actual_cost: task.actual_cost || ''
   });
 
