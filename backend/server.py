@@ -1508,11 +1508,9 @@ ROOM_SUBTASK_TEMPLATES = {
         {"title": "Painting", "description": "Paint walls and trim"}
     ],
     "bedroom": [
-        {"title": "Electrical Work", "description": "Install outlets, switches, and lighting"},
+        {"title": "Wall Coverings", "description": "Install wall coverings, paint, or wallpaper"},
         {"title": "Flooring", "description": "Install bedroom flooring"},
-        {"title": "Painting", "description": "Paint walls and trim"},
-        {"title": "Closet", "description": "Install closet systems and doors"},
-        {"title": "Windows", "description": "Install or finish window trim"}
+        {"title": "Lighting", "description": "Install bedroom lighting and electrical fixtures"}
     ],
     "living room": [
         {"title": "Electrical Work", "description": "Install outlets, switches, and lighting"},
