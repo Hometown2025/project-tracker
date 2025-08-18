@@ -47,7 +47,7 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
 
       await axios.post(`${API}/tasks`, subtaskData);
       
-      setNewSubtask({ title: '', description: '', order_date: '', delivery_date: '' });
+      setNewSubtask({ title: '', description: '', order_date: '', delivery_date: '', actual_cost: '' });
       setShowCreateForm(false);
       await fetchSubtasks();
       
