@@ -714,7 +714,7 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
 };
 
 // Calendar View Component
-const CalendarView = ({ tasks, projects, refreshData }) => {
+const CalendarView = ({ tasks, projects, refreshData, setCurrentView, setSelectedProject }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarEvents, setCalendarEvents] = useState([]);
 
@@ -728,6 +728,16 @@ const CalendarView = ({ tasks, projects, refreshData }) => {
       setCalendarEvents(response.data);
     } catch (error) {
       console.error('Error fetching calendar events:', error);
+    }
+  };
+
+  const handleEventClick = (event) => {
+    if (event.project_id) {
+      const project = projects.find(p => p.id === event.project_id);
+      if (project) {
+        setSelectedProject(project);
+        setCurrentView('tasks');
+      }
     }
   };
 
