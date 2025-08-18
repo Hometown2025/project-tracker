@@ -1702,7 +1702,12 @@ const EditProjectModal = ({ project, onClose, onSuccess }) => {
       // Only send fields that have values
       const updateData = {};
       Object.keys(formData).forEach(key => {
-        if (formData[key] && formData[key].toString().trim() !== '') {
+        if (key === 'square_footage') {
+          // Handle square footage field - allow 0 as valid value
+          if (formData[key] !== '' && formData[key] !== null && formData[key] !== undefined) {
+            updateData[key] = parseInt(formData[key]) || null;
+          }
+        } else if (formData[key] && formData[key].toString().trim() !== '') {
           updateData[key] = formData[key];
         }
       });
