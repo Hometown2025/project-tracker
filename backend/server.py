@@ -1494,10 +1494,14 @@ ROOM_SUBTASK_TEMPLATES = {
     ],
     "bathroom": [
         {"title": "Plumbing", "description": "Install toilet, sink, shower/tub plumbing"},
-        {"title": "Electrical Work", "description": "Install lighting, outlets, and ventilation fan"},
+        {"title": "Electrical Work", "description": "Install electrical outlets and ventilation fan"},
         {"title": "Tile Work", "description": "Install wall and floor tiles"},
         {"title": "Fixtures", "description": "Install toilet, sink, shower/tub fixtures"},
-        {"title": "Vanity", "description": "Install bathroom vanity and mirror"},
+        {"title": "Cabinets", "description": "Install bathroom cabinets and mirror"},
+        {"title": "Lighting", "description": "Install bathroom lighting fixtures and switches"},
+        {"title": "Cabinet Hardware", "description": "Install cabinet handles, knobs, and drawer slides"},
+        {"title": "Shower/Tub", "description": "Install shower doors, tub surrounds, and accessories"},
+        {"title": "Countertop", "description": "Install bathroom countertops and vanity tops"},
         {"title": "Flooring", "description": "Install bathroom flooring"},
         {"title": "Painting", "description": "Paint walls and trim"}
     ],
