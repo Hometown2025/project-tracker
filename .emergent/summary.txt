@@ -1,9 +1,19 @@
 <analysis>
-The previous AI engineer successfully transformed a basic task manager into a multi-tenant Lumberyard House Building Tracker. Initial development established core CRUD, RBAC, and multi-tenancy via . Subsequent work focused on robust feature expansion. Key implementations include a comprehensive budget system for projects and rooms (with detailed rollup calculations), a multi-faceted user management system allowing viewing/reactivation of deactivated users and super admin password resets, and auto-population of subtasks based on room labels. Architectural decisions involved strict use of environment variables for URLs, FastAPI for the backend, React for the frontend, and MongoDB as the database. The engineer adeptly handled technical challenges like frontend-backend API prefix mismatches and refined budget logic to align with allocation-based accounting. The application now supports complex permissions, detailed financial tracking, and improved user experience.
+The AI engineer successfully evolved the Lumberyard House Building Tracker from an MVP to a feature-rich application. Core enhancements included a refined multi-tenant budget system where project budgets act as total allocations, comprehensive user management with deactivated user handling and super admin password resets, and auto-population of subtasks. The architectural foundation consistently leveraged FastAPI for the backend, React for the frontend, and MongoDB for data, with strict adherence to environment variables for URLs.
+
+Significant feature additions throughout the trajectory include:
+1.  **Project List Scrollbar**: Enhanced navigation by providing a scrollable list for all projects.
+2.  **Truss Tracking System**: Introduced a new admin-only, store-specific Truss Tracker tab. This involved creating backend models and endpoints, a spreadsheet-like frontend UI with quick-add functionality, optional fields, running lumber totals, designer dropdowns, and robust date handling.
+3.  **UI/UX Refinements**: Adjusted font sizes, column widths, and implemented text wrapping for improved readability and space efficiency.
+4.  **File Management Improvements**: Compacted file upload areas and simplified file display to single clickable download links.
+5.  **Truss Project Lifecycle**: Implemented archiving for delivered projects and integrated shipment scheduling directly into the calendar.
+6.  **Collapsible Sidebar**: Added a toggleable sidebar for improved workspace management.
+
+Challenges encountered and resolved included fixing a CSS syntax error, handling MongoDB's  serialization requirements, resolving date format mismatches between frontend and backend, and addressing duplicate backend routes that the testing agent implicitly fixed. The development process was iterative, responding directly to user feedback and progressively enhancing functionality and user experience.
 </analysis>
 
 <product_requirements>
-The Lumberyard House Building Tracker facilitates managing house construction projects across multiple lumber yard locations. It includes CRUD for House Building Projects and House Rooms (tasks), with custom  and  for rooms and subtasks. A robust role-based access control system (, , ) ensures data isolation and hierarchical permissions.  has global control,  manages their store, and  has read-only project access. Real-time updates occur via polling, and users can attach files. A 2-level subtask system supports optional dates and color-coding. An Ideas Board is available for admin creation/editing. A Budget Tab allows customers to view overall project budgets, spending, and cost estimates, with the recent enhancement where project budget acts as a total from which room budgets are allocated. The system now supports viewing/reactivating deactivated users and super admin password resets, and auto-populates subtasks based on room types. Store-specific logos can be uploaded by super admins and displayed.
+The Lumberyard House Building Tracker manages house construction projects across multiple lumber yard locations. It provides CRUD operations for House Building Projects and House Rooms (tasks), supporting custom  and  for rooms and subtasks. A robust RBAC system (, , ) ensures data isolation.  has global control,  manages their store, and  has read-only access. Real-time updates utilize polling, and file attachments are supported. A 2-level subtask system includes optional dates and color-coding, alongside an Ideas Board for admins. The Budget Tab allows customers to view overall project budgets, spending, and cost estimates, with project budgets now serving as total funds from which room budgets are allocated. User management features include viewing/reactivating deactivated users and super admin password resets, and subtasks auto-populate based on room types. Store-specific logos can be uploaded by super admins and displayed. Recent enhancements added a dedicated, store-specific Truss Tracking system for admins, encompassing a spreadsheet-like interface with project lifecycle management (creation, editing, optional fields, running totals, archiving, shipment scheduling, and calendar integration), alongside a collapsible sidebar for improved workspace flexibility.
 </product_requirements>
 
 <key_technical_concepts>
@@ -23,69 +33,79 @@ The application utilizes a standard full-stack setup:
 
 
 -   :
-    -   **Importance**: Core FastAPI application handling API routes, MongoDB interaction, and business logic.
+    -   **Importance**: Lists Python dependencies for the backend.
+    -   **Changes**:  and  were added for Excel file parsing capabilities.
+-   :
+    -   **Importance**: Core FastAPI application handling API routes and MongoDB interaction.
     -   **Changes**:
-        -   Task, TaskCreate, TaskUpdate models updated with  and .
-        -   ProjectCreate model updated with .
-        -   New , , and user creation username conflict handling.
-        -   New  and  endpoints.
-        -    endpoint added for standard subtask templates.
-        -   Budget rollup calculations added for projects and tasks, updating  and  endpoints with new calculated fields.
-        -    and  models updated to include calculated budget fields.
-        -   New  model and endpoints (, ) for logo management, with  returned on login.
-        -   Refactored budget calculation logic to treat project budget as total, with rooms as allocations.
+        -   Existing models updated for budget rollup.
+        -    enum and , ,  models added for truss tracking.  fields changed to  in truss models for MongoDB compatibility. Default status in Truss models updated.
+        -   New Truss API endpoints ( for CRUD, , , ) were added.
+        -    endpoint updated to include truss shipments.
+        -   Duplicate  endpoint was identified and removed, and the primary  endpoint was modified to exclude archived projects by default.
 -   :
     -   **Importance**: Main React component managing routing and global layout.
-    -   **Changes**:  component props updated to pass  and .
+    -   **Changes**:
+        -    props updated.
+        -    component added for routing to the new truss tracking interface.
+        -    state variable and  function added and passed to  for collapsible sidebar feature.  CSS class conditionally applied to the main layout.
 -   :
-    -   **Importance**: Manages user authentication, session, and roles.
-    -   **Changes**: Login function updated to pass  and now returns .
+    -   **Importance**: Manages user authentication and roles.
+    -   **Changes**: Login function updated to pass  and return .
 -   :
     -   **Importance**: Centralizes reusable UI components and main views.
     -   **Changes**:
-        -    and  updated to include  field and handle its submission.
-        -    and  updated to include  and  fields and handle their submission.
-        -    component: Added  function and a Generate Standard Subtasks button.
-        -    and  updated to display new calculated budget totals (, ,  for projects; ,  for tasks).
-        -    component updated to include .
-        -    component added to display store logos.
+        -    and  updated for budget.
+        -    and  updated for budget.
+        -    updated with .
+        -    and  updated to display new calculated budget totals.
+        -    component updated to include , and significantly modified to integrate the collapsible sidebar: accepts  and  props, added a toggle button, and conditionally hides navigation item text, projects list, user info, and user actions when collapsed.
+        -    component was created to implement the truss tracking table: includes quick-add, edit modals, search, sort, filters, running lumber totals, and total production days. It displays , , and . It also manages  state for archiving.
+        -    (new) modified to make fields optional, simplify for quick-add (removed lumber fields), and improve error handling. Designer field changed to dropdown.
+        -    (new) modified to include all optional lumber fields, and handle date formatting for submission. Designer field changed to dropdown.
+        -    (new) component created for scheduling truss project shipments.
+        -   Action buttons in  updated to include Archive, Unarchive, and Schedule Shipment.
+        -   Exports updated to include , , , .
 -   :
     -   **Importance**: User login interface.
-    -   **Changes**: Updated to display  in the login header.
+    -   **Changes**: Updated to display .
 -   :
     -   **Importance**: Admin user management interface.
-    -   **Changes**:
-        -   Implemented a tab system for Active Users and Deactivated Users.
-        -   Added  and  functions.
-        -   User list actions updated to include reactivate button.
-        -   Username conflict handling improved.
-        -    component, along with generate/reset password functions, added for Super Admins. Reset password button added to user actions.
-        -    component added for Super Admins to upload/manage store logos, with a Manage Store Logos button.
+    -   **Changes**: Implemented tab system for users, , and .
 -   :
     -   **Importance**: Displays budget information for projects.
-    -   **Changes**: Rewritten to include  based Pie and Bar charts for overall project budget and room-level breakdowns, using the project's estimated budget as the total and room budgets as allocations. Fixed API constant usage and added error handling.
+    -   **Changes**: Rewritten with  for Pie/Bar charts, showing allocated vs. spent.
 -   :
-    -   **Importance**: Global CSS styles for the application.
-    -   **Changes**: Added styles for AdminPanel tabs, budget summaries, chart components, and logo elements.
+    -   **Importance**: Handles file uploads.
+    -   **Changes**: Made more compact by reducing min-height, padding, gap spacing, text sizes, and icon sizes.
+-   :
+    -   **Importance**: Displays uploaded files.
+    -   **Changes**: Made ultra-compact: reduced container padding, element gaps, grid spacing, icon sizes, text sizes, thumbnail sizes, and button padding. Simplified to show filename as a single clickable download link, with an optional small preview icon for images.
+-   :
+    -   **Importance**: Global CSS styles.
+    -   **Changes**: Added styles for AdminPanel, budget, logo elements. Added styles for scrollable project list. Added styles for truss components (table layout, totals row, specific column widths, font sizes, text wrapping for project name). Reduced font size for lumber/production days. Added compact styling for date and lumber columns and headers. Made file upload box smaller (, , ). Fixed a CSS syntax error (extra ). Made file list elements more compact. Added comprehensive styles for the collapsible sidebar (width transitions, gradient background, hidden text, dynamic margins for main content).
 </code_architecture>
 
 <pending_tasks>
 -   **Pinterest Integration**: Deferred by user, requires API credentials.
 -   **Stripe Integration**: Mentioned in initial prompt, not yet requested.
 -   **Slack Integration**: Mentioned in initial prompt, not yet requested.
--   **Project list scroll bar**: User requested adding a scroll bar to the project list for better visibility.
 </pending_tasks>
 
 <current_work>
-The application has been continuously enhanced, transforming into a robust Lumberyard House Building Tracker. Most recently, the focus has been on comprehensive financial and user management features.
+Immediately preceding this summary, the focus was on implementing a **collapsible sidebar feature**. The user requested a button to hide and show the left sidebar (task bar). This functionality was successfully implemented by:
 
-**Budgeting System Refinement**: The budget calculation logic was fundamentally changed. Previously, room budgets were added to the project budget. Now, the **house project budget is the total available funds**, and **room budgets are allocations that subtract from this total**. This change accurately reflects a top-down budgeting approach. The backend was updated with new calculation functions (, , ) and corresponding fields in the  model and API endpoints. The frontend  was completely rewritten to display this new logic using interactive **Pie and Bar charts**, showing allocated vs. spent, remaining budget, and a breakdown by rooms with percentages, all using the existing color scheme.  and  were also updated to display the new budget metrics.
+1.  **State Management**: Adding a  state variable and a  function in  and passing them down to the  component.
+2.  **Dynamic Styling**: Applying a  CSS class to the main layout () based on the  state.
+3.  **Navigation Component Updates ()**:
+    *   The  component was updated to accept the  prop.
+    *   A toggle button (hamburger/arrow icon) was added to the top-right of the sidebar header to control the  state.
+    *   Navigation items (buttons), the projects list, user information (username, role), and user action buttons (admin panel, logout) were made to conditionally hide their text labels or themselves when the sidebar is in a  state, showing only icons or avatars.
+4.  **CSS Animations ()**: Comprehensive CSS was added to handle the smooth transition of the sidebar's width (between 260px expanded and 64px collapsed), apply a purple gradient background, and adjust the  of the main content area to prevent layout shifts.
 
-**Store Logo Management**: A system for managing **store-specific logos** was implemented. Super Admins can now **upload and manage logos** for different stores via a new  in the . These logos are stored and dynamically displayed in the application's header/navigation ( component in ) and on the .
-
-Immediately prior to this summary, the user identified that the **project list on the left sidebar only shows a limited number of projects with a X projects, +Y more projects indicator** and requested a scroll bar or dropdown for easier access to all projects. This is the next task to address.
+This feature provides users with greater control over their workspace layout, allowing them to gain more horizontal screen space when desired, while maintaining full accessibility to navigation through icons and tooltips. This task was concluded just before this summary request.
 </current_work>
 
 <optional_next_step>
-Implement a scroll bar or dropdown for the project list on the left side to show all projects directly.
+Confirm the functionality of the new collapsible sidebar and verify if truss shipments are now appearing correctly on the frontend calendar.
 </optional_next_step>
