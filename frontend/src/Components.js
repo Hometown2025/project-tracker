@@ -1306,13 +1306,13 @@ const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Actual Cost</label>
+              <label className="form-label">Budget</label>
               <input 
                 type="number"
                 className="form-input"
                 value={formData.actual_cost}
                 onChange={(e) => setFormData({...formData, actual_cost: e.target.value})}
-                placeholder="Actual cost spent so far"
+                placeholder="Budget allocated for this room"
                 min="0"
                 step="0.01"
               />
