@@ -3478,8 +3478,8 @@ body {
 
 .form-input:focus {
   outline: none;
-  border-color: #8b5cf6;
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  border-color: #e73137;
+  box-shadow: 0 0 0 3px rgba(231, 49, 55, 0.1);
 }
 
 /* Truss View Styles */
