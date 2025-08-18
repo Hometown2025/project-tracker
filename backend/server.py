@@ -3166,29 +3166,6 @@ async def get_archived_trusses(current_user: User = Depends(get_current_user)):
     # Convert to Truss objects
     return [Truss(**truss) for truss in trusses]
 
-# Update main get_trusses to exclude archived by default
-@api_router.get("/trusses", response_model=List[Truss])
-async def get_trusses(include_archived: bool = False, current_user: User = Depends(get_current_user)):
-    """Get trusses - Super Admin sees all from all stores, Admin sees all from their store"""
-    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
-        raise HTTPException(status_code=403, detail="Only admins can view trusses")
-    
-    # Build query filter
-    query_filter = {}
-    if not include_archived:
-        query_filter["is_archived"] = {"$ne": True}
-    
-    if current_user.role == UserRole.SUPER_ADMIN:
-        # Super Admin sees all trusses from all stores
-        trusses = await db.trusses.find(query_filter).to_list(1000)
-    else:
-        # Admin sees all trusses from their store
-        query_filter["store_id"] = current_user.store_id
-        trusses = await db.trusses.find(query_filter).to_list(1000)
-    
-    # Convert to Truss objects
-    return [Truss(**truss) for truss in trusses]
-
 # Include the router in the main app
 app.include_router(api_router)
 
