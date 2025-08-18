@@ -436,6 +436,20 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
                 rows="3"
                 placeholder="Description"
               />
+              <div className="mb-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cost (optional)
+                </label>
+                <input
+                  type="number"
+                  value={editingSubtask.actual_cost || ''}
+                  onChange={(e) => setEditingSubtask({ ...editingSubtask, actual_cost: e.target.value })}
+                  className="form-input"
+                  placeholder="Actual cost for this subtask"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
               <div className="grid grid-cols-2 gap-3 mb-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
