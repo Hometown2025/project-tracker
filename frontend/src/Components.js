@@ -612,14 +612,14 @@ const TaskView = ({ tasks, projects, selectedProject, refreshData }) => {
                 />
               )}
 
-              {/* Room Cost Summary (for main rooms only) */}
+              {/* Room Budget Summary (for main rooms only) */}
               {task.subtask_level === 0 && (task.total_actual > 0 || task.subtask_actual_total > 0) && (
                 <div className="room-budget-summary">
-                  <h4 className="budget-summary-title">Room Costs</h4>
+                  <h4 className="budget-summary-title">Room Budget & Costs</h4>
                   <div className="cost-grid">
                     <div className="cost-column">
                       <div className="budget-item">
-                        <span className="budget-label">Room Cost:</span>
+                        <span className="budget-label">Room Budget:</span>
                         <span className="budget-amount">
                           ${(task.actual_cost || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </span>
