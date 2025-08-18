@@ -1529,6 +1529,10 @@ ROOM_SUBTASK_TEMPLATES = {
     "laundry room": [
         {"title": "Plumbing", "description": "Install washer/dryer connections and utility sink"},
         {"title": "Electrical Work", "description": "Install electrical outlets and lighting"},
+        {"title": "Wall Coverings", "description": "Install wall coverings, paint, or tile backsplash"},
+        {"title": "Cabinets", "description": "Install laundry room cabinets and storage solutions"},
+        {"title": "Cabinet Hardware", "description": "Install cabinet handles, knobs, and drawer slides"},
+        {"title": "Lighting", "description": "Install overhead lighting and task lighting fixtures"},
         {"title": "Flooring", "description": "Install laundry room flooring"},
         {"title": "Appliances", "description": "Install washer, dryer, and connections"},
         {"title": "Ventilation", "description": "Install proper ventilation for dryer"}
