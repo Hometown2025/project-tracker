@@ -2266,6 +2266,52 @@ const TrussView = ({ refreshData, user }) => {
     }
   };
 
+  const handleArchive = async (trussId, projectName) => {
+    if (window.confirm(`Are you sure you want to archive the truss "${projectName}"? Archived projects can still be viewed but won't appear in the main list.`)) {
+      try {
+        await axios.post(`${API}/trusses/${trussId}/archive`);
+        fetchTrusses();
+        alert('Truss project archived successfully');
+      } catch (error) {
+        console.error('Error archiving truss:', error);
+        alert('Failed to archive truss project');
+      }
+    }
+  };
+
+  const handleUnarchive = async (trussId, projectName) => {
+    if (window.confirm(`Are you sure you want to unarchive the truss "${projectName}"?`)) {
+      try {
+        await axios.post(`${API}/trusses/${trussId}/unarchive`);
+        fetchTrusses();
+        alert('Truss project unarchived successfully');
+      } catch (error) {
+        console.error('Error unarchiving truss:', error);
+        alert('Failed to unarchive truss project');
+      }
+    }
+  };
+
+  const handleScheduleShipment = (truss) => {
+    setShipmentTruss(truss);
+    setShowShipmentModal(true);
+  };
+
+  const submitShipment = async (shipmentDate) => {
+    try {
+      await axios.post(`${API}/trusses/${shipmentTruss.id}/schedule-shipment`, {
+        shipment_date: new Date(shipmentDate + 'T00:00:00').toISOString()
+      });
+      fetchTrusses();
+      setShowShipmentModal(false);
+      setShipmentTruss(null);
+      alert('Shipment scheduled successfully and added to calendar');
+    } catch (error) {
+      console.error('Error scheduling shipment:', error);
+      alert('Failed to schedule shipment');
+    }
+  };
+
   const getSortIcon = (column) => {
     if (sortColumn !== column) return '↕️';
     return sortDirection === 'asc' ? '↑' : '↓';
