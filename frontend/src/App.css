@@ -523,10 +523,18 @@ body {
 
 /* Main Content */
 .main-content {
-  flex: 1;
-  margin-left: 280px;
-  padding: 2rem;
-  background: transparent;
+  margin-left: 260px;
+  min-height: 100vh;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+.sidebar-collapsed .main-content {
+  margin-left: 64px;
+}
+
+.App {
+  display: flex;
 }
 
 /* Page Headers */
