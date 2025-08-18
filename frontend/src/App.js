@@ -202,6 +202,8 @@ const AppContent = () => {
             tasks={tasks}
             projects={projects}
             refreshData={refreshData}
+            setCurrentView={setCurrentView}
+            setSelectedProject={setSelectedProject}
             user={user}
           />
         )}
