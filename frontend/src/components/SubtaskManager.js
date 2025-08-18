@@ -251,7 +251,7 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
                         <button 
                           onClick={() => {
                             setShowCreateForm(false);
-                            setNewSubtask({ title: '', description: '', order_date: '', delivery_date: '' });
+                            setNewSubtask({ title: '', description: '', order_date: '', delivery_date: '', actual_cost: '' });
                           }}
                           className="btn-secondary-small"
                         >
