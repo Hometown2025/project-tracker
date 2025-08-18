@@ -3345,15 +3345,35 @@ body {
 }
 
 .subtask-title {
-  font-weight: 500;
+  font-size: 0.875rem;
+  font-weight: 600;
   color: #374151;
   margin: 0;
-  transition: all 0.2s;
 }
 
 .subtask-title.completed {
   text-decoration: line-through;
-  color: #9ca3af;
+  opacity: 0.6;
+}
+
+.subtask-room-label {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #6b7280;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.subtask-room-label .room-name {
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .subtask-description {
