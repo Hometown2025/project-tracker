@@ -3019,6 +3019,137 @@ async def delete_truss(truss_id: str, current_user: User = Depends(get_current_u
     await db.trusses.delete_one({"id": truss_id})
     return {"message": "Truss deleted successfully"}
 
+@api_router.post("/trusses/{truss_id}/archive")
+async def archive_truss(truss_id: str, current_user: User = Depends(get_current_user)):
+    """Archive a delivered truss project (Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can archive trusses")
+    
+    truss = await db.trusses.find_one({"id": truss_id})
+    if not truss:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    # Check store access for regular admins
+    if current_user.role == UserRole.ADMIN and truss.get("store_id") != current_user.store_id:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    # Only allow archiving if status is delivered
+    if truss.get("project_status") != "delivered":
+        raise HTTPException(status_code=400, detail="Only delivered projects can be archived")
+    
+    # Archive the truss
+    await db.trusses.update_one(
+        {"id": truss_id}, 
+        {"$set": {
+            "is_archived": True,
+            "archived_date": datetime.utcnow(),
+            "updated_date": datetime.utcnow()
+        }}
+    )
+    
+    return {"message": "Truss project archived successfully"}
+
+@api_router.post("/trusses/{truss_id}/unarchive")
+async def unarchive_truss(truss_id: str, current_user: User = Depends(get_current_user)):
+    """Unarchive a truss project (Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can unarchive trusses")
+    
+    truss = await db.trusses.find_one({"id": truss_id})
+    if not truss:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    # Check store access for regular admins
+    if current_user.role == UserRole.ADMIN and truss.get("store_id") != current_user.store_id:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    # Unarchive the truss
+    await db.trusses.update_one(
+        {"id": truss_id}, 
+        {"$set": {
+            "is_archived": False,
+            "archived_date": None,
+            "updated_date": datetime.utcnow()
+        }}
+    )
+    
+    return {"message": "Truss project unarchived successfully"}
+
+@api_router.post("/trusses/{truss_id}/schedule-shipment")
+async def schedule_shipment(truss_id: str, shipment_data: dict, current_user: User = Depends(get_current_user)):
+    """Schedule shipment for a truss project (Admin only)"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can schedule shipments")
+    
+    truss = await db.trusses.find_one({"id": truss_id})
+    if not truss:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    # Check store access for regular admins
+    if current_user.role == UserRole.ADMIN and truss.get("store_id") != current_user.store_id:
+        raise HTTPException(status_code=404, detail="Truss not found")
+    
+    # Validate shipment date
+    shipment_date = shipment_data.get("shipment_date")
+    if not shipment_date:
+        raise HTTPException(status_code=400, detail="Shipment date is required")
+    
+    # Parse the shipment date
+    try:
+        parsed_date = datetime.fromisoformat(shipment_date.replace('Z', '+00:00'))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    
+    # Update the truss with shipment date
+    await db.trusses.update_one(
+        {"id": truss_id}, 
+        {"$set": {
+            "shipment_date": parsed_date,
+            "updated_date": datetime.utcnow()
+        }}
+    )
+    
+    return {"message": "Shipment scheduled successfully"}
+
+@api_router.get("/trusses/archived")
+async def get_archived_trusses(current_user: User = Depends(get_current_user)):
+    """Get archived trusses - Super Admin sees all from all stores, Admin sees all from their store"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can view archived trusses")
+    
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super Admin sees all archived trusses from all stores
+        trusses = await db.trusses.find({"is_archived": True}).to_list(1000)
+    else:
+        # Admin sees all archived trusses from their store
+        trusses = await db.trusses.find({"store_id": current_user.store_id, "is_archived": True}).to_list(1000)
+    
+    # Convert to Truss objects
+    return [Truss(**truss) for truss in trusses]
+
+# Update main get_trusses to exclude archived by default
+@api_router.get("/trusses", response_model=List[Truss])
+async def get_trusses(include_archived: bool = False, current_user: User = Depends(get_current_user)):
+    """Get trusses - Super Admin sees all from all stores, Admin sees all from their store"""
+    if current_user.role not in [UserRole.ADMIN, UserRole.SUPER_ADMIN]:
+        raise HTTPException(status_code=403, detail="Only admins can view trusses")
+    
+    # Build query filter
+    query_filter = {}
+    if not include_archived:
+        query_filter["is_archived"] = {"$ne": True}
+    
+    if current_user.role == UserRole.SUPER_ADMIN:
+        # Super Admin sees all trusses from all stores
+        trusses = await db.trusses.find(query_filter).to_list(1000)
+    else:
+        # Admin sees all trusses from their store
+        query_filter["store_id"] = current_user.store_id
+        trusses = await db.trusses.find(query_filter).to_list(1000)
+    
+    # Convert to Truss objects
+    return [Truss(**truss) for truss in trusses]
+
 # Include the router in the main app
 app.include_router(api_router)
 
