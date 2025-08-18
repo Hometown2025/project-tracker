@@ -1358,8 +1358,6 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-  transform: scale(1.02);
-}
 
 .calendar-event.due_date {
   border-left-color: #3b82f6;
