@@ -1182,8 +1182,8 @@ const EditTaskModal = ({ task, projects, onClose, onSuccess }) => {
       // Only send fields that have values or have been changed
       const updateData = {};
       Object.keys(formData).forEach(key => {
-        if (key === 'actual_cost' || key === 'square_footage') {
-          // Handle numeric fields - allow 0 as valid value
+        if (key === 'actual_cost') {
+          // Handle cost field - allow 0 as valid value
           if (formData[key] !== '' && formData[key] !== null && formData[key] !== undefined) {
             updateData[key] = parseFloat(formData[key]) || null;
           }
