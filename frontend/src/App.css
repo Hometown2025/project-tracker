@@ -1830,13 +1830,13 @@ body {
   align-items: center;
   justify-content: center;
   margin: 0 auto 0.5rem;
-  background: #3b82f6;
-  border-color: #3b82f6;
+  background: #e73137;
+  border-color: #e73137;
 }
 
 .generate-subtasks-btn:hover {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: #c82f35;
+  border-color: #c82f35;
 }
 
 .generate-subtasks-hint {
