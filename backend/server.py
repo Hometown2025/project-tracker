@@ -1484,13 +1484,15 @@ async def delete_store_logo(
 # Room Type Subtask Templates
 ROOM_SUBTASK_TEMPLATES = {
     "kitchen": [
-        {"title": "Electrical Work", "description": "Install outlets, lighting, and electrical connections"},
-        {"title": "Plumbing", "description": "Install sink, dishwasher, and water connections"},
-        {"title": "Cabinets", "description": "Install kitchen cabinets and hardware"},
-        {"title": "Countertops", "description": "Install countertops and backsplash"},
-        {"title": "Appliances", "description": "Install and connect kitchen appliances"},
+        {"title": "Wall Coverings", "description": "Install wall coverings, paint, or wallpaper"},
         {"title": "Flooring", "description": "Install kitchen flooring"},
-        {"title": "Painting", "description": "Paint walls and trim"}
+        {"title": "Lighting", "description": "Install kitchen lighting and electrical fixtures"},
+        {"title": "Cabinets", "description": "Install kitchen cabinets and storage solutions"},
+        {"title": "Cabinet Hardware", "description": "Install cabinet handles, knobs, and drawer slides"},
+        {"title": "Sink", "description": "Install kitchen sink and disposal"},
+        {"title": "Faucet", "description": "Install kitchen faucet and water connections"},
+        {"title": "Countertop", "description": "Install kitchen countertops"},
+        {"title": "Backsplash", "description": "Install kitchen backsplash and tile work"}
     ],
     "bathroom": [
         {"title": "Plumbing", "description": "Install toilet, sink, shower/tub plumbing"},
