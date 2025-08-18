@@ -208,6 +208,20 @@ const SubtaskManager = ({ parentTask, onSubtaskUpdate }) => {
                         className="form-input mb-2"
                         rows="2"
                       />
+                      <div className="mb-2">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          Cost (optional)
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="Actual cost for this subtask"
+                          value={newSubtask.actual_cost}
+                          onChange={(e) => setNewSubtask({ ...newSubtask, actual_cost: e.target.value })}
+                          className="form-input"
+                          min="0"
+                          step="0.01"
+                        />
+                      </div>
                       <div className="grid grid-cols-2 gap-2 mb-2">
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
