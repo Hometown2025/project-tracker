@@ -2360,6 +2360,12 @@ async def update_project(project_id: str, updates: ProjectCreate, current_user: 
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Only admins can edit projects")
     
+    # Get the current project for change tracking
+    current_project = await db.projects.find_one({"id": project_id})
+    if not current_project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Update the project
     result = await db.projects.update_one(
         {"id": project_id},
         {"$set": updates.dict()}
@@ -2368,6 +2374,30 @@ async def update_project(project_id: str, updates: ProjectCreate, current_user: 
         raise HTTPException(status_code=404, detail="Project not found")
     
     updated_project = await db.projects.find_one({"id": project_id})
+    
+    # Log the changes
+    changes_made = []
+    old_values = {}
+    new_values = {}
+    
+    for field, new_value in updates.dict().items():
+        if field in current_project and current_project[field] != new_value:
+            changes_made.append(f"{field}: '{current_project[field]}' → '{new_value}'")
+            old_values[field] = current_project[field]
+            new_values[field] = new_value
+    
+    if changes_made:
+        await log_change(
+            project_id=project_id,
+            entity_type="project",
+            entity_id=project_id,
+            entity_title=updated_project['name'],
+            change_type=ChangeType.UPDATED,
+            user=current_user,
+            changes_description=f"Project updated: {'; '.join(changes_made)}",
+            old_values=old_values,
+            new_values=new_values
+        )
     
     # Send notification
     await send_notification_to_project_members(
