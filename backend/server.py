@@ -318,6 +318,7 @@ async def create_notification(notification_type: NotificationType, title: str, m
     notification_dict["is_read"] = False
     
     await db.notifications.insert_one(notification_dict)
+    return str(notification.id)
 
 # File utility functions
 def get_file_extension(filename: str) -> str:
