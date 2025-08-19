@@ -3412,10 +3412,11 @@ export default {
   EditIdeaModal,
   CreateProjectModal,
   EditProjectModal,
+  ChangeHistoryModal,
   CreateTrussModal,
   EditTrussModal,
   ShipmentModal,
   StoreLogo
 };
 
-export { Dashboard, TaskView, ProjectView, CreateTaskModal, EditTaskModal, EditProjectModal, CreateProjectModal, CreateIdeaModal, EditIdeaModal, IdeasBoard as IdeasView, BudgetView, TrussView, CreateTrussModal, EditTrussModal, ShipmentModal, StoreLogo };
+export { Dashboard, TaskView, ProjectView, CreateTaskModal, EditTaskModal, EditProjectModal, CreateProjectModal, CreateIdeaModal, EditIdeaModal, IdeasBoard as IdeasView, BudgetView, TrussView, CreateTrussModal, EditTrussModal, ShipmentModal, StoreLogo, ChangeHistoryModal };
