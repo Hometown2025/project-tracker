@@ -320,6 +320,37 @@ async def create_notification(notification_type: NotificationType, title: str, m
     await db.notifications.insert_one(notification_dict)
     return str(notification.id)
 
+# Helper function to log changes for project change tracking
+async def log_change(
+    project_id: str,
+    entity_type: str, 
+    entity_id: str,
+    entity_title: str,
+    change_type: ChangeType,
+    user: User,
+    changes_description: str,
+    old_values: dict = None,
+    new_values: dict = None
+):
+    """Log a change for project change tracking"""
+    change_log = ChangeLog(
+        project_id=project_id,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        entity_title=entity_title,
+        change_type=change_type,
+        user_id=user.id,
+        username=user.username,
+        user_role=user.role,
+        store_id=user.store_id,
+        changes_description=changes_description,
+        old_values=old_values,
+        new_values=new_values
+    )
+    
+    await db.change_logs.insert_one(change_log.dict())
+    return str(change_log.id)
+
 # File utility functions
 def get_file_extension(filename: str) -> str:
     """Get file extension from filename"""
