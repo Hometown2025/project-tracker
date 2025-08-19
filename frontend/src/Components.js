@@ -1763,7 +1763,8 @@ const EditProjectModal = ({ project, onClose, onSuccess }) => {
     name: project.name || '',
     description: project.description || '',
     color: project.color || '#8B5CF6',
-    square_footage: project.square_footage || ''
+    square_footage: project.square_footage || '',
+    tags: project.tags || []
   });
 
   const colors = [
