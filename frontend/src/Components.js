@@ -2424,19 +2424,52 @@ const TrussView = ({ refreshData, user }) => {
       return matchesStatus && matchesDesigner && matchesSearch;
     })
     .sort((a, b) => {
-      let aVal = a[sortColumn] || '';
-      let bVal = b[sortColumn] || '';
+      // Define status priority order (lower number = higher priority)
+      const statusPriority = {
+        'on_hold': 1,              // Hold - highest priority
+        'in_the_shop': 2,          // In The Shop
+        'ready_for_shop': 3,       // Ready for Shop
+        'optimizing': 4,           // Optimizing
+        'awaiting_final_measurements': 5, // Awaiting Final Measurements
+        'completed': 6,            // Completed
+        'delivered': 7             // Delivered - lowest priority
+      };
+
+      // First, sort by status priority
+      const aPriority = statusPriority[a.project_status] || 999;
+      const bPriority = statusPriority[b.project_status] || 999;
       
-      if (typeof aVal === 'string') {
-        aVal = aVal.toLowerCase();
-        bVal = bVal.toLowerCase();
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority; // Lower priority number comes first
       }
+
+      // If statuses are the same, sort by estimated delivery date
+      const aDate = a.estimated_delivery ? new Date(a.estimated_delivery) : new Date('9999-12-31');
+      const bDate = b.estimated_delivery ? new Date(b.estimated_delivery) : new Date('9999-12-31');
       
-      if (sortDirection === 'asc') {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
+      if (aDate.getTime() !== bDate.getTime()) {
+        return aDate - bDate; // Earlier dates first
       }
+
+      // If both status and date are the same, fall back to manual sorting
+      if (sortColumn && a[sortColumn] !== undefined && b[sortColumn] !== undefined) {
+        let aVal = a[sortColumn] || '';
+        let bVal = b[sortColumn] || '';
+        
+        if (typeof aVal === 'string') {
+          aVal = aVal.toLowerCase();
+          bVal = bVal.toLowerCase();
+        }
+        
+        if (sortDirection === 'asc') {
+          return aVal > bVal ? 1 : -1;
+        } else {
+          return aVal < bVal ? 1 : -1;
+        }
+      }
+
+      // Finally, sort by project name as tie-breaker
+      return (a.project_name || '').localeCompare(b.project_name || '');
     });
 
   // Calculate lumber totals from filtered results
