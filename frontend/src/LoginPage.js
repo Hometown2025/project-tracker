@@ -32,19 +32,10 @@ const LoginPage = () => {
       <div className="login-container">
         <div className="login-header">
           <div className="login-logo">
-            {formData.store_id ? (
-              <StoreLogo storeId={formData.store_id} className="login-store-logo" />
-            ) : (
-              <svg className="w-12 h-12 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                      d="M8 21v-4a2 2 0 012-2h4a2 2 0 012 2v4" />
-              </svg>
-            )}
+            <StoreLogo storeId="STORE_001" className="login-store-logo" />
           </div>
-          <h1 className="login-title">Lumberyard House Builder</h1>
-          <p className="login-subtitle">{formData.store_id ? `${formData.store_id} Portal` : 'Project Management System'}</p>
+          <h1 className="login-title">Belleville Hometown Lumber</h1>
+          <p className="login-subtitle">House Building Project Management</p>
         </div>
 
         <div className="login-form-container">
