@@ -1868,6 +1868,7 @@ const EditProjectModal = ({ project, onClose, onSuccess }) => {
     square_footage: project.square_footage || '',
     tags: project.tags || []
   });
+  const [showChangeHistory, setShowChangeHistory] = useState(false);
 
   const colors = [
     '#8B5CF6', '#EF4444', '#F59E0B', '#10B981', '#3B82F6', 
