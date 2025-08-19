@@ -2323,6 +2323,25 @@ async def get_project(project_id: str, current_user: User = Depends(get_current_
     
     return Project(**project)
 
+@api_router.get("/projects/{project_id}/change-logs")
+async def get_project_change_logs(project_id: str, current_user: User = Depends(get_current_user)):
+    """Get change logs for a specific project"""
+    # Check if project exists and user has access
+    project = await db.projects.find_one({"id": project_id})
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Check permissions
+    if current_user.role != UserRole.ADMIN and project_id not in current_user.assigned_projects:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get change logs for this project, ordered by most recent first
+    change_logs = await db.change_logs.find(
+        {"project_id": project_id, "store_id": current_user.store_id}
+    ).sort("created_at", -1).limit(100).to_list(100)  # Last 100 changes
+    
+    return [ChangeLog(**log) for log in change_logs]
+
 @api_router.put("/projects/{project_id}", response_model=Project)
 async def update_project(project_id: str, updates: ProjectCreate, current_user: User = Depends(get_current_user)):
     """Update project (Admin only)"""
