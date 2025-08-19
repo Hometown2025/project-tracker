@@ -52,19 +52,8 @@ const LoginPage = () => {
           )}
 
           <form onSubmit={handleSubmit} className="login-form">
-            <div className="form-group">
-              <label className="form-label">Store ID</label>
-              <input 
-                type="text"
-                className="form-input"
-                value={formData.store_id}
-                onChange={(e) => setFormData({...formData, store_id: e.target.value})}
-                placeholder="Enter your store/lumberyard ID"
-                required
-                disabled={loading}
-              />
-            </div>
-
+            {/* Store ID is now automatically set to STORE_001 (Belleville Hometown Lumber) */}
+            
             <div className="form-group">
               <label className="form-label">Username</label>
               <input 
