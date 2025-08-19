@@ -2534,10 +2534,10 @@ const TrussView = ({ refreshData, user }) => {
 
   const getStatusColor = (status) => {
     const colors = {
-      'ready_for_shop': '#3b82f6',
+      'ready_for_shop': '#eab308',        // Changed to yellow
       'in_the_shop': '#8b5cf6',
       'optimizing': '#06b6d4',
-      'awaiting_final_measurements': '#f59e0b',
+      'awaiting_final_measurements': '#1e40af',  // Changed to dark blue
       'completed': '#10b981',
       'delivered': '#22c55e',
       'on_hold': '#ef4444'
