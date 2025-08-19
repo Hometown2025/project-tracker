@@ -87,6 +87,30 @@ class UserRole(str, Enum):
     ADMIN = "admin"              # Can manage their own store only
     CUSTOMER = "customer"        # Customers who view assigned projects/quotes
 
+class ChangeType(str, Enum):
+    CREATED = "created"
+    UPDATED = "updated"
+    DELETED = "deleted"
+    COMPLETED = "completed"
+    STATUS_CHANGED = "status_changed"
+
+# Change Tracking Model
+class ChangeLog(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    project_id: str
+    entity_type: str  # "project", "task", "subtask"
+    entity_id: str
+    entity_title: str  # Name/title of the changed item
+    change_type: ChangeType
+    user_id: str
+    username: str
+    user_role: UserRole
+    store_id: str
+    changes_description: str  # Human readable description of changes
+    old_values: Optional[dict] = None  # Previous values (for updates)
+    new_values: Optional[dict] = None  # New values (for updates)
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+
 # User Models
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
