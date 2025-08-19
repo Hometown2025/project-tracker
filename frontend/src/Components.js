@@ -2006,6 +2006,13 @@ const EditProjectModal = ({ project, onClose, onSuccess }) => {
                 Delete Project
               </button>
             )}
+            <button 
+              type="button" 
+              className="btn-secondary" 
+              onClick={() => setShowChangeHistory(true)}
+            >
+              View Changes
+            </button>
             <div className="modal-actions-right">
               <button type="button" className="btn-secondary" onClick={onClose}>
                 Cancel
@@ -2016,6 +2023,13 @@ const EditProjectModal = ({ project, onClose, onSuccess }) => {
             </div>
           </div>
         </form>
+
+        {showChangeHistory && (
+          <ChangeHistoryModal 
+            project={project}
+            onClose={() => setShowChangeHistory(false)}
+          />
+        )}
       </div>
     </div>
   );
