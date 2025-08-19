@@ -1874,7 +1874,8 @@ const CreateProjectModal = ({ onClose, onSuccess }) => {
     name: '',
     description: '',
     color: '#8B5CF6',
-    square_footage: ''
+    square_footage: '',
+    tags: []
   });
 
   const colors = [
