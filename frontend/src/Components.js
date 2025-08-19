@@ -2665,6 +2665,9 @@ const TrussView = ({ refreshData, user }) => {
               return total + (parseFloat(truss.estimated_production_days) || 0);
             }, 0).toFixed(1)}
           </span>
+          <span className="auto-sort-indicator">
+            • Auto-sorted by: Hold → In Shop → Ready for Shop → Optimizing → Awaiting Measurements, then by delivery date
+          </span>
         </div>
       </div>
 
