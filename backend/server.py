@@ -1981,6 +1981,8 @@ class Project(BaseModel):
     status: ProjectStatus = ProjectStatus.ACTIVE
     owner_id: Optional[str] = None  # User who owns this project
     store_id: str  # Store/Lumberyard identifier
+    tags: List[str] = []  # Project tags for organization
+    square_footage: Optional[int] = None  # Total square footage
     created_date: datetime = Field(default_factory=datetime.utcnow)
     task_count: Optional[int] = 0
     completed_tasks: Optional[int] = 0
