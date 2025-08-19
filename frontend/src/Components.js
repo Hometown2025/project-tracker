@@ -3311,12 +3311,16 @@ const EditTrussModal = ({ truss, onClose, onSuccess }) => {
             </div>
             <div className="form-group">
               <label className="form-label">Salesman <span className="optional">(optional)</span></label>
-              <input 
-                type="text"
-                className="form-input"
+              <select 
+                className="form-select"
                 value={formData.salesman}
                 onChange={(e) => setFormData({...formData, salesman: e.target.value})}
-              />
+              >
+                <option value="">Select Salesman</option>
+                {SALESMEN_LIST.map(salesman => (
+                  <option key={salesman} value={salesman}>{salesman}</option>
+                ))}
+              </select>
             </div>
           </div>
 
