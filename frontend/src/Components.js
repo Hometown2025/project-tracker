@@ -1948,6 +1948,16 @@ const CreateProjectModal = ({ onClose, onSuccess }) => {
           </div>
 
           <div className="form-group">
+            <label className="form-label">Tags <span className="optional">(optional)</span></label>
+            <TagsInput 
+              tags={formData.tags || []}
+              onChange={(tags) => setFormData({...formData, tags})}
+              placeholder="Add tags for organization (e.g., luxury, historic, custom)"
+            />
+            <small className="form-hint">Add tags to organize and categorize projects</small>
+          </div>
+
+          <div className="form-group">
             <label className="form-label">Color</label>
             <div className="color-picker">
               {colors.map(color => (
