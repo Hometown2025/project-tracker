@@ -3839,6 +3839,13 @@ body {
   font-weight: 600;
 }
 
+.auto-sort-indicator {
+  color: #6b7280;
+  font-weight: 500;
+  font-style: italic;
+  font-size: 0.8rem;
+}
+
 /* Truss Table Styles */
 .truss-table-container {
   background: white;
