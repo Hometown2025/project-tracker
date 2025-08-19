@@ -11,6 +11,55 @@ import { useAuth } from './AuthContext';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Tags Input Component
+const TagsInput = ({ tags, onChange, placeholder }) => {
+  const [inputValue, setInputValue] = useState('');
+
+  const handleInputKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const newTag = inputValue.trim();
+      if (newTag && !tags.includes(newTag)) {
+        onChange([...tags, newTag]);
+      }
+      setInputValue('');
+    } else if (e.key === 'Backspace' && inputValue === '' && tags.length > 0) {
+      onChange(tags.slice(0, -1));
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    onChange(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  return (
+    <div className="tags-input-container">
+      <div className="tags-display">
+        {tags.map((tag, index) => (
+          <span key={index} className="tag">
+            {tag}
+            <button
+              type="button"
+              className="tag-remove"
+              onClick={() => removeTag(tag)}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleInputKeyDown}
+          placeholder={tags.length === 0 ? placeholder : ''}
+          className="tags-input"
+        />
+      </div>
+    </div>
+  );
+};
+
 // Navigation Component
 const Navigation = ({ currentView, setCurrentView, projects, setSelectedProject, selectedProject, user, onLogout, onShowAdmin, sidebarCollapsed, onToggleSidebar }) => {
   const [showNotifications, setShowNotifications] = useState(false);
