@@ -2055,6 +2055,7 @@ class TaskCreate(BaseModel):
     parent_task_id: Optional[str] = None  # For creating subtasks
     estimated_budget: Optional[float] = None
     actual_cost: Optional[float] = None
+    tags: List[str] = []
 
 class TaskUpdate(BaseModel):
     title: Optional[str] = None
@@ -2068,6 +2069,7 @@ class TaskUpdate(BaseModel):
     subtask_order: Optional[int] = None  # For reordering subtasks
     estimated_budget: Optional[float] = None
     actual_cost: Optional[float] = None
+    tags: Optional[List[str]] = None
 
 class Idea(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
