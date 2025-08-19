@@ -11,6 +11,40 @@ import { useAuth } from './AuthContext';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Salesmen list for truss tracker
+const SALESMEN_LIST = [
+  'Aaron Sawyer',
+  'Adam Blazek', 
+  'Arron LaClair',
+  'Ben Shaneyfelt',
+  'Bill Bird',
+  'Brayton Gillen',
+  'Brett Edelman',
+  'Brian Emig',
+  'Brian McDaniel',
+  'Brian Reidy',
+  'Carter Harmon',
+  'Chad Omar',
+  'Craig Wisehart',
+  'Dan Campbell',
+  'Darren Kuntz',
+  'Dawson Graham',
+  'Henry Sager',
+  'Jeff Blumer',
+  'John Mayberry',
+  'Justin Martin',
+  'Luke Wells',
+  'Luke Wingerd',
+  'Matt Engle',
+  'Michael Clark',
+  'Nick Thilges',
+  'Parker Eaves',
+  'Shane Hocker',
+  'Taylor Garcia',
+  'Terry Manson',
+  'Toby Watts'
+].sort(); // Sort alphabetically for easy selection
+
 // Tags Input Component
 const TagsInput = ({ tags, onChange, placeholder }) => {
   const [inputValue, setInputValue] = useState('');
