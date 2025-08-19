@@ -2238,6 +2238,18 @@ async def create_project(project: ProjectCreate, current_user: User = Depends(ge
     project_obj = Project(**project_dict, owner_id=current_user.id, store_id=current_user.store_id)
     await db.projects.insert_one(project_obj.dict())
     
+    # Log the project creation
+    await log_change(
+        project_id=project_obj.id,
+        entity_type="project",
+        entity_id=project_obj.id,
+        entity_title=project_obj.name,
+        change_type=ChangeType.CREATED,
+        user=current_user,
+        changes_description=f"Project '{project_obj.name}' was created",
+        new_values={"name": project_obj.name, "description": project_obj.description, "tags": project_obj.tags}
+    )
+    
     # Send notification to project members and admins
     await send_notification_to_project_members(
         NotificationType.PROJECT_CREATED,
