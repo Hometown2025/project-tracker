@@ -2024,6 +2024,7 @@ class Task(BaseModel):
     created_date: datetime = Field(default_factory=datetime.utcnow)
     completed_date: Optional[datetime] = None
     file_count: int = 0  # Computed field
+    tags: List[str] = []  # Task/Room tags for organization
     
     # Subtask fields
     parent_task_id: Optional[str] = None  # If this is a subtask, ID of parent task
