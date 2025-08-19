@@ -1756,7 +1756,109 @@ const CreateIdeaModal = ({ projects, selectedProject, onClose, onSuccess }) => {
   );
 };
 
-// Edit Project Modal
+// Change History Modal Component
+const ChangeHistoryModal = ({ project, onClose }) => {
+  const [changeLogs, setChangeLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchChangeLogs();
+  }, [project.id]);
+
+  const fetchChangeLogs = async () => {
+    try {
+      const response = await axios.get(`${API}/projects/${project.id}/change-logs`);
+      setChangeLogs(response.data);
+    } catch (error) {
+      console.error('Error fetching change logs:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatChangeType = (changeType) => {
+    const types = {
+      'created': 'Created',
+      'updated': 'Updated', 
+      'deleted': 'Deleted',
+      'completed': 'Completed',
+      'status_changed': 'Status Changed'
+    };
+    return types[changeType] || changeType;
+  };
+
+  const formatEntityType = (entityType) => {
+    const types = {
+      'project': 'Project',
+      'task': 'Room/Task',
+      'subtask': 'Subtask'
+    };
+    return types[entityType] || entityType;
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal change-history-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2 className="modal-title">
+            Change History - {project.name}
+          </h2>
+          <button className="modal-close" onClick={onClose}>×</button>
+        </div>
+
+        <div className="modal-body">
+          {loading ? (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading change history...</p>
+            </div>
+          ) : changeLogs.length === 0 ? (
+            <div className="empty-state">
+              <p>No changes recorded for this project yet.</p>
+            </div>
+          ) : (
+            <div className="change-logs-list">
+              {changeLogs.map((log) => (
+                <div key={log.id} className="change-log-item">
+                  <div className="change-log-header">
+                    <div className="change-log-info">
+                      <span className={`change-type ${log.change_type}`}>
+                        {formatChangeType(log.change_type)}
+                      </span>
+                      <span className="entity-type">
+                        {formatEntityType(log.entity_type)}
+                      </span>
+                      <span className="entity-title">
+                        {log.entity_title}
+                      </span>
+                    </div>
+                    <div className="change-log-meta">
+                      <span className="user-info">
+                        {log.username} ({log.user_role})
+                      </span>
+                      <span className="change-date">
+                        {new Date(log.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="change-description">
+                    {log.changes_description}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="modal-actions">
+          <button className="btn-secondary" onClick={onClose}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 const EditProjectModal = ({ project, onClose, onSuccess }) => {
   const { user } = useAuth();
   const [formData, setFormData] = useState({
