@@ -8,7 +8,7 @@ const LoginPage = () => {
   const [formData, setFormData] = useState({
     username: '',
     password: '',
-    store_id: ''
+    store_id: 'STORE_001' // Automatically set to Belleville Hometown Lumber
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
